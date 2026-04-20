@@ -173,7 +173,6 @@ function toggleSidebar() {
 /* ---- RENDER ALL ---- */
 function renderAll() {
     updateDashboard();
-    renderEmployeeSelector();
     renderEmployeeTable();
     renderLogs();
     renderSecurityPage();
