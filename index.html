@@ -135,6 +135,26 @@
             </div>
         </div>
     </aside>
+    
+    <!-- BARRA DE NAVEGACIÓN MÓVIL (Solo visible en celulares) -->
+    <nav class="mobile-nav">
+        <button class="m-nav-item active" id="m-nav-dashboard" onclick="showPage('dashboard')">
+            <div class="m-nav-icon-wrap">🏠</div>
+            <span>Inicio</span>
+        </button>
+        <button class="m-nav-item" id="m-nav-scanner" onclick="showPage('scanner')">
+            <div class="m-nav-icon-wrap">📷</div>
+            <span>Escáner</span>
+        </button>
+        <button class="m-nav-item" id="m-nav-generate" onclick="showPage('generate')">
+            <div class="m-nav-icon-wrap">🔑</div>
+            <span>QR</span>
+        </button>
+        <button class="m-nav-item" id="m-nav-logs" onclick="showPage('logs')">
+            <div class="m-nav-icon-wrap">📋</div>
+            <span>Logs</span>
+        </button>
+    </nav>
 
     <!-- ========== MAIN ========== -->
     <div class="main-wrap">
