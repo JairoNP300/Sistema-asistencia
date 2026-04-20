@@ -4,3 +4,5 @@ tunnel.log
 tunnel.err
 data.json
 *.bat
+watch-deploy.js
+migrate-to-render.js
