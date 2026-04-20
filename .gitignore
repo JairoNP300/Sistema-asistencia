@@ -1,0 +1,6 @@
+node_modules/
+.env
+tunnel.log
+tunnel.err
+data.json
+*.bat

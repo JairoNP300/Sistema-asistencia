@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>QR-Asistencia — Registrar Acceso</title>
+    <meta name="theme-color" content="#07071a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="checkin.css" />
+</head>
+
+<body>
+
+    <!-- STATUS: validating token -->
+    <div class="screen" id="screen-validating">
+        <div class="logo-wrap">
+            <div class="logo-icon">🔐</div>
+            <h1>QR<strong>Asistencia</strong></h1>
+        </div>
+        <div class="spinner"></div>
+        <p class="status-text">Verificando código de acceso…</p>
+    </div>
+
+    <!-- STATUS: expired / invalid token -->
+    <div class="screen hidden" id="screen-expired">
+        <div class="logo-wrap">
+            <div class="logo-icon error">⚠️</div>
+            <h1>QR<strong>Asistencia</strong></h1>
+        </div>
+        <div class="error-card">
+            <div class="error-icon">⏱️</div>
+            <h2>Código Expirado</h2>
+            <p id="expiredMsg">Este código QR ya no es válido. Por favor escanea el código actualizado en la pantalla de
+                la entrada.</p>
+        </div>
+        <div class="timer-note" id="expiredDetail"></div>
+    </div>
+
+    <!-- STATUS: employee selection -->
+    <div class="screen hidden" id="screen-select">
+        <div class="checkin-header">
+            <div class="co-logo" id="coLogo">🏢</div>
+            <div class="co-info">
+                <span class="co-name" id="coName">Mi Empresa</span>
+                <span class="co-time" id="coTime"></span>
+            </div>
+            <div class="token-valid-badge">✅ Acceso Válido</div>
+        </div>
+
+        <div class="section-label">¿Quién eres?</div>
+        <div class="search-wrap">
+            <input type="text" id="empSearchInput" placeholder="🔍 Buscar por nombre o ID…" oninput="filterEmployees()"
+                autocomplete="off" />
+        </div>
+        <div class="employee-list" id="employeeList"></div>
+
+        <div class="token-footer">
+            <span class="token-exp" id="tokenExpLabel"></span>
+        </div>
+    </div>
+
+    <!-- STATUS: confirm entry/exit -->
+    <div class="screen hidden" id="screen-confirm">
+        <div class="checkin-header">
+            <div class="co-logo" id="coLogo2">🏢</div>
+            <div class="co-info">
+                <span class="co-name" id="coName2">Mi Empresa</span>
+                <span class="co-time" id="coTime2"></span>
+            </div>
+        </div>
+
+        <div class="selected-emp" id="selectedEmpCard">
+            <div class="sel-avatar" id="selAvatar">👤</div>
+            <div class="sel-info">
+                <span class="sel-name" id="selName">—</span>
+                <span class="sel-dept" id="selDept">—</span>
+                <span class="sel-num" id="selNum">—</span>
+            </div>
+        </div>
+
+        <div class="section-label">¿Qué deseas registrar?</div>
+
+        <div class="action-buttons">
+            <button class="action-btn entry" id="btnEntry" onclick="submitCheckin('entry')">
+                <span class="action-icon">🟢</span>
+                <span class="action-label">Entrada</span>
+                <span class="action-sub" id="entryTimeSub"></span>
+            </button>
+            <button class="action-btn exit" id="btnExit" onclick="submitCheckin('exit')">
+                <span class="action-icon">🔴</span>
+                <span class="action-label">Salida</span>
+                <span class="action-sub" id="exitTimeSub"></span>
+            </button>
+        </div>
+
+        <button class="back-btn" onclick="goBack()">← Cambiar empleado</button>
+    </div>
+
+    <!-- STATUS: success -->
+    <div class="screen hidden" id="screen-success">
+        <div class="success-wrap">
+            <div class="success-anim" id="successAnim">✅</div>
+            <h2 class="success-title" id="successTitle">Registro Exitoso</h2>
+            <div class="success-card" id="successCard">
+                <div class="sc-row"><span>Empleado</span><strong id="scName">—</strong></div>
+                <div class="sc-row"><span>Tipo</span><strong id="scType">—</strong></div>
+                <div class="sc-row"><span>Hora</span><strong id="scTime">—</strong></div>
+                <div class="sc-row"><span>Departamento</span><strong id="scDept">—</strong></div>
+            </div>
+            <p class="success-note">El registro ha sido enviado al sistema. Puedes cerrar esta pantalla.</p>
+            <div class="countdown-close" id="countdownClose">Cerrando en <span id="closeCount">5</span>s…</div>
+        </div>
+    </div>
+
+    <!-- STATUS: already registered -->
+    <div class="screen hidden" id="screen-already">
+        <div class="success-wrap">
+            <div class="success-anim warning">⚠️</div>
+            <h2 class="success-title">Ya registraste tu <span id="alreadyType">entrada</span></h2>
+            <p class="success-note" id="alreadyMsg">Ya tienes una entrada registrada hoy. Si necesitas marcar tu salida,
+                selecciona la opción correspondiente.</p>
+            <button class="btn-primary full" onclick="goBack()">← Volver</button>
+        </div>
+    </div>
+
+    <script src="crypto-utils.js"></script>
+    <script src="checkin.js"></script>
+</body>
+
+</html>
