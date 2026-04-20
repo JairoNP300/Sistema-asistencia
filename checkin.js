@@ -79,7 +79,7 @@ async function validateStationToken(encoded) {
     if (payload?.type !== 'station') return { valid: false, reason: 'Tipo de token incorrecto', code: 'WRONG_TYPE' };
     if (!payload.ts || !payload.nonce || !payload.sig) return { valid: false, reason: 'Token incompleto', code: 'INCOMPLETE' };
 
-    const window = cState.config.timeWindow || 30;
+    const window = cState.config.timeWindow || 300;
     const life = cState.config.tokenLife || 30;
     const age = now - payload.ts;
     if (age > life + window) return { valid: false, reason: `Token expirado (${Math.round(age)}s)`, code: 'EXPIRED' };
