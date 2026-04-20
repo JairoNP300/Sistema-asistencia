@@ -20,8 +20,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateClocks, 1000);
     try {
         await loadAdminData();
+        startPolling(); // <--- Activamos el vigilante automático
     } catch (e) {
-        showExpired('No se pudo conectar al servidor. Verifica que estás en la misma red WiFi.', '');
+        showExpired('No se pudo conectar al servidor. Verifica tu conexión.', '');
         return;
     }
 
