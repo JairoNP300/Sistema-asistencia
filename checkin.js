@@ -70,6 +70,33 @@ async function loadAdminData() {
     cState.presentSet = d.presentSet || [];
 }
 
+/* ---- POLL SERVER FOR UPDATES ---- */
+function startPolling() {
+    setInterval(async () => {
+        try {
+            const res = await fetch(`/api/data?t=${Date.now()}`, { cache: 'no-store' });
+            if (res.ok) {
+                const d = await res.json();
+                
+                // Si hay cambios en los presentes o en la lista de empleados
+                if (JSON.stringify(d.presentSet) !== JSON.stringify(cState.presentSet) || d.employees?.length !== cState.employees?.length) {
+                    console.log('🔄 Sincronizando datos con el servidor...');
+                    cState.employees = (d.employees || []).filter(e => e.status === 'active');
+                    cState.presentSet = d.presentSet || [];
+                    
+                    // Si estamos viendo la lista de selección, la redibujamos
+                    const screenSelect = document.getElementById('screen-select');
+                    if (screenSelect && !screenSelect.classList.contains('hidden')) {
+                        filterEmployees();
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Error en polling de check-in:', e.message);
+        }
+    }, 3000); // Cada 3 segundos para los móviles para no gastar tanta batería
+}
+
 /* ---- VALIDATE STATION TOKEN ---- */
 async function validateStationToken(encoded) {
     const now = Math.floor(Date.now() / 1000);
