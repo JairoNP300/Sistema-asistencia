@@ -6,7 +6,7 @@
 const STORE_KEY = 'qr_asist';
 let state = {
     employees: [], logs: [], departments: ['TI', 'RRHH', 'Ventas', 'Operaciones', 'Finanzas'],
-    secretKey: '', config: { tokenLife: 30, timeWindow: 30, maxRetries: 3, antiReplay: true, deviceLock: false, alerts: true },
+    secretKey: '', config: { tokenLife: 30, timeWindow: 300, maxRetries: 3, antiReplay: true, deviceLock: false, alerts: true },
     usedTokens: new Set(), scannerStream: null, scannerActive: false,
     selectedEmpForQR: null, currentQRToken: null, qrRotateTimer: null,
     securityLog: [], adminConfig: { company: 'Mi Empresa S.A.', logo: '🏢', entryTime: '08:00', exitTime: '18:00', grace: 10 },
