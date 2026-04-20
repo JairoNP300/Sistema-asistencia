@@ -377,29 +377,34 @@ function startPolling() {
 
     setInterval(async () => {
         try {
-            const res = await fetch('/api/data');
+            // Agregamos ?t= para evitar que el navegador cachee la respuesta
+            const res = await fetch(`/api/data?t=${Date.now()}`, { cache: 'no-store' });
             if (res.ok) {
                 const d = await res.json();
                 failCount = 0;
                 updateConnStatus(true);
 
                 const newLogs = d.logs || [];
-                if (newLogs.length !== lastLogCount) {
+                // Si la cantidad de logs cambió o el estado de presentes es diferente
+                if (newLogs.length !== lastLogCount || JSON.stringify(d.presentSet) !== JSON.stringify([...state.presentSet])) {
+                    console.log('🔄 Actualización detectada desde el servidor...');
+                    
                     const prevCount = lastLogCount;
                     lastLogCount = newLogs.length;
 
+                    // Actualizar estado global
                     state.logs = newLogs;
                     state.employees = d.employees || state.employees;
                     state.presentSet = new Set(d.presentSet || []);
                     state.stats = d.stats || state.stats;
                     state.usedTokens = new Set(d.usedTokens || []);
+                    state.adminConfig = d.adminConfig || state.adminConfig;
 
+                    // Guardar localmente y REDIBUJAR TODO
                     localStorage.setItem(STORE_KEY, JSON.stringify(d));
-                    updateDashboard();
+                    
+                    renderAll(); // <--- Esta línea redibuja absolutamente todo el dashboard solo
                     updateStationStats();
-                    renderLogs();
-                    renderEmployeeTable();
-                    renderReports();
 
                     if (newLogs.length > prevCount) {
                         const newEntries = newLogs.slice(prevCount);
@@ -417,11 +422,8 @@ function startPolling() {
         } catch (e) {
             failCount++;
             updateConnStatus(false, failCount);
-            if (failCount > 30) { // ~60 seconds of failure
-                console.warn('Long disconnection detected. Attempting full re-sync logic...');
-            }
         }
-    }, 2000);
+    }, 1500); // Consulta cada 1.5 segundos para máxima fluidez
 }
 
 function updateConnStatus(online, failCount = 0) {
