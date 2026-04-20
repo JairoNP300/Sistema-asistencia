@@ -2264,3 +2264,17 @@ body {
         display: none;
     }
 }
+
+/* APP NAVIGATION */
+@media (max-width: 768px) {
+    .sidebar { display: none !important; }
+    .main-wrap { margin-left: 0 !important; padding-bottom: 80px; }
+    .mobile-nav { 
+        display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; 
+        height: 70px; background: #0f172a; border-top: 1px solid #ffffff14; 
+        justify-content: space-around; align-items: center; z-index: 9999;
+    }
+    .m-nav-item { color: #94a3b8; font-size: 11px; display: flex; flex-direction: column; align-items: center; background: none; border: none; }
+    .m-nav-item.active { color: #818cf8; }
+}
+@media (min-width: 769px) { .mobile-nav { display: none !important; } }
