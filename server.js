@@ -23,6 +23,11 @@ app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname)));
 
+// Ruta principal para smartphones y monitoreo
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // --- DETECTAR IP ---
 function getLocalIP() {
     const interfaces = os.networkInterfaces();
