@@ -372,58 +372,38 @@ function updateStationStats() {
 
 /* ---- POLL SERVER FOR CHECKIN UPDATES ---- */
 function startPolling() {
+    console.log('👀 Vigilante de actualizaciones iniciado...');
     let lastLogCount = state.logs.length;
-    let failCount = 0;
 
     setInterval(async () => {
         try {
-            // Agregamos ?t= para evitar que el navegador cachee la respuesta
             const res = await fetch(`/api/data?t=${Date.now()}`, { cache: 'no-store' });
             if (res.ok) {
                 const d = await res.json();
-                failCount = 0;
-                updateConnStatus(true);
-
                 const newLogs = d.logs || [];
-                // Si la cantidad de logs cambió o el estado de presentes es diferente
-                if (newLogs.length !== lastLogCount || JSON.stringify(d.presentSet) !== JSON.stringify([...state.presentSet])) {
-                    console.log('🔄 Actualización detectada desde el servidor...');
-                    
-                    const prevCount = lastLogCount;
-                    lastLogCount = newLogs.length;
+                
+                // DIAGNÓSTICO: Esto aparecerá en tu consola (F12)
+                console.log(`🛰️ Consulta exitosa. Logs en servidor: ${newLogs.length}, Locales: ${lastLogCount}`);
 
-                    // Actualizar estado global
+                // Si hay CUALQUIER cambio en la cantidad de logs o presentes
+                if (newLogs.length !== lastLogCount || (d.presentSet && d.presentSet.length !== state.presentSet.size)) {
+                    console.warn('🚀 ¡CAMBIO DETECTADO! Actualizando interfaz...');
+                    
+                    lastLogCount = newLogs.length;
                     state.logs = newLogs;
                     state.employees = d.employees || state.employees;
                     state.presentSet = new Set(d.presentSet || []);
                     state.stats = d.stats || state.stats;
-                    state.usedTokens = new Set(d.usedTokens || []);
-                    state.adminConfig = d.adminConfig || state.adminConfig;
-
-                    // Guardar localmente y REDIBUJAR TODO
-                    localStorage.setItem(STORE_KEY, JSON.stringify(d));
                     
-                    renderAll(); // <--- Esta línea redibuja absolutamente todo el dashboard solo
+                    renderAll(); 
                     updateStationStats();
-
-                    if (newLogs.length > prevCount) {
-                        const newEntries = newLogs.slice(prevCount);
-                        newEntries.forEach(last => {
-                            if (last?.source === 'checkin') {
-                                const icon = last.type === 'entry' ? '🟢' : '🔴';
-                                showToast(`📱 ${icon} ${last.empName} — ${last.type === 'entry' ? 'Entrada' : 'Salida'}`, 'success');
-                            }
-                        });
-                    }
+                    showToast('🔄 Datos actualizados automáticamente', 'info');
                 }
-            } else {
-                throw new Error('Server error');
             }
         } catch (e) {
-            failCount++;
-            updateConnStatus(false, failCount);
+            console.error('❌ Error de conexión en polling:', e.message);
         }
-    }, 1500); // Consulta cada 1.5 segundos para máxima fluidez
+    }, 2000); 
 }
 
 function updateConnStatus(online, failCount = 0) {
