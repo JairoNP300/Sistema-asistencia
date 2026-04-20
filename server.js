@@ -82,6 +82,12 @@ if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('USUARIO:PASSWO
 
 // GET /api/data - Lectura compartida
 app.get('/api/data', async (req, res) => {
+    // 🔥 FORZAR NO CACHÉ (Artillería pesada)
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+
     try {
         let data;
         if (useMongo) {
