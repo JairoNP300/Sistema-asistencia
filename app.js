@@ -386,17 +386,24 @@ function startPolling() {
 
                 // Si hay CUALQUIER cambio en la cantidad de logs o presentes
                 if (newLogs.length !== lastLogCount || (d.presentSet && d.presentSet.length !== state.presentSet.size)) {
-                    console.warn('🚀 ¡CAMBIO DETECTADO! Actualizando interfaz...');
+                    console.warn('🚀 ¡ACTUALIZACIÓN GLOBAL DETECTADA! Sincronizando ecosistema...');
                     
                     lastLogCount = newLogs.length;
+                    
+                    // Sincronización total de datos
                     state.logs = newLogs;
                     state.employees = d.employees || state.employees;
                     state.presentSet = new Set(d.presentSet || []);
                     state.stats = d.stats || state.stats;
                     
+                    // Sincronización de configuración (Ecosistema uniforme)
+                    state.departments = d.departments || state.departments;
+                    state.adminConfig = d.adminConfig || state.adminConfig;
+                    state.config = d.config || state.config;
+                    
                     renderAll(); 
                     updateStationStats();
-                    showToast('🔄 Datos actualizados automáticamente', 'info');
+                    showToast('🔄 Ecosistema sincronizado en tiempo real', 'info');
                 }
             }
         } catch (e) {
