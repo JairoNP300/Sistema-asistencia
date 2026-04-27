@@ -377,6 +377,20 @@ app.post('/api/checkin', async (req, res) => {
             data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
         }
 
+        // ---- Validar geofence si hay configurados y el log trae ubicación ----
+        const geofences = (data.adminConfig && data.adminConfig.geofences) || data.geofences || [];
+        if (geofences.length > 0 && logEntry.location && logEntry.location.lat != null) {
+            const inside = geofences.some(g => isInsideGeofence(logEntry.location, g));
+            if (!inside) {
+                return res.status(403).json({
+                    error: 'GEOFENCE_VIOLATION',
+                    currentLocation: logEntry.location,
+                    allowedGeofences: geofences.map(g => ({ name: g.name, lat: g.lat, lon: g.lon, radiusMeters: g.radiusMeters }))
+                });
+            }
+            logEntry.geofenceValid = true;
+        }
+
         // Actualizar datos
         data.logs.push(logEntry);
         if (logEntry.type === 'entry') {
