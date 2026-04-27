@@ -1162,3 +1162,103 @@ async function loginSubmit() {
         showToast('Error de autenticación', 'error');
     }
 }
+
+/* ============================================================
+   GEOFENCES — Gestión de zonas geográficas permitidas
+   ============================================================ */
+
+async function renderGeofences() {
+    try {
+        const res = await fetch('/api/geofences');
+        const data = res.ok ? await res.json() : { geofences: [] };
+        const list = data.geofences || [];
+        const el = document.getElementById('geofencesList');
+        if (!el) return;
+        if (!list.length) {
+            el.innerHTML = '<div class="empty-feed">No hay geofences configurados. Agrega uno arriba.</div>';
+            return;
+        }
+        el.innerHTML = list.map(g => `
+            <div class="activity-item" style="align-items:center">
+                <div class="activity-avatar" style="background:rgba(99,102,241,0.15);color:#6366f1">📍</div>
+                <div class="activity-body">
+                    <div class="activity-name">${g.name}</div>
+                    <div class="activity-detail">
+                        Lat: ${Number(g.lat).toFixed(5)} · Lon: ${Number(g.lon).toFixed(5)} · Radio: ${g.radiusMeters}m
+                    </div>
+                </div>
+                <a href="https://maps.google.com/?q=${g.lat},${g.lon}" target="_blank"
+                   style="font-size:0.75rem;color:var(--primary);text-decoration:none;margin-right:8px">🗺 Ver</a>
+                <button class="btn-table del" onclick="deleteGeofence('${g.id}')">🗑</button>
+            </div>`).join('');
+    } catch (e) {
+        showToast('Error cargando geofences: ' + e.message, 'error');
+    }
+}
+
+async function addGeofence() {
+    const name = document.getElementById('gfName')?.value.trim();
+    const lat  = parseFloat(document.getElementById('gfLat')?.value);
+    const lon  = parseFloat(document.getElementById('gfLon')?.value);
+    const radiusMeters = parseInt(document.getElementById('gfRadius')?.value);
+
+    if (!name || isNaN(lat) || isNaN(lon) || isNaN(radiusMeters) || radiusMeters <= 0) {
+        showToast('⚠️ Completa todos los campos correctamente', 'warning');
+        return;
+    }
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        showToast('⚠️ Coordenadas fuera de rango', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/geofences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, lat, lon, radiusMeters })
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        showToast(`✅ Geofence "${name}" agregado`, 'success');
+        // Limpiar campos
+        ['gfName','gfLat','gfLon','gfRadius'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        renderGeofences();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteGeofence(id) {
+    showConfirm('Eliminar Geofence', '¿Eliminar esta zona geográfica?', async () => {
+        try {
+            const res = await fetch(`/api/geofences/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error((await res.json()).error || 'Error');
+            showToast('🗑 Geofence eliminado', 'warning');
+            renderGeofences();
+        } catch (e) {
+            showToast('❌ Error: ' + e.message, 'error');
+        }
+    });
+}
+
+/* ---- Obtener ubicación actual del admin (para autocompletar geofence) ---- */
+function useMyLocation() {
+    if (!('geolocation' in navigator)) {
+        showToast('GPS no disponible en este navegador', 'warning');
+        return;
+    }
+    showToast('📡 Obteniendo tu ubicación…', 'info');
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            const latEl = document.getElementById('gfLat');
+            const lonEl = document.getElementById('gfLon');
+            if (latEl) latEl.value = pos.coords.latitude.toFixed(6);
+            if (lonEl) lonEl.value = pos.coords.longitude.toFixed(6);
+            showToast(`📍 Ubicación obtenida (±${Math.round(pos.coords.accuracy)}m)`, 'success');
+        },
+        err => showToast('⚠️ No se pudo obtener ubicación: ' + err.message, 'warning'),
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
