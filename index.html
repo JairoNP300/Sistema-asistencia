@@ -951,15 +951,19 @@
         <!-- === GEOFENCES === -->
         <section class="page" id="page-geofences">
           <div class="panel">
-            <div class="panel-header"><h3>&#128205; Geofences</h3></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
-              <div><label class="form-label">Nombre</label><input type="text" id="gfName" class="form-input" placeholder="Oficina Central" style="width:100%" /></div>
+            <div class="panel-header"><h3>📍 Geofences — Zonas Permitidas</h3></div>
+            <p class="info-text muted" style="margin-bottom:16px">Define zonas geográficas. Los empleados solo podrán registrar asistencia si están dentro de una zona activa.</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px">
+              <div><label class="form-label">Nombre de la zona</label><input type="text" id="gfName" class="form-input" placeholder="Oficina Central" style="width:100%" /></div>
               <div><label class="form-label">Latitud</label><input type="number" id="gfLat" class="form-input" placeholder="19.4326" step="any" style="width:100%" /></div>
               <div><label class="form-label">Longitud</label><input type="number" id="gfLon" class="form-input" placeholder="-99.1332" step="any" style="width:100%" /></div>
               <div><label class="form-label">Radio (metros)</label><input type="number" id="gfRadius" class="form-input" placeholder="100" style="width:100%" /></div>
             </div>
-            <button class="btn-primary" onclick="addGeofence()">Agregar Geofence</button>
-            <div class="panel-header" style="margin-top:20px"><h3>Geofences Configurados</h3></div>
+            <div style="display:flex;gap:8px;margin-bottom:24px">
+              <button class="btn-primary" onclick="addGeofence()">+ Agregar Geofence</button>
+              <button class="btn-ghost" onclick="useMyLocation()" title="Usar mi ubicación actual">📡 Usar mi ubicación</button>
+            </div>
+            <div class="panel-header" style="margin-top:4px"><h3>Zonas Configuradas</h3></div>
             <div id="geofencesList" class="activity-feed"><div class="empty-feed">No hay geofences configurados.</div></div>
           </div>
         </section>
