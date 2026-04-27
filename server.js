@@ -20,8 +20,6 @@ const SECRET = process.env.JWT_SECRET || 'qr_asistencia_secret';
 
 // --------- Auth helpers ---------
 function requireAuth(req, res, next) {
-    // Permit login endpoint without token
-    if (req.path.startsWith('/api/auth/login')) return next();
     const auth = req.headers['authorization'];
     if (!auth) return res.status(401).json({ error: 'No autorizado' });
     const parts = auth.split(' ');
@@ -36,8 +34,7 @@ function requireAuth(req, res, next) {
     }
 }
 
-// Apply to API routes (except login)
-app.use('/api', requireAuth);
+// --- APP INIT (debe ir ANTES de cualquier app.use) ---
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
@@ -46,6 +43,13 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 app.use(express.static(path.join(__dirname)));
+
+// Apply auth to API routes, except login and checkin (used by mobile devices without JWT)
+app.use('/api', (req, res, next) => {
+    if (req.path === '/auth/login') return next();
+    if (req.path === '/checkin') return next();
+    requireAuth(req, res, next);
+});
 
 // Ruta principal para smartphones y monitoreo
 app.get('/', (req, res) => {
@@ -140,7 +144,7 @@ app.get('/api/data', async (req, res) => {
         }
 
         if (!data) return res.status(404).json({ error: 'System state not found' });
-        
+
         // Reset diario automático
         const today = new Date().toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
         if (data.currentDate && data.currentDate !== today) {
@@ -186,8 +190,6 @@ app.post('/api/auth/login', async (req, res) => {
             const defaultUser = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
             const defaultPass = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
             if (username === defaultUser && password === defaultPass) {
-                // Crear usuario en memoria para esta sesión es complejo; responder que no autorizado
-                // En producción, seed inicial crea el usuario; aquí permitimos login temporal si Mongo no está configurado
                 const payload = { uid: 'local-admin', username, role: 'admin' };
                 const token = jwt.sign(payload, SECRET, { expiresIn: '24h' });
                 return res.json({ token, user: { id: payload.uid, username, name: 'Admin Local', role: 'admin' } });
@@ -255,7 +257,7 @@ app.post('/api/entries', async (req, res) => {
             data.stats.exits = (data.stats.exits || 0) + 1;
         }
         if (emp) emp.lastAccess = now.toISOString();
-        if (req.body.tokenNonce) data.usedTokens = data.usedTokens || []; data.usedTokens.push(req.body.tokenNonce);
+        if (req.body.tokenNonce) { data.usedTokens = data.usedTokens || []; data.usedTokens.push(req.body.tokenNonce); }
         if (useMongo) await data.save(); else fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
         res.json({ success: true, log: logEntry });
     } catch (e) {
@@ -332,12 +334,12 @@ app.post('/api/employees/upsert', async (req, res) => {
     }
 });
 
-// POST /api/checkin - Registro de acceso desde móviles
+// POST /api/checkin - Registro de acceso desde móviles (sin auth requerida)
 app.post('/api/checkin', async (req, res) => {
     try {
         const logEntry = req.body;
         let data;
-        
+
         if (useMongo) {
             data = await State.findOne();
         } else {
@@ -361,7 +363,7 @@ app.post('/api/checkin', async (req, res) => {
         if (logEntry.tokenNonce) data.usedTokens.push(logEntry.tokenNonce);
 
         if (useMongo) await data.save(); else fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-        
+
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -379,7 +381,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌍 Modo: ${useMongo ? 'Sincronizado con Atlas' : 'Local (Esperando .env)'}`);
     console.log(`📍 IP: http://${getLocalIP()}:${PORT}`);
     console.log(`=========================================`);
-    
+
     // Abrir automáticamente el navegador en la PC del usuario
     require('child_process').exec(`start http://localhost:${PORT}`);
 });
