@@ -910,8 +910,7 @@ app.get('/api/invoicing/:id/export', async (req, res) => {
     if (fmt === 'json') return res.json(invoice);
     const headers = ['empId','empName','hours','rate','amount'];
     const rows = invoice.lineItems.map(l => [l.empId, l.empName, l.hours, l.rate, l.amount]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('
-');
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="invoice.csv"');
     res.send(csv);
@@ -974,8 +973,7 @@ app.get('/api/reports/advanced', async (req, res) => {
     if (format === 'csv') {
       const headers = ['empId','empName','dept','projectId','clockIn','clockOut','hours','source'];
       const csvRows = rows.map(r => [r.empId, r.empName, r.dept, r.projectId, r.clockIn, r.clockOut, r.hours, r.source]);
-      const csv = [headers, ...csvRows].map(r => r.join(',')).join('
-');
+      const csv = [headers, ...csvRows].map(r => r.join(',')).join('\n');
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename="report.csv"');
       return res.send(csv);
