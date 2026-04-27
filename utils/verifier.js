@@ -12,6 +12,12 @@
  * @returns {number} distancia en metros
  */
 function haversineDistance(lat1, lon1, lat2, lon2) {
+    // Validar que todas las coordenadas sean números finitos
+    if (!Number.isFinite(lat1) || !Number.isFinite(lon1) || 
+        !Number.isFinite(lat2) || !Number.isFinite(lon2)) {
+        return 0;
+    }
+    
     const R = 6371000; // radio de la Tierra en metros
     const toRad = deg => (deg * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
