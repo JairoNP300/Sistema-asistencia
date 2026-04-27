@@ -705,6 +705,18 @@ function renderEmployeeTable() {
 
 function goToQR(empId) { showPage('generate'); selectEmpForQR(empId); }
 
+/* ---- SELECT EMPLOYEE FOR QR (Generate page) ---- */
+function selectEmpForQR(empId) {
+    state.selectedEmpForQR = empId;
+    // The generate page uses station QR mode — just show the page
+    // Individual employee QR is handled via station token
+}
+
+async function generateAndShowQR() {
+    // Re-render station QR after key rotation
+    await renderStationQR();
+}
+
 /* ---- EMPLOYEE CRUD ---- */
 function openEmpModal(emp = null) {
     document.getElementById('empModalTitle').textContent = emp ? 'Editar Empleado' : 'Nuevo Empleado';
