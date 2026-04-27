@@ -41,7 +41,13 @@ const LogSchema = new mongoose.Schema({
     tokenNonce: String,
     status: String,
     reason: String,
-    source: String
+    source: String,
+    location: {
+        lat: Number,
+        lon: Number,
+        accuracy: Number
+    },
+    geofenceValid: Boolean
 });
 
 const StateSchema = new mongoose.Schema({
