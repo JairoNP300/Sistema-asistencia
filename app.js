@@ -803,6 +803,11 @@ function renderLogs() {
         const typeClass = l.type === 'entry' ? 'type-entry' : l.type === 'exit' ? 'type-exit' : 'type-rejected';
         const typeLabel = l.type === 'entry' ? '🟢 Entrada' : l.type === 'exit' ? '🔴 Salida' : '⛔ Rechazado';
         const statusClass = l.status === 'valid' ? 'status-active' : 'status-inactive';
+        const gpsCell = l.location && l.location.lat != null
+            ? `<a href="https://maps.google.com/?q=${l.location.lat},${l.location.lon}" target="_blank"
+                  title="${l.location.lat.toFixed(5)}, ${l.location.lon.toFixed(5)}"
+                  style="color:var(--primary);text-decoration:none;font-size:1rem">📍</a>`
+            : '<span style="color:var(--text-muted);font-size:0.75rem">—</span>';
         return `<tr>
       <td><span class="token-mono">${list.length - i}</span></td>
       <td>${l.empName}</td>
@@ -810,6 +815,7 @@ function renderLogs() {
       <td><span class="token-mono">${formatDateTime(l.ts)}</span></td>
       <td><span class="token-mono">${l.tokenNonce?.slice(0, 12) || '—'}…</span></td>
       <td><span class="status-chip ${statusClass}">${l.status === 'valid' ? '✓ Válido' : '✗ Rechazado'}</span></td>
+      <td>${gpsCell}</td>
       <td style="font-size:0.8rem;color:var(--text-muted)">${l.reason}</td>
     </tr>`;
     }).join('');
