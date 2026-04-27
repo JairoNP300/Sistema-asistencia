@@ -148,105 +148,37 @@ Definición de zonas geográficas permitidas para registro de asistencia.
 
 ## 🌐 Deploy en Render (Auto-Deploy Activado)
 
-El sistema está configurado para auto-deploy completo:
-
-### Flujo de Deployment Automático:
+El sistema está deployado en:
 ```
-Cambios Locales → Git Push → GitHub → Render (Auto-Deploy) → Producción
+https://sistema-asistencia-s0m2.onrender.com
 ```
 
-### Configuración Inicial en Render:
+### Auto-Deploy Configurado
 
-1. **Conectar Repositorio**
-   - Ve a [Render Dashboard](https://dashboard.render.com/)
-   - Click en "New +" → "Web Service"
-   - Conecta tu repositorio: `https://github.com/JairoNP300/Sistema-asistencia`
-   - Branch: `main`
+Cada push a la rama `main` en GitHub activa automáticamente un redeploy en Render.
 
-2. **Configurar el Servicio**
-   - Name: `qr-asistencia` (o el nombre que prefieras)
-   - Environment: `Node`
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Plan: `Free` (o el que prefieras)
-
-3. **Variables de Entorno (CRÍTICO)**
-   
-   En la sección "Environment Variables", agrega:
-   
-   ```
-   MONGODB_URI=mongodb+srv://Zetino19:JairoZetino22@cnad.zyac7wv.mongodb.net/qr_asistencia?retryWrites=true&w=majority&appName=CNAD
-   JWT_SECRET=qr_asistencia_secret_key_production_2024
-   DEFAULT_ADMIN_USERNAME=admin
-   DEFAULT_ADMIN_PASSWORD=admin123
-   NODE_ENV=production
-   ```
-
-4. **Activar Auto-Deploy**
-   - En "Settings" → "Build & Deploy"
-   - Asegúrate que "Auto-Deploy" esté en **Yes**
-   - Esto hace que cada push a `main` redeploy automáticamente
-
-### Uso del Sistema de Auto-Deploy Local:
-
-El archivo `watch-deploy.js` detecta cambios y los sube automáticamente:
-
-```bash
-# Iniciar el sistema completo (incluye watch-deploy)
-INICIAR_SISTEMA.bat
-
-# O manualmente:
-node watch-deploy.js
+**Flujo:**
+```
+Cambios → Git Push → GitHub → Render (Auto-Deploy) → Producción
 ```
 
-**Flujo Automático:**
-1. Haces cambios en cualquier archivo
-2. `watch-deploy.js` detecta el cambio
-3. Automáticamente hace: `git add` → `git commit` → `git push`
-4. GitHub recibe el push
-5. Render detecta el push y redeploya automáticamente
-6. En ~2 minutos, los cambios están en producción
+### Variables de Entorno en Render
 
-### URL de Producción:
+Las siguientes variables están configuradas en Render:
 
-Una vez deployado, Render te dará una URL como:
 ```
-https://qr-asistencia.onrender.com
+MONGODB_URI=mongodb+srv://...
+JWT_SECRET=...
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=admin123
+NODE_ENV=production
 ```
 
-O tu dominio personalizado si lo configuraste.
+### Monitoreo
 
-### Verificar Deployment:
-
-1. **Logs en Render:**
-   - Ve a tu servicio en Render Dashboard
-   - Click en "Logs" para ver el deployment en tiempo real
-
-2. **Estado del Servicio:**
-   - El badge debe mostrar "Live" en verde
-   - Si hay errores, revisa los logs
-
-### Troubleshooting:
-
-**Si el deployment falla:**
-1. Verifica que todas las variables de entorno estén configuradas
-2. Revisa los logs en Render Dashboard
-3. Asegúrate que `MONGODB_URI` sea válido y accesible
-
-**Si los cambios no se reflejan:**
-1. Verifica que el push llegó a GitHub: `git log`
-2. Verifica que Auto-Deploy esté activado en Render
-3. Fuerza un redeploy manual desde Render Dashboard
-
-**Si MongoDB no conecta:**
-1. Verifica que la IP de Render esté en la whitelist de MongoDB Atlas
-2. En MongoDB Atlas → Network Access → Add IP Address → "Allow Access from Anywhere" (0.0.0.0/0)
-
-### Monitoreo:
-
-- **Logs en tiempo real:** Render Dashboard → Logs
-- **Métricas:** Render Dashboard → Metrics
-- **Uptime:** Render mantiene el servicio activo 24/7
+- **Logs**: Render Dashboard → Logs
+- **Métricas**: Render Dashboard → Metrics
+- **Estado**: Badge "Live" = funcionando correctamente
 
 ## 🐛 Solución de Problemas
 
