@@ -100,11 +100,9 @@
                 </button>
                 <button class="nav-item" id="nav-timer" onclick="showPage('timer')">&#9201; Timer</button>
                 <button class="nav-item" id="nav-timeoff" onclick="showPage('timeoff')">&#127958; Time Off</button>
-                <button class="nav-item" id="nav-approvals" onclick="showPage('approvals')">&#9989; Aprobaciones</button>
                 <button class="nav-item" id="nav-schedules" onclick="showPage('schedules')">&#128197; Horarios</button>
                 <button class="nav-item" id="nav-groups" onclick="showPage('groups')">&#128101; Grupos</button>
                 <button class="nav-item" id="nav-projects" onclick="showPage('projects')">&#128193; Proyectos</button>
-                <button class="nav-item" id="nav-invoicing" onclick="showPage('invoicing')">&#128176; Facturacion</button>
                 <button class="nav-item" id="nav-reports-advanced" onclick="showPage('reports-advanced')">&#128202; Reportes Avanzados</button>
                 <button class="nav-item" id="nav-geofences" onclick="showPage('geofences')">&#128205; Geofences</button>
             </div>
@@ -852,13 +850,7 @@
           </div>
         </section>
 
-        <!-- === APPROVALS === -->
-        <section class="page" id="page-approvals">
-          <div class="panel">
-            <div class="panel-header"><h3>&#9989; Aprobaciones</h3><button class="btn-ghost sm" onclick="renderApprovals()">Refrescar</button></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Tipo</th><th>Empleado</th><th>Referencia</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="approvalsTableBody"></tbody></table></div>
-          </div>
-        </section>
+        <!-- === APPROVALS - REMOVED === -->
 
         <!-- === SCHEDULES === -->
         <section class="page" id="page-schedules">
@@ -910,20 +902,7 @@
           </div>
         </section>
 
-        <!-- === INVOICING === -->
-        <section class="page" id="page-invoicing">
-          <div class="panel">
-            <div class="panel-header"><h3>&#128176; Facturacion</h3></div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end">
-              <div><label class="form-label">Proyecto</label><select id="invProject" class="form-input" style="width:200px"><option value="">Seleccionar...</option></select></div>
-              <div><label class="form-label">Periodo inicio</label><input type="date" id="invStart" class="form-input" /></div>
-              <div><label class="form-label">Periodo fin</label><input type="date" id="invEnd" class="form-input" /></div>
-              <button class="btn-primary" onclick="generateInvoice()">Generar Factura</button>
-            </div>
-            <div class="panel-header" style="margin-top:20px"><h3>Facturas</h3></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Proyecto</th><th>Periodo</th><th>Horas</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="invoicingTableBody"></tbody></table></div>
-          </div>
-        </section>
+        <!-- === INVOICING - REMOVED === -->
 
         <!-- === REPORTS ADVANCED === -->
         <section class="page" id="page-reports-advanced">
