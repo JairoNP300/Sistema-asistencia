@@ -74,7 +74,14 @@ const StateSchema = new mongoose.Schema({
     secretKey: String,
     usedTokens: [String],
     securityLog: [mongoose.Schema.Types.Mixed],
-    history: mongoose.Schema.Types.Map
+    history: mongoose.Schema.Types.Map,
+    geofences: [{
+        id: String,
+        name: String,
+        lat: Number,
+        lon: Number,
+        radiusMeters: Number
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('State', StateSchema);
