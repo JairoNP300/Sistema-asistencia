@@ -1167,7 +1167,7 @@ async function loginSubmit() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: u, password: p })
         });
-        if (!res.ok) { document.getElementById('loginError')?.style.display = 'block'; return; }
+        if (!res.ok) { document.getElementById('loginError').style.display = 'block'; return; }
         const data = await res.json();
         localStorage.setItem('jwt', data.token);
         hideLoginOverlay();
