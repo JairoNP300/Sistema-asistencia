@@ -14,7 +14,21 @@ let state = {
 };
 
 /* ---- INIT ---- */
+// Global fetch wrapper to automatically attach JWT when available
+(function() {
+    const orig = window.fetch.bind(window);
+    window.fetch = function(input, init = {}) {
+        init.headers = init.headers || {};
+        const token = localStorage.getItem('jwt');
+        if (token) init.headers['Authorization'] = 'Bearer ' + token;
+        return orig(input, init);
+    };
+})();
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // If no token yet, prompt login and halt further initialization
+    const token = localStorage.getItem('jwt');
+    if (!token) { showLoginOverlay(); return; }
     await loadFromStorage();
     if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
     if (!state.employees.length) seedDemoEmployees();
@@ -26,6 +40,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     startPolling();
     initWakeLock();
     showPage('dashboard');
+    // Initialize Jibble MVP panel UI
+    initJibblePanelUI();
 });
 
 /* ---- SCREEN WAKE LOCK (Keep display on) ---- */
@@ -178,6 +194,100 @@ function renderAll() {
     renderSecurityPage();
     renderAdminPage();
     fillDeptDropdowns();
+    // Ensure the Jibble MVP UI is populated alongside other data
+    populateJibbleUIElements();
+}
+
+// --- Jibble MVP UI helpers ---
+function initJibblePanelUI() {
+    // Prepare static select options for employees on the MVP panel
+    const empOptions = (state.employees || []).filter(e => e.status === 'active')
+        .map(e => `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.empNum})</option>`)
+        .join('');
+    const sel = document.getElementById('jb_empSelect');
+    if (sel) sel.innerHTML = `<option value="">Seleccionar empleado...</option>${empOptions}`;
+    // Populate range options for reports/exports
+    const rep = document.getElementById('jb_reportRange');
+    if (rep) rep.innerHTML = `<option value="today">Hoy</option><option value="week">Esta semana</option>`;
+    const exp = document.getElementById('jb_exportRange');
+    if (exp) exp.innerHTML = `<option value="today">Hoy</option><option value="week">Esta semana</option>`;
+}
+
+async function populateJibbleUIElements() {
+    // Fill presentes immediately if available
+    await jbRefreshPresent();
+}
+
+async function jbRefreshPresent() {
+    try {
+        const res = await fetch('/api/attendance/present');
+        if (!res.ok) throw new Error('No se pudo obtener presencia');
+        const data = await res.json();
+        const wrap = document.getElementById('jb_presentList');
+        if (!wrap) return;
+        wrap.innerHTML = (data.present || [])
+            .map(p => `<div class="present-item">${p.avatar || p.name?.[0] || '👤'} ${p.name} <small>(${p.dept || ''} • ${p.empNum || ''})</small></div>`)
+            .join('') || '<div class="empty-feed">Sin presencia</div>';
+    } catch (e) {
+        console.warn('JB: error obteniendo presentes', e.message);
+    }
+}
+
+async function jbRegister(type) {
+    const sel = document.getElementById('jb_empSelect');
+    const empId = sel?.value;
+    if (!empId) { showToast('Selecciona un empleado', 'warning'); return; }
+    const payload = { empId, type, ts: new Date().toISOString() };
+    try {
+        const res = await fetch('/api/entries', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Fallo al registrar');
+        const data = await res.json();
+        showToast(`✅ ${type === 'entry' ? 'Entrada' : 'Salida'} registrada`, 'success');
+        await jbRefreshPresent();
+        jbShowSummary();
+        // Update any existing logs/panels if needed
+    } catch (e) {
+        showToast('❌ Error registrando: ' + e.message, 'error');
+    }
+}
+
+async function jbShowSummary() {
+    const range = document.getElementById('jb_reportRange')?.value || 'today';
+    try {
+        const res = await fetch(`/api/reports/summary?range=${range}`);
+        if (!res.ok) throw new Error('No se pudo obtener resumen');
+        const data = await res.json();
+        const out = JSON.stringify(data, null, 2);
+        const el = document.getElementById('jb_reportResult');
+        if (el) el.textContent = out;
+        // Also show human-friendly tip
+        showToast('Resumen obtenido', 'info');
+    } catch (e) {
+        showToast('❌ Error obteniendo resumen: ' + e.message, 'error');
+    }
+}
+
+async function jbExportLogs() {
+    const range = document.getElementById('jb_exportRange')?.value || 'today';
+    try {
+        const res = await fetch('/api/export/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ range })
+        });
+        if (!res.ok) throw new Error('Exportación fallida');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'logs.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        const status = document.getElementById('jb_exportStatus'); if (status) status.textContent = 'Descarga iniciada';
+    } catch (e) {
+        showToast('❌ Error exportando: ' + e.message, 'error');
+    }
 }
 
 /* ---- DASHBOARD ---- */
@@ -1000,4 +1110,37 @@ function downloadFile(name, content, mime) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([content], { type: mime }));
     a.download = name; a.click();
+}
+
+// --- Login UI and auto-auth wiring ---
+function showLoginOverlay() {
+    const el = document.getElementById('loginOverlay');
+    if (el) el.style.display = 'flex';
+    if (document.getElementById('loginError')) document.getElementById('loginError').style.display = 'none';
+    // clear fields
+    if (document.getElementById('loginUser')) document.getElementById('loginUser').value = '';
+    if (document.getElementById('loginPass')) document.getElementById('loginPass').value = '';
+}
+function hideLoginOverlay() {
+    const el = document.getElementById('loginOverlay');
+    if (el) el.style.display = 'none';
+}
+async function loginSubmit() {
+    const u = document.getElementById('loginUser')?.value;
+    const p = document.getElementById('loginPass')?.value;
+    if (!u || !p) { showToast('Ingresa credenciales', 'warning'); return; }
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+        });
+        if (!res.ok) { document.getElementById('loginError')?.style.display = 'block'; return; }
+        const data = await res.json();
+        localStorage.setItem('jwt', data.token);
+        hideLoginOverlay();
+        location.reload();
+    } catch (e) {
+        showToast('Error de autenticación', 'error');
+    }
 }
