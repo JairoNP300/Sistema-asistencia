@@ -2,6 +2,19 @@
 
 Sistema completo de control de asistencia con códigos QR dinámicos, seguridad criptográfica HMAC-SHA256 e integración Jibble para gestión avanzada de tiempo.
 
+## 🌐 Acceso al Sistema
+
+**URL de Producción:**
+```
+https://sistema-asistencia-s0m2.onrender.com
+```
+
+**Credenciales de Acceso:**
+```
+Usuario: admin
+Contraseña: admin123
+```
+
 ## ✨ Características Principales
 
 - 📱 **Códigos QR Dinámicos**: Rotación automática cada 30 segundos con firma HMAC-SHA256
@@ -12,115 +25,6 @@ Sistema completo de control de asistencia con códigos QR dinámicos, seguridad 
 - 👥 **Grupos y Proyectos**: Organización de empleados y seguimiento de proyectos
 - 📊 **Reportes Avanzados**: Exportación CSV/XLS con filtros personalizados
 - 🔄 **Auto-Deploy**: Sincronización automática con GitHub y Render
-
-## 🚀 Inicio Rápido
-
-### Opción 1: Inicio Automático (Recomendado)
-
-Simplemente ejecuta el archivo:
-
-```
-INICIAR_SISTEMA.bat
-```
-
-Esto iniciará automáticamente:
-1. ✅ Verificación e instalación de dependencias
-2. ✅ Servidor Node.js en puerto 3000
-3. ✅ Watch-deploy para sincronización automática
-4. ✅ Navegador web con la aplicación
-
-### Opción 2: Inicio Manual
-
-```bash
-# Instalar dependencias (solo la primera vez)
-npm install
-
-# Iniciar el servidor
-npm start
-
-# En otra terminal, iniciar watch-deploy (opcional)
-node watch-deploy.js
-```
-
-## 🛑 Detener el Sistema
-
-Ejecuta el archivo:
-
-```
-DETENER_SISTEMA.bat
-```
-
-O cierra las ventanas de terminal que se abrieron.
-
-## ⚙️ Configuración
-
-### Archivo .env
-
-El sistema crea automáticamente un archivo `.env` con la configuración básica. Puedes editarlo para personalizar:
-
-```env
-# Puerto del servidor
-PORT=3000
-
-# MongoDB Atlas (requerido para sincronización en la nube)
-MONGODB_URI=mongodb+srv://USUARIO:PASSWORD@cluster.mongodb.net/qr-asistencia
-
-# Seguridad JWT
-JWT_SECRET=tu_clave_secreta_aqui
-
-# Credenciales de administrador por defecto
-DEFAULT_ADMIN_USERNAME=admin
-DEFAULT_ADMIN_PASSWORD=admin123
-
-# Entorno
-NODE_ENV=production
-```
-
-### MongoDB Atlas
-
-Para habilitar la sincronización en la nube:
-
-1. Crea una cuenta gratuita en [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Crea un cluster gratuito
-3. Obtén tu connection string
-4. Actualiza `MONGODB_URI` en el archivo `.env`
-
-**Nota**: El sistema puede funcionar en modo local sin MongoDB, pero no habrá sincronización entre dispositivos.
-
-## 📱 Acceso
-
-### Desde la misma computadora:
-```
-http://localhost:3000
-```
-
-### Desde otros dispositivos en la misma red:
-```
-http://[TU-IP-LOCAL]:3000
-```
-
-Para encontrar tu IP local:
-- Windows: `ipconfig` en CMD
-- Mac/Linux: `ifconfig` en Terminal
-
-### Credenciales por defecto:
-- **Usuario**: admin
-- **Contraseña**: admin123
-
-## 🧪 Tests
-
-El sistema incluye property-based tests para validar la lógica crítica:
-
-```bash
-npm test
-```
-
-Tests incluidos:
-- ✅ Distancia haversine (geolocalización)
-- ✅ Geofencing (zonas permitidas)
-- ✅ Cálculo de días hábiles
-- ✅ Validación de selfie requerida
-- ✅ Totales de facturación
 
 ## 📦 Estructura del Proyecto
 
