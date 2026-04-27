@@ -60,6 +60,27 @@ Sistema-asistencia-main/
 - **Testing**: fast-check (property-based testing)
 - **Deploy**: Render (auto-deploy desde GitHub)
 
+## 🔄 Auto-Deploy
+
+El sistema está configurado con auto-deploy en Render:
+
+1. Haz cambios en el código
+2. Haz commit y push a GitHub:
+   ```bash
+   git add .
+   git commit -m "Descripción de cambios"
+   git push origin main
+   ```
+3. Render detecta el push y redeploya automáticamente
+4. Los cambios están en producción en ~2 minutos
+
+**Alternativamente**, usa `watch-deploy.js` para auto-deploy automático:
+```bash
+node watch-deploy.js
+```
+
+Esto detecta cambios en archivos y los sube automáticamente a GitHub.
+
 ## 📚 Módulos Principales
 
 ### 1. Dashboard
