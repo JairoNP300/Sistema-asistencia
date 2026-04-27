@@ -323,6 +323,27 @@ app.post('/api/export/logs', async (req, res) => {
     }
 });
 
+// DELETE /api/employees/:id - Eliminar empleado
+app.delete('/api/employees/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (useMongo) {
+            const st = await State.findOne();
+            st.employees = st.employees.filter(e => e.id !== id);
+            st.presentSet = (st.presentSet || []).filter(pid => pid !== id);
+            await st.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            data.employees = data.employees.filter(e => e.id !== id);
+            data.presentSet = (data.presentSet || []).filter(pid => pid !== id);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // POST /api/employees/upsert - Actualización atómica de empleado
 app.post('/api/employees/upsert', async (req, res) => {
     try {
