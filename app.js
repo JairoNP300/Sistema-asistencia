@@ -162,6 +162,15 @@ const pageTitles = {
     reports: ['Reportes', 'Estadísticas y análisis'],
     security: ['Seguridad', 'Criptografía y configuración de tokens'],
     admin: ['Configuración', 'Ajustes del sistema'],
+    timer: ['Timer', 'Registro de tiempo en tiempo real'],
+    timeoff: ['Time Off', 'Gestión de ausencias y permisos'],
+    approvals: ['Aprobaciones', 'Revisión y aprobación de registros'],
+    schedules: ['Horarios', 'Programación de turnos de trabajo'],
+    groups: ['Grupos', 'Organización del equipo'],
+    projects: ['Proyectos', 'Seguimiento de tiempo por proyecto'],
+    invoicing: ['Facturación', 'Resumen facturable por proyecto'],
+    'reports-advanced': ['Reportes Avanzados', 'Análisis detallado de asistencia y tiempo'],
+    geofences: ['Geofences', 'Zonas geográficas permitidas'],
 };
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -178,6 +187,15 @@ function showPage(id) {
     if (id === 'reports') renderReports();
     if (id === 'security') renderSecurityPage();
     if (id === 'admin') renderAdminPage();
+    if (id === 'timer') renderTimer();
+    if (id === 'timeoff') renderTimeOff();
+    if (id === 'approvals') renderApprovals();
+    if (id === 'schedules') renderSchedules();
+    if (id === 'groups') renderGroups();
+    if (id === 'projects') renderProjects();
+    if (id === 'invoicing') renderInvoicing();
+    if (id === 'reports-advanced') renderReportsAdvanced();
+    if (id === 'geofences') renderGeofences();
 }
 
 function toggleSidebar() {
