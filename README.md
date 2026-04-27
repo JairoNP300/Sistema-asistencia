@@ -182,30 +182,23 @@ NODE_ENV=production
 
 ## 🐛 Solución de Problemas
 
-### El servidor no inicia
+### El sistema no carga en Render
 
-1. Verifica que Node.js esté instalado: `node --version`
-2. Verifica que las dependencias estén instaladas: `npm install`
-3. Revisa el archivo `.env` para configuración correcta
-4. Verifica que el puerto 3000 no esté en uso
+1. Verifica que el servicio esté "Live" en Render Dashboard
+2. Revisa los logs en Render para ver errores
+3. Verifica que todas las variables de entorno estén configuradas
 
 ### No se conecta a MongoDB
 
-1. Verifica que `MONGODB_URI` esté correctamente configurado en `.env`
-2. Verifica que tu IP esté en la whitelist de MongoDB Atlas
+1. Verifica que `MONGODB_URI` esté correctamente configurado en Render
+2. Verifica que tu IP esté en la whitelist de MongoDB Atlas (0.0.0.0/0)
 3. El sistema puede funcionar en modo local sin MongoDB
 
-### Watch-deploy no funciona
+### Los cambios no se reflejan en producción
 
-1. Verifica que Git esté instalado: `git --version`
-2. Verifica que el repositorio esté configurado: `git remote -v`
-3. Verifica tus credenciales de Git
-
-### Tests fallan
-
-1. Verifica que fast-check esté instalado: `npm install`
-2. Ejecuta los tests: `npm test`
-3. Revisa los errores específicos en la salida
+1. Verifica que el push llegó a GitHub: `git log`
+2. Verifica que Auto-Deploy esté activado en Render
+3. Fuerza un redeploy manual desde Render Dashboard
 
 ## 📄 Licencia
 
