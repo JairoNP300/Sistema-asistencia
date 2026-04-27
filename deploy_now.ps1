@@ -6,7 +6,7 @@ $status = git status --porcelain
 if ($status) {
     git commit -m "GPS + Geofences: ubicacion en tiempo real ($ts)"
     git push origin main
-    Write-Host "✅ Cambios subidos a GitHub. Render actualizara en ~2 minutos."
+    Write-Host "OK - Cambios subidos a GitHub. Render actualizara en ~2 minutos."
 } else {
-    Write-Host "ℹ️ No hay cambios nuevos para subir."
+    Write-Host "INFO - No hay cambios nuevos para subir."
 }
