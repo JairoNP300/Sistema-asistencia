@@ -1,37 +1,46 @@
 /**
- * verifier.js — Utilidades de verificación para Jibble Integration
- * Haversine, Geofencing, Días hábiles, Totales de factura
+ * QR-Asistencia — Utilidades de verificación Jibble
+ * Funciones puras: haversine, geofencing, días hábiles, totales de factura
  */
-
-const EARTH_RADIUS_M = 6371000;
 
 /**
- * Calcula distancia en metros entre dos coordenadas usando fórmula haversine.
- * Propiedades: dist(A,B) >= 0, dist(A,B) == dist(B,A), dist(A,A) == 0
+ * Calcula la distancia en metros entre dos coordenadas usando la fórmula haversine.
+ * @param {number} lat1
+ * @param {number} lon1
+ * @param {number} lat2
+ * @param {number} lon2
+ * @returns {number} distancia en metros
  */
 function haversineDistance(lat1, lon1, lat2, lon2) {
-    const toRad = d => (d * Math.PI) / 180;
+    const R = 6371000; // radio de la Tierra en metros
+    const toRad = deg => (deg * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
     const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a));
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
 }
 
 /**
- * Verifica si un GeoPoint está dentro de un geofence circular.
- * @param {{ lat, lon }} geoPoint
- * @param {{ lat, lon, radiusMeters }} geofence
+ * Determina si un punto GPS está dentro de un geofence.
+ * @param {{ lat: number, lon: number }} geoPoint
+ * @param {{ lat: number, lon: number, radiusMeters: number }} geofence
+ * @returns {boolean}
  */
 function isInsideGeofence(geoPoint, geofence) {
+    if (!geoPoint || !geofence) return false;
     const dist = haversineDistance(geoPoint.lat, geoPoint.lon, geofence.lat, geofence.lon);
     return dist <= geofence.radiusMeters;
 }
 
 /**
- * Calcula días hábiles (lunes–viernes) entre dos fechas YYYY-MM-DD (inclusive).
- * Retorna >= 0 siempre. Para mismo día hábil retorna 1; fin de semana retorna 0.
+ * Calcula el número de días hábiles (lunes–viernes) entre dos fechas, inclusive.
+ * @param {string} startDate  YYYY-MM-DD
+ * @param {string} endDate    YYYY-MM-DD
+ * @returns {number}
  */
 function calculateWorkingDays(startDate, endDate) {
     const start = new Date(startDate + 'T00:00:00');
@@ -48,18 +57,21 @@ function calculateWorkingDays(startDate, endDate) {
 }
 
 /**
- * Calcula totales de factura a partir de lineItems.
- * Invariante: sum(lineItems[i].amount) === totalAmount
- * @param {Array<{empId,empName,hours,rate}>} lineItems
+ * Calcula los totales de una factura a partir de sus líneas.
+ * @param {Array<{ hours: number, rate: number }>} lineItems
+ * @param {number} defaultRate  tarifa por defecto si lineItem.rate no está definido
  * @returns {{ lineItems: Array, totalHours: number, totalAmount: number }}
  */
-function computeInvoiceTotals(lineItems) {
-    const computed = lineItems.map(item => ({
-        ...item,
-        amount: Math.round((item.hours * item.rate) * 100) / 100
-    }));
-    const totalHours = computed.reduce((s, i) => s + i.hours, 0);
-    const totalAmount = Math.round(computed.reduce((s, i) => s + i.amount, 0) * 100) / 100;
+function computeInvoiceTotals(lineItems, defaultRate = 0) {
+    let totalHours = 0;
+    let totalAmount = 0;
+    const computed = (lineItems || []).map(item => {
+        const rate = item.rate != null ? item.rate : defaultRate;
+        const amount = (item.hours || 0) * rate;
+        totalHours += item.hours || 0;
+        totalAmount += amount;
+        return { ...item, rate, amount };
+    });
     return { lineItems: computed, totalHours, totalAmount };
 }
 
