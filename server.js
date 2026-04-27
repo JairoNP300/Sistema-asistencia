@@ -990,6 +990,40 @@ app.get('/api/activity/live', async (req, res) => {
 
 
 
+
+// ---- GEOFENCES ----
+app.get('/api/geofences', async (req, res) => {
+  try {
+    if (!useMongo) return res.json({ geofences: [] });
+    const st = await State.findOne();
+    res.json({ geofences: (st && st.geofences) || [] });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/geofences', async (req, res) => {
+  try {
+    const { name, lat, lon, radiusMeters } = req.body;
+    if (!name || lat == null || lon == null || !radiusMeters) return res.status(400).json({ error: 'name, lat, lon, radiusMeters requeridos' });
+    if (!useMongo) return res.status(503).json({ error: 'Requiere MongoDB' });
+    const st = await State.findOne();
+    const gf = { id: Date.now().toString(), name, lat: Number(lat), lon: Number(lon), radiusMeters: Number(radiusMeters) };
+    if (!st.geofences) st.geofences = [];
+    st.geofences.push(gf);
+    await st.save();
+    res.json({ success: true, geofence: gf });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/geofences/:id', async (req, res) => {
+  try {
+    if (!useMongo) return res.status(503).json({ error: 'Requiere MongoDB' });
+    const st = await State.findOne();
+    st.geofences = (st.geofences || []).filter(g => g.id !== req.params.id);
+    await st.save();
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Iniciar
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`=========================================`);
