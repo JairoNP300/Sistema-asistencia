@@ -1,7 +1,8 @@
+/* GPS-DEPLOY-20260427-095647 */
 /**
- * QR-Asistencia — Check-in Page Logic (GPS + API VERSION)
+ * QR-Asistencia â€” Check-in Page Logic (GPS + API VERSION)
  * Captura GPS en tiempo real al registrar entrada/salida.
- * Valida geofences si están configurados en el servidor.
+ * Valida geofences si estÃ¡n configurados en el servidor.
  */
 
 /* ---- STATE ---- */
@@ -9,7 +10,7 @@ let cState = {
     employees: [],
     config: { tokenLife: 30, timeWindow: 30, antiReplay: true },
     secretKey: '',
-    adminConfig: { company: 'Mi Empresa', logo: '🏢' },
+    adminConfig: { company: 'Mi Empresa', logo: 'ðŸ¢' },
     selectedEmployee: null,
     tokenPayload: null,
     presentSet: [],
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadAdminData();
         startPolling();
     } catch (e) {
-        showExpired('No se pudo conectar al servidor. Verifica tu conexión.', '');
+        showExpired('No se pudo conectar al servidor. Verifica tu conexiÃ³n.', '');
         return;
     }
 
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tokenEncoded = params.get('t');
 
     if (!tokenEncoded) {
-        showExpired('No se encontró un código de acceso en esta URL.', 'Escanea el QR en la pantalla de entrada.');
+        showExpired('No se encontrÃ³ un cÃ³digo de acceso en esta URL.', 'Escanea el QR en la pantalla de entrada.');
         return;
     }
 
@@ -50,10 +51,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!result.valid) {
         showExpired(
             result.code === 'EXPIRED'
-                ? 'Este QR ya expiró. Escanea el código actualizado en la pantalla de la entrada.'
-                : `Código inválido: ${result.reason}`,
+                ? 'Este QR ya expirÃ³. Escanea el cÃ³digo actualizado en la pantalla de la entrada.'
+                : `CÃ³digo invÃ¡lido: ${result.reason}`,
             result.code === 'EXPIRED'
-                ? `⏱ Los códigos se actualizan cada ${cState.config.tokenLife} segundos para mayor seguridad.`
+                ? `â± Los cÃ³digos se actualizan cada ${cState.config.tokenLife} segundos para mayor seguridad.`
                 : ''
         );
         return;
@@ -77,15 +78,15 @@ async function loadAdminData() {
     cState.geofences = (d.adminConfig && d.adminConfig.geofences) || d.geofences || [];
 }
 
-/* ---- GPS: Captura de ubicación en tiempo real ---- */
+/* ---- GPS: Captura de ubicaciÃ³n en tiempo real ---- */
 function startGPS() {
     if (!('geolocation' in navigator)) {
         setGPSStatus('error', 'GPS no disponible en este dispositivo', null);
         return;
     }
-    setGPSStatus('acquiring', 'Obteniendo ubicación…', null);
+    setGPSStatus('acquiring', 'Obteniendo ubicaciÃ³nâ€¦', null);
 
-    // Intento rápido primero
+    // Intento rÃ¡pido primero
     navigator.geolocation.getCurrentPosition(
         pos => onGPSSuccess(pos),
         err => onGPSError(err),
@@ -117,13 +118,13 @@ function onGPSSuccess(pos) {
         const inside = cState.geofences.some(g => isInsideGeofenceClient(cState.gpsPosition, g));
         if (inside) {
             const gf = cState.geofences.find(g => isInsideGeofenceClient(cState.gpsPosition, g));
-            setGPSStatus('ok', `✅ Dentro de zona: ${gf.name}`, { lat, lon, accuracy });
+            setGPSStatus('ok', `âœ… Dentro de zona: ${gf.name}`, { lat, lon, accuracy });
         } else {
-            setGPSStatus('blocked', '⚠️ Fuera de zona permitida', { lat, lon, accuracy });
+            setGPSStatus('blocked', 'âš ï¸ Fuera de zona permitida', { lat, lon, accuracy });
         }
     } else {
         // Sin geofences: solo mostrar coordenadas
-        setGPSStatus('ok', `📍 Ubicación obtenida (±${Math.round(accuracy)}m)`, { lat, lon, accuracy });
+        setGPSStatus('ok', `ðŸ“ UbicaciÃ³n obtenida (Â±${Math.round(accuracy)}m)`, { lat, lon, accuracy });
     }
 }
 
@@ -131,8 +132,8 @@ function onGPSError(err) {
     cState.gpsPosition = null;
     cState.gpsError = err.message;
     const msgs = {
-        1: 'Permiso de ubicación denegado',
-        2: 'Ubicación no disponible',
+        1: 'Permiso de ubicaciÃ³n denegado',
+        2: 'UbicaciÃ³n no disponible',
         3: 'Tiempo de espera agotado',
     };
     setGPSStatus('error', msgs[err.code] || 'Error de GPS', null);
@@ -146,10 +147,10 @@ function setGPSStatus(state, text, coords) {
     if (!bar) return;
 
     bar.className = 'gps-status-bar';
-    if (state === 'acquiring') { bar.classList.add('gps-acquiring'); icon.textContent = '📡'; }
-    else if (state === 'ok') { bar.classList.add('gps-ok'); icon.textContent = '📍'; }
-    else if (state === 'blocked') { bar.classList.add('gps-blocked'); icon.textContent = '🚫'; }
-    else if (state === 'error') { bar.classList.add('gps-error'); icon.textContent = '⚠️'; }
+    if (state === 'acquiring') { bar.classList.add('gps-acquiring'); icon.textContent = 'ðŸ“¡'; }
+    else if (state === 'ok') { bar.classList.add('gps-ok'); icon.textContent = 'ðŸ“'; }
+    else if (state === 'blocked') { bar.classList.add('gps-blocked'); icon.textContent = 'ðŸš«'; }
+    else if (state === 'error') { bar.classList.add('gps-error'); icon.textContent = 'âš ï¸'; }
 
     textEl.textContent = text;
     if (coords) {
@@ -159,7 +160,7 @@ function setGPSStatus(state, text, coords) {
     }
 }
 
-/* ---- Haversine client-side (para validación visual) ---- */
+/* ---- Haversine client-side (para validaciÃ³n visual) ---- */
 function haversineClient(lat1, lon1, lat2, lon2) {
     const R = 6371000;
     const toRad = d => d * Math.PI / 180;
@@ -210,7 +211,7 @@ async function validateStationToken(encoded) {
 
     const message = `station|${payload.ts}|${payload.nonce}`;
     const sig = await CryptoUtils.hmacSign(message, cState.secretKey);
-    if (sig.slice(0, 32) !== payload.sig) return { valid: false, reason: 'Firma inválida', code: 'INVALID_SIG' };
+    if (sig.slice(0, 32) !== payload.sig) return { valid: false, reason: 'Firma invÃ¡lida', code: 'INVALID_SIG' };
 
     return { valid: true, payload };
 }
@@ -218,13 +219,13 @@ async function validateStationToken(encoded) {
 /* ---- RENDER SELECT SCREEN ---- */
 function renderSelectScreen() {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    setEl('coLogo', cState.adminConfig.logo || '🏢');
+    setEl('coLogo', cState.adminConfig.logo || 'ðŸ¢');
     setEl('coName', cState.adminConfig.company || 'Mi Empresa');
-    setEl('coLogo2', cState.adminConfig.logo || '🏢');
+    setEl('coLogo2', cState.adminConfig.logo || 'ðŸ¢');
     setEl('coName2', cState.adminConfig.company || 'Mi Empresa');
 
     const expTime = (cState.tokenPayload.ts + cState.config.tokenLife) * 1000;
-    setEl('tokenExpLabel', `🔒 Token válido hasta las ${new Date(expTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
+    setEl('tokenExpLabel', `ðŸ”’ Token vÃ¡lido hasta las ${new Date(expTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
     renderEmployeeList(cState.employees);
 }
 
@@ -236,9 +237,9 @@ function renderEmployeeList(list) {
       <div class="emp-avatar">${e.avatar || e.firstName?.[0] || '?'}</div>
       <div style="flex:1">
         <span class="emp-name">${e.firstName} ${e.lastName}</span>
-        <span class="emp-meta">${e.dept} • ${e.empNum}</span>
+        <span class="emp-meta">${e.dept} â€¢ ${e.empNum}</span>
       </div>
-      <span class="emp-arrow">›</span>
+      <span class="emp-arrow">â€º</span>
     </div>`).join('');
 }
 
@@ -256,9 +257,9 @@ function selectEmployee(empId) {
     const isInside = cState.presentSet.includes(emp.id);
 
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    setEl('selAvatar', emp.avatar || emp.firstName[0] || '👤');
+    setEl('selAvatar', emp.avatar || emp.firstName[0] || 'ðŸ‘¤');
     setEl('selName', `${emp.firstName} ${emp.lastName}`);
-    setEl('selDept', `${emp.dept} — ${emp.role || ''}`);
+    setEl('selDept', `${emp.dept} â€” ${emp.role || ''}`);
     setEl('selNum', emp.empNum);
 
     const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
@@ -268,7 +269,7 @@ function selectEmployee(empId) {
     document.getElementById('btnEntry').style.opacity = isInside ? '0.45' : '1';
     document.getElementById('btnExit').style.opacity = !isInside ? '0.45' : '1';
 
-    // Iniciar GPS al mostrar pantalla de confirmación
+    // Iniciar GPS al mostrar pantalla de confirmaciÃ³n
     startGPS();
     showScreen('screen-confirm');
 }
@@ -293,7 +294,7 @@ async function submitCheckin(type) {
     const now = new Date();
     const nonce = cState.tokenPayload?.nonce || null;
 
-    // Construir log con GPS si está disponible
+    // Construir log con GPS si estÃ¡ disponible
     const logEntry = {
         id: Date.now(),
         empId: emp.id,
@@ -302,7 +303,7 @@ async function submitCheckin(type) {
         ts: now.toISOString(),
         tokenNonce: nonce,
         status: 'valid',
-        reason: type === 'entry' ? 'Entrada registrada desde QR móvil' : 'Salida registrada desde QR móvil',
+        reason: type === 'entry' ? 'Entrada registrada desde QR mÃ³vil' : 'Salida registrada desde QR mÃ³vil',
         source: 'checkin',
         // GPS data
         location: cState.gpsPosition ? {
@@ -321,9 +322,9 @@ async function submitCheckin(type) {
         const json = await res.json();
 
         if (!res.ok || json.error) {
-            // Geofence violation — mostrar mensaje claro
+            // Geofence violation â€” mostrar mensaje claro
             if (json.error === 'GEOFENCE_VIOLATION') {
-                showToastLocal('🚫 Fuera de zona permitida. Acércate al lugar de trabajo.', 'error');
+                showToastLocal('ðŸš« Fuera de zona permitida. AcÃ©rcate al lugar de trabajo.', 'error');
                 document.getElementById('btnEntry').disabled = false;
                 document.getElementById('btnExit').disabled = false;
                 return;
@@ -335,7 +336,7 @@ async function submitCheckin(type) {
         stopGPS();
         showSuccess(emp, type, now, cState.gpsPosition);
     } catch (e) {
-        showToastLocal('❌ Error: ' + e.message, 'error');
+        showToastLocal('âŒ Error: ' + e.message, 'error');
         document.getElementById('btnEntry').disabled = false;
         document.getElementById('btnExit').disabled = false;
     }
@@ -345,16 +346,16 @@ async function submitCheckin(type) {
 function showSuccess(emp, type, time, gps) {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('scName', `${emp.firstName} ${emp.lastName}`);
-    setEl('scType', type === 'entry' ? '🟢 Entrada' : '🔴 Salida');
+    setEl('scType', type === 'entry' ? 'ðŸŸ¢ Entrada' : 'ðŸ”´ Salida');
     setEl('scTime', time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     setEl('scDept', emp.dept);
-    setEl('successTitle', type === 'entry' ? '¡Bienvenido! 👋' : '¡Hasta pronto! 👋');
+    setEl('successTitle', type === 'entry' ? 'Â¡Bienvenido! ðŸ‘‹' : 'Â¡Hasta pronto! ðŸ‘‹');
 
-    // Mostrar ubicación si está disponible
+    // Mostrar ubicaciÃ³n si estÃ¡ disponible
     const locRow = document.getElementById('scLocationRow');
     const locEl = document.getElementById('scLocation');
     if (gps && locRow && locEl) {
-        locEl.textContent = `${gps.lat.toFixed(5)}, ${gps.lon.toFixed(5)} (±${Math.round(gps.accuracy)}m)`;
+        locEl.textContent = `${gps.lat.toFixed(5)}, ${gps.lon.toFixed(5)} (Â±${Math.round(gps.accuracy)}m)`;
         locRow.style.display = 'flex';
     }
 
@@ -369,7 +370,7 @@ function showSuccess(emp, type, time, gps) {
             clearInterval(interval);
             window.close();
             const cd = document.getElementById('countdownClose');
-            if (cd) cd.textContent = '✅ Puedes cerrar esta pestaña.';
+            if (cd) cd.textContent = 'âœ… Puedes cerrar esta pestaÃ±a.';
         }
     }, 1000);
 }
@@ -419,9 +420,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(updateClocks, 1000);
     try {
         await loadAdminData();
-        startPolling(); // <--- Activamos el vigilante automático
+        startPolling(); // <--- Activamos el vigilante automÃ¡tico
     } catch (e) {
-        showExpired('No se pudo conectar al servidor. Verifica tu conexión.', '');
+        showExpired('No se pudo conectar al servidor. Verifica tu conexiÃ³n.', '');
         return;
     }
 
@@ -429,7 +430,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tokenEncoded = params.get('t');
 
     if (!tokenEncoded) {
-        showExpired('No se encontró un código de acceso en esta URL.', 'Escanea el QR en la pantalla de entrada.');
+        showExpired('No se encontrÃ³ un cÃ³digo de acceso en esta URL.', 'Escanea el QR en la pantalla de entrada.');
         return;
     }
 
@@ -443,10 +444,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!result.valid) {
         showExpired(
             result.code === 'EXPIRED'
-                ? 'Este QR ya expiró. Escanea el código actualizado en la pantalla de la entrada.'
-                : `Código inválido: ${result.reason}`,
+                ? 'Este QR ya expirÃ³. Escanea el cÃ³digo actualizado en la pantalla de la entrada.'
+                : `CÃ³digo invÃ¡lido: ${result.reason}`,
             result.code === 'EXPIRED'
-                ? `⏱ Los códigos se actualizan cada ${cState.config.tokenLife} segundos para mayor seguridad.`
+                ? `â± Los cÃ³digos se actualizan cada ${cState.config.tokenLife} segundos para mayor seguridad.`
                 : ''
         );
         return;
@@ -479,11 +480,11 @@ function startPolling() {
                 
                 // Si hay cambios en los presentes o en la lista de empleados
                 if (JSON.stringify(d.presentSet) !== JSON.stringify(cState.presentSet) || d.employees?.length !== cState.employees?.length) {
-                    console.log('🔄 Sincronizando datos con el servidor...');
+                    console.log('ðŸ”„ Sincronizando datos con el servidor...');
                     cState.employees = (d.employees || []).filter(e => e.status === 'active');
                     cState.presentSet = d.presentSet || [];
                     
-                    // Si estamos viendo la lista de selección, la redibujamos
+                    // Si estamos viendo la lista de selecciÃ³n, la redibujamos
                     const screenSelect = document.getElementById('screen-select');
                     if (screenSelect && !screenSelect.classList.contains('hidden')) {
                         filterEmployees();
@@ -493,7 +494,7 @@ function startPolling() {
         } catch (e) {
             console.warn('Error en polling de check-in:', e.message);
         }
-    }, 3000); // Cada 3 segundos para los móviles para no gastar tanta batería
+    }, 3000); // Cada 3 segundos para los mÃ³viles para no gastar tanta baterÃ­a
 }
 
 /* ---- VALIDATE STATION TOKEN ---- */
@@ -514,7 +515,7 @@ async function validateStationToken(encoded) {
 
     const message = `station|${payload.ts}|${payload.nonce}`;
     const sig = await CryptoUtils.hmacSign(message, cState.secretKey);
-    if (sig.slice(0, 32) !== payload.sig) return { valid: false, reason: 'Firma inválida', code: 'INVALID_SIG' };
+    if (sig.slice(0, 32) !== payload.sig) return { valid: false, reason: 'Firma invÃ¡lida', code: 'INVALID_SIG' };
 
     return { valid: true, payload };
 }
@@ -522,13 +523,13 @@ async function validateStationToken(encoded) {
 /* ---- RENDER SELECT SCREEN ---- */
 function renderSelectScreen() {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    setEl('coLogo', cState.adminConfig.logo || '🏢');
+    setEl('coLogo', cState.adminConfig.logo || 'ðŸ¢');
     setEl('coName', cState.adminConfig.company || 'Mi Empresa');
-    setEl('coLogo2', cState.adminConfig.logo || '🏢');
+    setEl('coLogo2', cState.adminConfig.logo || 'ðŸ¢');
     setEl('coName2', cState.adminConfig.company || 'Mi Empresa');
 
     const expTime = (cState.tokenPayload.ts + cState.config.tokenLife) * 1000;
-    setEl('tokenExpLabel', `🔒 Token válido hasta las ${new Date(expTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
+    setEl('tokenExpLabel', `ðŸ”’ Token vÃ¡lido hasta las ${new Date(expTime).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`);
     renderEmployeeList(cState.employees);
 }
 
@@ -540,9 +541,9 @@ function renderEmployeeList(list) {
       <div class="emp-avatar">${e.avatar || e.firstName?.[0] || '?'}</div>
       <div style="flex:1">
         <span class="emp-name">${e.firstName} ${e.lastName}</span>
-        <span class="emp-meta">${e.dept} • ${e.empNum}</span>
+        <span class="emp-meta">${e.dept} â€¢ ${e.empNum}</span>
       </div>
-      <span class="emp-arrow">›</span>
+      <span class="emp-arrow">â€º</span>
     </div>`).join('');
 }
 
@@ -560,9 +561,9 @@ function selectEmployee(empId) {
     const isInside = cState.presentSet.includes(emp.id);
 
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    setEl('selAvatar', emp.avatar || emp.firstName[0] || '👤');
+    setEl('selAvatar', emp.avatar || emp.firstName[0] || 'ðŸ‘¤');
     setEl('selName', `${emp.firstName} ${emp.lastName}`);
-    setEl('selDept', `${emp.dept} — ${emp.role || ''}`);
+    setEl('selDept', `${emp.dept} â€” ${emp.role || ''}`);
     setEl('selNum', emp.empNum);
 
     const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
@@ -601,7 +602,7 @@ async function submitCheckin(type) {
         ts: now.toISOString(),
         tokenNonce: nonce,
         status: 'valid',
-        reason: type === 'entry' ? 'Entrada registrada desde QR móvil' : 'Salida registrada desde QR móvil',
+        reason: type === 'entry' ? 'Entrada registrada desde QR mÃ³vil' : 'Salida registrada desde QR mÃ³vil',
         source: 'checkin',
     };
 
@@ -620,7 +621,7 @@ async function submitCheckin(type) {
 
         showSuccess(emp, type, now);
     } catch (e) {
-        showToastLocal('❌ Error: ' + e.message, 'error');
+        showToastLocal('âŒ Error: ' + e.message, 'error');
         document.getElementById('btnEntry').disabled = false;
         document.getElementById('btnExit').disabled = false;
     }
@@ -630,10 +631,10 @@ async function submitCheckin(type) {
 function showSuccess(emp, type, time) {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('scName', `${emp.firstName} ${emp.lastName}`);
-    setEl('scType', type === 'entry' ? '🟢 Entrada' : '🔴 Salida');
+    setEl('scType', type === 'entry' ? 'ðŸŸ¢ Entrada' : 'ðŸ”´ Salida');
     setEl('scTime', time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     setEl('scDept', emp.dept);
-    setEl('successTitle', type === 'entry' ? '¡Bienvenido! 👋' : '¡Hasta pronto! 👋');
+    setEl('successTitle', type === 'entry' ? 'Â¡Bienvenido! ðŸ‘‹' : 'Â¡Hasta pronto! ðŸ‘‹');
     showScreen('screen-success');
 
     let count = 6;
@@ -645,7 +646,7 @@ function showSuccess(emp, type, time) {
             clearInterval(interval);
             window.close();
             const cd = document.getElementById('countdownClose');
-            if (cd) cd.textContent = '✅ Puedes cerrar esta pestaña.';
+            if (cd) cd.textContent = 'âœ… Puedes cerrar esta pestaÃ±a.';
         }
     }, 1000);
 }
