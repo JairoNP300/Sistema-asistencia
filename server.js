@@ -12,10 +12,20 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const mongoose = require('mongoose');
-const State = require('./models/State'); // Nuestro modelo de datos
-const User = require('./models/User'); // Usuarios administrativos
+const State = require('./models/State');
+const User = require('./models/User');
+const TimeEntry = require('./models/TimeEntry');
+const TimeOffRequest = require('./models/TimeOffRequest');
+const WorkSchedule = require('./models/WorkSchedule');
+const Group = require('./models/Group');
+const Project = require('./models/Project');
+const Approval = require('./models/Approval');
+const Invoice = require('./models/Invoice');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+let XLSX;
+try { XLSX = require('xlsx'); } catch(e) { XLSX = null; }
+const { haversineDistance, isInsideGeofence, calculateWorkingDays, computeInvoiceTotals } = require('./utils/verifier');
 const SECRET = process.env.JWT_SECRET || 'qr_asistencia_secret';
 
 // --------- Auth helpers ---------
