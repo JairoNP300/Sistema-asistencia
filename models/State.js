@@ -12,7 +12,24 @@ const EmployeeSchema = new mongoose.Schema({
     status: { type: String, default: 'active' },
     avatar: String,
     createdAt: String,
-    lastAccess: String
+    lastAccess: String,
+    groupIds: [String],
+    scheduleId: String,
+    pinHash: { type: String, select: false },
+    verificationConfig: {
+        selfieRequired: { type: Boolean, default: false },
+        gpsRequired: { type: Boolean, default: false },
+        pinRequired: { type: Boolean, default: false }
+    },
+    timeOffBalance: {
+        vacation: { type: Number, default: 15 },
+        sick: { type: Number, default: 7 },
+        personal: { type: Number, default: 3 }
+    },
+    hourlyRate: { type: Number, default: 0 },
+    currency: { type: String, default: 'MXN' },
+    pinAttempts: { type: Number, default: 0 },
+    pinLockedUntil: Date
 });
 
 const LogSchema = new mongoose.Schema({
