@@ -29,13 +29,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // If no token yet, prompt login and halt further initialization
     const token = localStorage.getItem('jwt');
     if (!token) { showLoginOverlay(); return; }
-    await loadFromStorage();
+
+    try { await loadFromStorage(); } catch(e) { console.warn('loadFromStorage error:', e); }
+
     // Always ensure we have a secret key
     if (!state.secretKey) {
-        state.secretKey = await CryptoUtils.generateKey();
+        try { state.secretKey = await CryptoUtils.generateKey(); } catch(e) { console.warn('generateKey error:', e); }
     }
     if (!state.employees.length) seedDemoEmployees();
-    await saveToStorage();
+
+    try { await saveToStorage(); } catch(e) { console.warn('saveToStorage error:', e); }
+
     initClock();
     initTokenTimer();
     renderAll();
@@ -43,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     startPolling();
     initWakeLock();
     showPage('dashboard');
-    // Initialize Jibble MVP panel UI
     initJibblePanelUI();
 });
 
@@ -92,11 +95,18 @@ async function loadFromStorage() {
             const d = await res.json();
             Object.assign(state, {
                 employees: d.employees || [], logs: d.logs || [], departments: d.departments || state.departments,
-                secretKey: d.secretKey || '', config: { ...state.config, ...(d.config || {}) },
+                // Never overwrite secretKey with empty — generate if missing
+                secretKey: d.secretKey || state.secretKey || '',
+                config: { ...state.config, ...(d.config || {}) },
                 adminConfig: { ...state.adminConfig, ...(d.adminConfig || {}) }, securityLog: d.securityLog || [],
                 stats: d.stats || state.stats, presentSet: new Set(d.presentSet || []),
                 usedTokens: new Set(d.usedTokens || [])
             });
+            return;
+        } else if (res.status === 401 || res.status === 403) {
+            // JWT expired — clear and re-login
+            localStorage.removeItem('jwt');
+            showLoginOverlay();
             return;
         }
     } catch (e) { console.warn('Server not available, falling back to localStorage'); }
@@ -107,7 +117,7 @@ async function loadFromStorage() {
         const d = JSON.parse(raw);
         Object.assign(state, {
             employees: d.employees || [], logs: d.logs || [], departments: d.departments || state.departments,
-            secretKey: d.secretKey || '', config: { ...state.config, ...(d.config || {}) },
+            secretKey: d.secretKey || state.secretKey || '', config: { ...state.config, ...(d.config || {}) },
             adminConfig: { ...state.adminConfig, ...(d.adminConfig || {}) }, securityLog: d.securityLog || [],
             stats: d.stats || state.stats, presentSet: new Set(d.presentSet || [])
         });
@@ -143,16 +153,23 @@ function initClock() {
 function initTokenTimer() {
     const circumference = 2 * Math.PI * 15; // r=15
     function tick() {
-        const life = state.config.tokenLife;
-        const elapsed = Math.floor(Date.now() / 1000) % life;
+        const life = state.config.tokenLife || 30;
+        const now = Math.floor(Date.now() / 1000);
+        const elapsed = now % life;
         const remaining = life - elapsed;
         const progress = remaining / life;
         const offset = circumference * (1 - progress);
         const ring = document.getElementById('timerRing');
-        if (ring) { ring.style.strokeDashoffset = offset; ring.style.stroke = remaining <= 5 ? '#f43f5e' : remaining <= 10 ? '#fbbf24' : '#6366f1'; }
-        document.getElementById('timerCount').textContent = `${remaining}s`;
+        const count = document.getElementById('timerCount');
+        if (ring) {
+            ring.style.strokeDasharray = circumference;
+            ring.style.strokeDashoffset = offset;
+            ring.style.stroke = remaining <= 5 ? '#f43f5e' : remaining <= 10 ? '#fbbf24' : '#6366f1';
+        }
+        if (count) count.textContent = `${remaining}s`;
     }
-    tick(); setInterval(tick, 1000);
+    tick();
+    setInterval(tick, 1000);
 }
 
 /* ---- PAGE NAVIGATION ---- */

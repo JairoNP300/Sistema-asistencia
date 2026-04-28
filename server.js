@@ -58,6 +58,8 @@ app.use(express.static(path.join(__dirname)));
 app.use('/api', (req, res, next) => {
     if (req.path === '/auth/login') return next();
     if (req.path === '/checkin') return next();
+    if (req.path === '/data') return next();       // read-only state, no auth needed
+    if (req.path === '/config') return next();     // public config
     requireAuth(req, res, next);
 });
 
