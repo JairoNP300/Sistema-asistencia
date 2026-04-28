@@ -1,12 +1,12 @@
 /**
- * QR-Asistencia — Check-in Page Logic (API VERSION)
- * Uses fetch to communicate with the Node.js server
+ * QR-Asistencia — Check-in Page Logic
  */
 
 /* ---- STATE ---- */
 let cState = {
     employees: [],
-    config: { tokenLife: 30, timeWindow: 30, antiReplay: true },
+    // timeWindow amplio: permite escanear hasta 5 minutos después de generado el QR
+    config: { tokenLife: 30, timeWindow: 300, antiReplay: true },
     secretKey: '',
     adminConfig: { company: 'Mi Empresa', logo: '🏢' },
     selectedEmployee: null,
@@ -18,19 +18,29 @@ let cState = {
 document.addEventListener('DOMContentLoaded', async () => {
     updateClocks();
     setInterval(updateClocks, 1000);
-    try {
-        await loadAdminData();
-        startPolling(); // <--- Activamos el vigilante automático
-    } catch (e) {
-        showExpired('No se pudo conectar al servidor. Verifica tu conexión.', '');
-        return;
-    }
 
     const params = new URLSearchParams(window.location.search);
     const tokenEncoded = params.get('t');
 
     if (!tokenEncoded) {
         showExpired('No se encontró un código de acceso en esta URL.', 'Escanea el QR en la pantalla de entrada.');
+        return;
+    }
+
+    // Cargar datos del servidor (con reintentos)
+    let loaded = false;
+    for (let i = 0; i < 3; i++) {
+        try {
+            await loadAdminData();
+            loaded = true;
+            break;
+        } catch (e) {
+            if (i < 2) await new Promise(r => setTimeout(r, 1500));
+        }
+    }
+
+    if (!loaded) {
+        showExpired('No se pudo conectar al servidor. Verifica tu conexión e intenta de nuevo.', '');
         return;
     }
 
@@ -42,20 +52,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const result = await validateStationToken(tokenEncoded);
 
     if (!result.valid) {
-        showExpired(
-            result.code === 'EXPIRED'
-                ? 'Este QR ya expiró. Escanea el código actualizado en la pantalla de la entrada.'
-                : `Código inválido: ${result.reason}`,
-            result.code === 'EXPIRED'
-                ? `⏱ Los códigos se actualizan cada ${cState.config.tokenLife} segundos para mayor seguridad.`
-                : ''
-        );
+        if (result.code === 'EXPIRED') {
+            showExpired(
+                'Este QR ya expiró. Escanea el código actualizado en la pantalla de la entrada.',
+                `⏱ Los códigos se actualizan cada ${cState.config.tokenLife} segundos para mayor seguridad.`
+            );
+        } else if (result.code === 'INVALID_SIG') {
+            showExpired('Firma inválida. Asegúrate de escanear el QR correcto.', '');
+        } else {
+            showExpired(`Código inválido: ${result.reason}`, '');
+        }
         return;
     }
 
     cState.tokenPayload = result.payload;
     renderSelectScreen();
     showScreen('screen-select');
+    startPolling();
 });
 
 /* ---- LOAD DATA FROM SERVER ---- */
@@ -77,24 +90,17 @@ function startPolling() {
             const res = await fetch(`/api/data?t=${Date.now()}`, { cache: 'no-store' });
             if (res.ok) {
                 const d = await res.json();
-                
-                // Si hay cambios en los presentes o en la lista de empleados
                 if (JSON.stringify(d.presentSet) !== JSON.stringify(cState.presentSet) || d.employees?.length !== cState.employees?.length) {
-                    console.log('🔄 Sincronizando datos con el servidor...');
                     cState.employees = (d.employees || []).filter(e => e.status === 'active');
                     cState.presentSet = d.presentSet || [];
-                    
-                    // Si estamos viendo la lista de selección, la redibujamos
                     const screenSelect = document.getElementById('screen-select');
                     if (screenSelect && !screenSelect.classList.contains('hidden')) {
                         filterEmployees();
                     }
                 }
             }
-        } catch (e) {
-            console.warn('Error en polling de check-in:', e.message);
-        }
-    }, 3000); // Cada 3 segundos para los móviles para no gastar tanta batería
+        } catch { /* ignore */ }
+    }, 5000);
 }
 
 /* ---- VALIDATE STATION TOKEN ---- */
@@ -107,15 +113,26 @@ async function validateStationToken(encoded) {
     if (payload?.type !== 'station') return { valid: false, reason: 'Tipo de token incorrecto', code: 'WRONG_TYPE' };
     if (!payload.ts || !payload.nonce || !payload.sig) return { valid: false, reason: 'Token incompleto', code: 'INCOMPLETE' };
 
-    const window = cState.config.timeWindow || 300;
+    // Ventana generosa: mínimo 5 minutos de tolerancia para conexiones lentas en móvil
     const life = cState.config.tokenLife || 30;
+    const tolerance = Math.max(cState.config.timeWindow || 300, 300);
     const age = now - payload.ts;
-    if (age > life + window) return { valid: false, reason: `Token expirado (${Math.round(age)}s)`, code: 'EXPIRED' };
-    if (payload.ts > now + window) return { valid: false, reason: 'Token con fecha futura', code: 'FUTURE_TS' };
+
+    if (age > life + tolerance) {
+        return { valid: false, reason: `Token expirado (${Math.round(age)}s de antigüedad)`, code: 'EXPIRED' };
+    }
+    // Tolerancia de 60s para diferencias de reloj entre dispositivos
+    if (payload.ts > now + 60) {
+        return { valid: false, reason: 'Token con timestamp futuro', code: 'FUTURE_TS' };
+    }
 
     const message = `station|${payload.ts}|${payload.nonce}`;
-    const sig = await CryptoUtils.hmacSign(message, cState.secretKey);
-    if (sig.slice(0, 32) !== payload.sig) return { valid: false, reason: 'Firma inválida', code: 'INVALID_SIG' };
+    try {
+        const sig = await CryptoUtils.hmacSign(message, cState.secretKey);
+        if (sig.slice(0, 32) !== payload.sig) return { valid: false, reason: 'Firma inválida', code: 'INVALID_SIG' };
+    } catch (e) {
+        return { valid: false, reason: 'Error al verificar firma', code: 'SIG_ERROR' };
+    }
 
     return { valid: true, payload };
 }

@@ -12,7 +12,6 @@ let state = {
     securityLog: [], adminConfig: { company: 'Mi Empresa S.A.', logo: '🏢', entryTime: '08:00', exitTime: '18:00', grace: 10 },
     stats: { present: 0, entries: 0, exits: 0, blocked: 0 }, presentSet: new Set(),
 };
-
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
     await loadFromStorage();
