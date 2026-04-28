@@ -125,14 +125,31 @@ app.get('/api/data', async (req, res) => {
 
         if (!data) return res.status(404).json({ error: 'System state not found' });
         
-        // Reset diario automático
+        // Reset diario automático — preserva logs históricos
         const today = new Date().toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
         if (data.currentDate && data.currentDate !== today) {
-            console.log('📅 Cambio de día detectado. Reseteando estadísticas...');
+            console.log(`📅 Cambio de día detectado (${data.currentDate} → ${today}). Archivando logs...`);
+
+            // Archivar logs del día anterior en history antes de borrarlos
+            if (data.logs && data.logs.length > 0) {
+                if (!data.history) data.history = new Map();
+                // Guardar logs del día anterior indexados por fecha
+                const prevDate = data.currentDate;
+                const existing = data.history.get(prevDate) || [];
+                data.history.set(prevDate, [...existing, ...data.logs]);
+                // Mantener solo los últimos 90 días de historial
+                const keys = [...data.history.keys()].sort();
+                if (keys.length > 90) {
+                    keys.slice(0, keys.length - 90).forEach(k => data.history.delete(k));
+                }
+                if (useMongo) data.markModified('history');
+                console.log(`✅ ${data.logs.length} logs archivados en history[${prevDate}]`);
+            }
+
             data.logs = [];
             data.stats = { present: 0, entries: 0, exits: 0, blocked: 0 };
             data.presentSet = [];
-            data.usedTokens = []; // Limpiar tokens usados al cambiar de día
+            data.usedTokens = [];
             data.currentDate = today;
             if (useMongo) {
                 data.markModified('logs');
