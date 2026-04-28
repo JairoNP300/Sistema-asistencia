@@ -553,25 +553,29 @@
 
             <!-- === REPORTS === -->
             <section class="page" id="page-reports">
+                <div class="panel" style="margin-bottom:16px">
+                    <div class="panel-header">
+                        <h3>📊 Resumen del Día</h3>
+                        <button class="btn-primary sm" onclick="exportReportExcel()">⬇ Exportar Excel</button>
+                    </div>
+                    <div id="attendanceSummary"></div>
+                </div>
                 <div class="reports-grid">
                     <div class="panel">
-                        <div class="panel-header">
-                            <h3>📊 Resumen Semanal</h3>
-                        </div>
+                        <div class="panel-header"><h3>📈 Entradas Esta Semana</h3></div>
                         <canvas id="weeklyChart" height="180"></canvas>
                     </div>
                     <div class="panel">
-                        <div class="panel-header">
-                            <h3>🏢 Asistencia por Departamento</h3>
-                        </div>
+                        <div class="panel-header"><h3>🏢 Empleados por Departamento</h3></div>
                         <div id="deptReport"></div>
                     </div>
-                    <div class="panel" style="grid-column: 1/-1">
-                        <div class="panel-header">
-                            <h3>⏰ Horas Trabajadas — Esta Semana</h3>
-                        </div>
-                        <div id="hoursReport"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>👥 Detalle por Empleado</h3>
+                        <button class="btn-ghost sm" onclick="exportReportExcel()">📊 Exportar Excel</button>
                     </div>
+                    <div id="employeeReport"></div>
                 </div>
             </section>
 

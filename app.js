@@ -374,45 +374,28 @@ function updateStationStats() {
 
 /* ---- POLL SERVER FOR CHECKIN UPDATES ---- */
 function startPolling() {
-    console.log('👀 Vigilante de actualizaciones iniciado...');
     let lastLogCount = state.logs.length;
-
     setInterval(async () => {
         try {
             const res = await fetch(`/api/data?t=${Date.now()}`, { cache: 'no-store' });
             if (res.ok) {
                 const d = await res.json();
                 const newLogs = d.logs || [];
-                
-                // DIAGNÓSTICO: Esto aparecerá en tu consola (F12)
-                console.log(`🛰️ Consulta exitosa. Logs en servidor: ${newLogs.length}, Locales: ${lastLogCount}`);
-
-                // Si hay CUALQUIER cambio en la cantidad de logs o presentes
                 if (newLogs.length !== lastLogCount || (d.presentSet && d.presentSet.length !== state.presentSet.size)) {
-                    console.warn('🚀 ¡ACTUALIZACIÓN GLOBAL DETECTADA! Sincronizando ecosistema...');
-                    
                     lastLogCount = newLogs.length;
-                    
-                    // Sincronización total de datos
                     state.logs = newLogs;
                     state.employees = d.employees || state.employees;
                     state.presentSet = new Set(d.presentSet || []);
                     state.stats = d.stats || state.stats;
-                    
-                    // Sincronización de configuración (Ecosistema uniforme)
                     state.departments = d.departments || state.departments;
                     state.adminConfig = d.adminConfig || state.adminConfig;
                     state.config = d.config || state.config;
-                    
-                    renderAll(); 
+                    renderAll();
                     updateStationStats();
-                    showToast('🔄 Ecosistema sincronizado en tiempo real', 'info');
                 }
             }
-        } catch (e) {
-            console.error('❌ Error de conexión en polling:', e.message);
-        }
-    }, 2000); 
+        } catch (e) { /* silently ignore */ }
+    }, 3000);
 }
 
 function updateConnStatus(online, failCount = 0) {
@@ -745,8 +728,10 @@ function clearLogs() {
 function renderReports() {
     renderWeeklyChart();
     renderDeptReport();
-    renderHoursReport();
+    renderEmployeeReport();
+    renderAttendanceSummary();
 }
+
 function renderWeeklyChart() {
     const canvas = document.getElementById('weeklyChart');
     if (!canvas) return;
@@ -755,7 +740,7 @@ function renderWeeklyChart() {
     const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const entries = Array(7).fill(0);
     const now = new Date();
-    const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay() + 1);
+    const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay() + 1); startOfWeek.setHours(0,0,0,0);
     state.logs.filter(l => l.type === 'entry').forEach(l => {
         const d = new Date(l.ts);
         const diff = Math.floor((d - startOfWeek) / 86400000);
@@ -778,6 +763,7 @@ function renderWeeklyChart() {
         if (v > 0) { ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillText(v, x + barW / 2, H - 25 - bh); }
     });
 }
+
 function renderDeptReport() {
     const el = document.getElementById('deptReport');
     if (!el) return;
@@ -790,25 +776,134 @@ function renderDeptReport() {
       <div class="dept-bar-track"><div class="dept-bar-fill" style="width:${c / total * 100}%"></div></div>
     </div>`).join('') || '<div class="empty-feed">Sin datos</div>';
 }
-function renderHoursReport() {
-    const el = document.getElementById('hoursReport');
+
+function renderAttendanceSummary() {
+    const el = document.getElementById('attendanceSummary');
     if (!el) return;
-    const empHours = {};
-    state.employees.forEach(e => { empHours[e.id] = { name: `${e.firstName} ${e.lastName}`, hours: 0 }; });
+    const today = new Date().toDateString();
+    const todayLogs = state.logs.filter(l => new Date(l.ts).toDateString() === today);
+    const todayEntries = todayLogs.filter(l => l.type === 'entry').length;
+    const todayExits = todayLogs.filter(l => l.type === 'exit').length;
+    const activeNow = state.presentSet.size;
+    const totalActive = state.employees.filter(e => e.status === 'active').length;
+    const attendanceRate = totalActive > 0 ? Math.round((activeNow / totalActive) * 100) : 0;
+    el.innerHTML = `
+        <div class="report-stat-grid">
+            <div class="report-stat"><span class="report-stat-val" style="color:var(--green)">${todayEntries}</span><span class="report-stat-lbl">Entradas hoy</span></div>
+            <div class="report-stat"><span class="report-stat-val" style="color:var(--orange)">${todayExits}</span><span class="report-stat-lbl">Salidas hoy</span></div>
+            <div class="report-stat"><span class="report-stat-val" style="color:var(--primary)">${activeNow}</span><span class="report-stat-lbl">Presentes ahora</span></div>
+            <div class="report-stat"><span class="report-stat-val" style="color:var(--blue)">${attendanceRate}%</span><span class="report-stat-lbl">Tasa asistencia</span></div>
+        </div>`;
+}
+
+function renderEmployeeReport() {
+    const el = document.getElementById('employeeReport');
+    if (!el) return;
+    // Calcular horas trabajadas por empleado
+    const empStats = {};
+    state.employees.forEach(e => {
+        empStats[e.id] = { emp: e, hours: 0, entries: 0, exits: 0, lastAccess: e.lastAccess };
+    });
     const entryMap = {};
-    [...state.logs].forEach(l => {
-        if (l.type === 'entry') entryMap[l.empId] = new Date(l.ts);
-        else if (l.type === 'exit' && entryMap[l.empId] && empHours[l.empId]) {
-            const h = (new Date(l.ts) - entryMap[l.empId]) / 3600000;
-            empHours[l.empId].hours += h; delete entryMap[l.empId];
+    [...state.logs].sort((a,b) => new Date(a.ts) - new Date(b.ts)).forEach(l => {
+        if (!empStats[l.empId]) return;
+        if (l.type === 'entry') {
+            entryMap[l.empId] = new Date(l.ts);
+            empStats[l.empId].entries++;
+        } else if (l.type === 'exit') {
+            empStats[l.empId].exits++;
+            if (entryMap[l.empId]) {
+                empStats[l.empId].hours += (new Date(l.ts) - entryMap[l.empId]) / 3600000;
+                delete entryMap[l.empId];
+            }
         }
     });
-    el.innerHTML = `<table class="data-table"><thead><tr><th>Empleado</th><th>Horas Trabajadas</th><th>Progreso</th></tr></thead><tbody>` +
-        Object.values(empHours).filter(e => e.hours > 0).map(e =>
-            `<tr><td>${e.name}</td><td class="token-mono">${e.hours.toFixed(1)}h</td>
-      <td style="width:40%"><div class="dept-bar-track"><div class="dept-bar-fill" style="width:${Math.min(e.hours / 8 * 100, 100)}%"></div></div></td></tr>`
-        ).join('') || '<tr><td colspan="3" class="empty-feed">Sin registros de horas</td></tr>' +
-        '</tbody></table>';
+    const rows = Object.values(empStats).filter(s => s.emp.status === 'active');
+    if (!rows.length) { el.innerHTML = '<div class="empty-feed">Sin empleados activos</div>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead><tr>
+            <th>Empleado</th><th>Departamento</th><th>Cargo</th>
+            <th>Entradas</th><th>Salidas</th><th>Horas</th><th>Último Acceso</th><th>Estado</th>
+        </tr></thead>
+        <tbody>${rows.map(s => {
+            const isPresent = state.presentSet.has(s.emp.id);
+            return `<tr>
+                <td><div class="emp-cell">
+                    <div class="emp-mini-avatar">${s.emp.avatar || s.emp.firstName[0]}</div>
+                    <div><div class="emp-mini-name">${s.emp.firstName} ${s.emp.lastName}</div>
+                    <div class="emp-mini-num">${s.emp.empNum}</div></div>
+                </div></td>
+                <td>${s.emp.dept}</td>
+                <td style="font-size:0.82rem;color:var(--text-muted)">${s.emp.role || '—'}</td>
+                <td><span style="color:var(--green);font-weight:700">${s.entries}</span></td>
+                <td><span style="color:var(--orange);font-weight:700">${s.exits}</span></td>
+                <td><span class="token-mono">${s.hours.toFixed(1)}h</span></td>
+                <td><span class="token-mono" style="font-size:0.75rem">${s.lastAccess ? formatDateTime(s.lastAccess) : 'Nunca'}</span></td>
+                <td><span class="status-chip ${isPresent ? 'status-active' : 'status-inactive'}">${isPresent ? '● Presente' : '○ Ausente'}</span></td>
+            </tr>`;
+        }).join('')}</tbody>
+    </table></div>`;
+}
+
+function exportReportExcel() {
+    if (!state.employees.length) { showToast('⚠️ No hay datos para exportar', 'warning'); return; }
+    const wb = XLSX.utils.book_new();
+
+    // Hoja 1: Resumen de empleados
+    const empStats = {};
+    state.employees.forEach(e => { empStats[e.id] = { emp: e, hours: 0, entries: 0, exits: 0 }; });
+    const entryMap = {};
+    [...state.logs].sort((a,b) => new Date(a.ts) - new Date(b.ts)).forEach(l => {
+        if (!empStats[l.empId]) return;
+        if (l.type === 'entry') { entryMap[l.empId] = new Date(l.ts); empStats[l.empId].entries++; }
+        else if (l.type === 'exit') {
+            empStats[l.empId].exits++;
+            if (entryMap[l.empId]) { empStats[l.empId].hours += (new Date(l.ts) - entryMap[l.empId]) / 3600000; delete entryMap[l.empId]; }
+        }
+    });
+    const empData = Object.values(empStats).map(s => ({
+        'ID': s.emp.empNum, 'Nombre': `${s.emp.firstName} ${s.emp.lastName}`,
+        'Departamento': s.emp.dept, 'Cargo': s.emp.role || '',
+        'Email': s.emp.email || '', 'Teléfono': s.emp.phone || '',
+        'Estado': s.emp.status === 'active' ? 'Activo' : 'Inactivo',
+        'Presente Ahora': state.presentSet.has(s.emp.id) ? 'Sí' : 'No',
+        'Entradas': s.entries, 'Salidas': s.exits,
+        'Horas Trabajadas': s.hours.toFixed(2),
+        'Último Acceso': s.emp.lastAccess ? new Date(s.emp.lastAccess).toLocaleString('es-MX') : 'Nunca'
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(empData);
+    ws1['!cols'] = [{ wch: 10 }, { wch: 25 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Empleados');
+
+    // Hoja 2: Registro de accesos
+    const logData = state.logs.map((l, i) => ({
+        '#': i + 1, 'Empleado': l.empName,
+        'Tipo': l.type === 'entry' ? 'Entrada' : l.type === 'exit' ? 'Salida' : 'Rechazado',
+        'Fecha': l.ts.split('T')[0], 'Hora': l.ts.split('T')[1]?.slice(0, 8),
+        'Estado': l.status === 'valid' ? 'Válido' : 'Rechazado',
+        'Motivo': l.reason || '', 'Fuente': l.source || 'qr'
+    }));
+    const ws2 = XLSX.utils.json_to_sheet(logData);
+    ws2['!cols'] = [{ wch: 5 }, { wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 35 }, { wch: 10 }];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Registro de Accesos');
+
+    // Hoja 3: Resumen por departamento
+    const deptData = {};
+    state.employees.filter(e => e.status === 'active').forEach(e => {
+        if (!deptData[e.dept]) deptData[e.dept] = { dept: e.dept, total: 0, presentes: 0 };
+        deptData[e.dept].total++;
+        if (state.presentSet.has(e.id)) deptData[e.dept].presentes++;
+    });
+    const ws3 = XLSX.utils.json_to_sheet(Object.values(deptData).map(d => ({
+        'Departamento': d.dept, 'Total Empleados': d.total,
+        'Presentes Ahora': d.presentes, 'Ausentes': d.total - d.presentes,
+        'Tasa Asistencia': `${Math.round(d.presentes / d.total * 100)}%`
+    })));
+    XLSX.utils.book_append_sheet(wb, ws3, 'Por Departamento');
+
+    const today = new Date().toLocaleDateString('es-MX').replace(/\//g, '-');
+    XLSX.writeFile(wb, `Reporte_Asistencia_${today}.xlsx`);
+    showToast('📊 Reporte Excel generado y descargado', 'success');
 }
 
 /* ---- SECURITY PAGE ---- */

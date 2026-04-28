@@ -282,9 +282,6 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`=========================================`);
     console.log(`🚀 SISTEMA CLOUD ACTIVO Y LISTO`);
     console.log(`🌍 Modo: ${useMongo ? 'Sincronizado con Atlas' : 'Local (Esperando .env)'}`);
-    console.log(`📍 IP: http://${getLocalIP()}:${PORT}`);
+    console.log(`📍 Puerto: ${PORT}`);
     console.log(`=========================================`);
-    
-    // Abrir automáticamente el navegador en la PC del usuario
-    require('child_process').exec(`start http://localhost:${PORT}`);
 });

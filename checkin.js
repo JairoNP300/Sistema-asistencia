@@ -189,8 +189,10 @@ async function submitCheckin(type) {
     const emp = cState.selectedEmployee;
     if (!emp) return;
 
-    document.getElementById('btnEntry').disabled = true;
-    document.getElementById('btnExit').disabled = true;
+    const btnEntry = document.getElementById('btnEntry');
+    const btnExit = document.getElementById('btnExit');
+    if (btnEntry) btnEntry.disabled = true;
+    if (btnExit) btnExit.disabled = true;
 
     const now = new Date();
     const nonce = cState.tokenPayload?.nonce || null;
@@ -207,25 +209,34 @@ async function submitCheckin(type) {
         source: 'checkin',
     };
 
-    try {
-        const res = await fetch('/api/checkin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(logEntry),
-        });
-        const json = await res.json();
+    // Retry logic: 3 intentos con 2s de espera
+    let lastError = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const res = await fetch('/api/checkin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logEntry),
+            });
+            const json = await res.json();
 
-        if (!res.ok || json.error) {
-            if (res.status === 409) { showAlreadyRegistered(type); return; }
-            throw new Error(json.error || 'Error del servidor');
+            if (!res.ok || json.error) {
+                if (res.status === 409) { showAlreadyRegistered(type); return; }
+                throw new Error(json.error || 'Error del servidor');
+            }
+
+            showSuccess(emp, type, now);
+            return;
+        } catch (e) {
+            lastError = e;
+            if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
         }
-
-        showSuccess(emp, type, now);
-    } catch (e) {
-        showToastLocal('❌ Error: ' + e.message, 'error');
-        document.getElementById('btnEntry').disabled = false;
-        document.getElementById('btnExit').disabled = false;
     }
+
+    // Todos los intentos fallaron
+    showToastLocal('❌ No se pudo conectar. Intenta de nuevo.', 'error');
+    if (btnEntry) btnEntry.disabled = false;
+    if (btnExit) btnExit.disabled = false;
 }
 
 /* ---- SUCCESS SCREEN ---- */

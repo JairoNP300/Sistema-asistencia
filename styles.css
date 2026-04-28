@@ -2368,3 +2368,35 @@ body {
     border-radius: 10px; padding: 10px 14px; font-size: 0.85rem;
     color: var(--text-muted, #94a3b8); display: flex; align-items: center; gap: 10px;
 }
+
+/* ---- REPORT STATS ---- */
+.report-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 8px 0;
+}
+@media (max-width: 768px) {
+    .report-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.report-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+.report-stat-val {
+    font-size: 2rem;
+    font-weight: 900;
+    font-family: var(--mono);
+    line-height: 1;
+}
+.report-stat-lbl {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    text-align: center;
+}
