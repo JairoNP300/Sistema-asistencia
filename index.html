@@ -98,11 +98,8 @@
                     </svg>
                     Reportes
                 </button>
-                <button class="nav-item" id="nav-timer" onclick="showPage('timer')">&#9201; Timer</button>
                 <button class="nav-item" id="nav-timeoff" onclick="showPage('timeoff')">&#127958; Time Off</button>
                 <button class="nav-item" id="nav-schedules" onclick="showPage('schedules')">&#128197; Horarios</button>
-                <button class="nav-item" id="nav-groups" onclick="showPage('groups')">&#128101; Grupos</button>
-                <button class="nav-item" id="nav-projects" onclick="showPage('projects')">&#128193; Proyectos</button>
                 <button class="nav-item" id="nav-reports-advanced" onclick="showPage('reports-advanced')">&#128202; Reportes Avanzados</button>
                 <button class="nav-item" id="nav-geofences" onclick="showPage('geofences')">&#128205; Geofences</button>
             </div>
@@ -789,30 +786,9 @@
             </section>
 
 
-        <!-- === TIMER === -->
-        <section class="page" id="page-timer">
-          <div class="panel">
-            <div class="panel-header"><h3>&#9201; Timer — Registro de Tiempo</h3><span id="timerOfflineBadge" class="nav-badge" style="display:none;background:#f59e0b">OFFLINE</span></div>
-            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
-              <div style="flex:1;min-width:200px">
-                <label class="form-label">Empleado</label>
-                <select id="timerEmpSelect" class="form-input" style="width:100%"><option value="">Seleccionar...</option></select>
-              </div>
-              <div style="flex:1;min-width:200px">
-                <label class="form-label">Proyecto</label>
-                <select id="timerProjectSelect" class="form-input" style="width:100%"><option value="">Sin proyecto</option></select>
-              </div>
-            </div>
-            <div style="display:flex;gap:12px;margin-bottom:20px">
-              <button class="btn-primary" onclick="timerClockIn()">&#9654; Clock In</button>
-              <button class="btn-ghost" onclick="timerClockOut()">&#9632; Clock Out</button>
-            </div>
-            <div class="panel-header"><h3>Entradas Activas</h3></div>
-            <div id="timerActiveList" class="activity-feed"><div class="empty-feed">No hay entradas activas.</div></div>
-          </div>
-        </section>
+        <!-- === INVOICING - REMOVED === -->
 
-        <!-- === TIME OFF === -->
+        <!-- === REPORTS ADVANCED === -->
         <section class="page" id="page-timeoff">
           <div class="panel">
             <div class="panel-header"><h3>&#127958; Time Off — Ausencias y Permisos</h3></div>
@@ -865,40 +841,6 @@
             <button class="btn-primary" onclick="saveSchedule()">Guardar Horario</button>
             <div class="panel-header" style="margin-top:20px"><h3>Horarios Existentes</h3></div>
             <div class="table-wrap"><table class="data-table"><thead><tr><th>Nombre</th><th>Asignado a</th><th>ID</th><th>Desde</th><th>Acciones</th></tr></thead><tbody id="schedulesTableBody"></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- === GROUPS === -->
-        <section class="page" id="page-groups">
-          <div class="panel">
-            <div class="panel-header"><h3>&#128101; Grupos</h3></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
-              <div><label class="form-label">Nombre</label><input type="text" id="grpName" class="form-input" placeholder="Nombre del grupo" style="width:100%" /></div>
-              <div><label class="form-label">Descripcion</label><input type="text" id="grpDesc" class="form-input" placeholder="Descripcion" style="width:100%" /></div>
-              <div><label class="form-label">Managers (IDs, coma)</label><input type="text" id="grpManagers" class="form-input" placeholder="id1,id2" style="width:100%" /></div>
-              <div><label class="form-label">Miembros (IDs, coma)</label><input type="text" id="grpMembers" class="form-input" placeholder="id1,id2" style="width:100%" /></div>
-            </div>
-            <button class="btn-primary" onclick="saveGroup()">Guardar Grupo</button>
-            <div class="panel-header" style="margin-top:20px"><h3>Grupos Existentes</h3></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Nombre</th><th>Descripcion</th><th>Miembros</th><th>Acciones</th></tr></thead><tbody id="groupsTableBody"></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- === PROJECTS === -->
-        <section class="page" id="page-projects">
-          <div class="panel">
-            <div class="panel-header"><h3>&#128193; Proyectos</h3></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
-              <div><label class="form-label">Nombre</label><input type="text" id="projName" class="form-input" placeholder="Nombre del proyecto" style="width:100%" /></div>
-              <div><label class="form-label">Codigo</label><input type="text" id="projCode" class="form-input" placeholder="PROJ-001" style="width:100%" /></div>
-              <div><label class="form-label">Cliente</label><input type="text" id="projClient" class="form-input" placeholder="Cliente" style="width:100%" /></div>
-              <div><label class="form-label">Tarifa/hora</label><input type="number" id="projRate" class="form-input" placeholder="0" style="width:100%" /></div>
-              <div><label class="form-label">Moneda</label><input type="text" id="projCurrency" class="form-input" value="MXN" style="width:100%" /></div>
-              <div><label class="form-label">Facturable</label><select id="projBillable" class="form-input" style="width:100%"><option value="true">Si</option><option value="false">No</option></select></div>
-            </div>
-            <button class="btn-primary" onclick="saveProject()">Guardar Proyecto</button>
-            <div class="panel-header" style="margin-top:20px"><h3>Proyectos</h3></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Nombre</th><th>Codigo</th><th>Cliente</th><th>Tarifa</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="projectsTableBody"></tbody></table></div>
           </div>
         </section>
 

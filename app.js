@@ -30,7 +30,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('jwt');
     if (!token) { showLoginOverlay(); return; }
     await loadFromStorage();
-    if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
+    // Always ensure we have a secret key
+    if (!state.secretKey) {
+        state.secretKey = await CryptoUtils.generateKey();
+    }
     if (!state.employees.length) seedDemoEmployees();
     await saveToStorage();
     initClock();
@@ -162,11 +165,8 @@ const pageTitles = {
     reports: ['Reportes', 'Estadísticas y análisis'],
     security: ['Seguridad', 'Criptografía y configuración de tokens'],
     admin: ['Configuración', 'Ajustes del sistema'],
-    timer: ['Timer', 'Registro de tiempo en tiempo real'],
     timeoff: ['Time Off', 'Gestión de ausencias y permisos'],
     schedules: ['Horarios', 'Programación de turnos de trabajo'],
-    groups: ['Grupos', 'Organización del equipo'],
-    projects: ['Proyectos', 'Seguimiento de tiempo por proyecto'],
     'reports-advanced': ['Reportes Avanzados', 'Análisis detallado de asistencia y tiempo'],
     geofences: ['Geofences', 'Zonas geográficas permitidas'],
 };
@@ -185,11 +185,8 @@ function showPage(id) {
     if (id === 'reports') renderReports();
     if (id === 'security') renderSecurityPage();
     if (id === 'admin') renderAdminPage();
-    if (id === 'timer') renderTimer();
     if (id === 'timeoff') renderTimeOff();
     if (id === 'schedules') renderSchedules();
-    if (id === 'groups') renderGroups();
-    if (id === 'projects') renderProjects();
     if (id === 'reports-advanced') renderReportsAdvanced();
     if (id === 'geofences') renderGeofences();
 }
@@ -391,6 +388,11 @@ function renderMiniChart() {
 
 /* ---- STATION QR GENERATION ---- */
 async function generateStationToken() {
+    // Ensure we have a secret key
+    if (!state.secretKey) {
+        state.secretKey = await CryptoUtils.generateKey();
+        await saveToStorage();
+    }
     const now = Math.floor(Date.now() / 1000);
     const life = state.config.tokenLife;
     const quantizedTs = Math.floor(now / life) * life;
@@ -417,78 +419,62 @@ async function startStationQR() {
 }
 
 async function renderStationQR() {
-    console.log('🔄 Generando QR de estación...');
-    console.log('Secret key exists:', !!state.secretKey);
-    console.log('Secret key length:', state.secretKey?.length);
-    
+    // Ensure secret key exists
     if (!state.secretKey) {
-        console.error('❌ No hay clave secreta generada');
-        showToast('Error: No hay clave secreta. Recarga la página.', 'error');
+        state.secretKey = await CryptoUtils.generateKey();
+        await saveToStorage();
+    }
+
+    let result;
+    try {
+        result = await generateStationToken();
+    } catch(e) {
+        console.error('Error generando token:', e);
         return;
     }
-    
-    const result = await generateStationToken();
-    console.log('✅ Token generado:', result);
     state.currentStationToken = result;
-    
-    // Utilizamos el dominio real en el que el administrador está viendo la página
-    // Esto asegura que si se usa Cloudflare (o localhost), el celular entra al mismo lugar
+
     const host = window.location.host;
     const protocol = window.location.protocol;
-
-    // Generar la URL completa de check-in
     const baseUrl = `${protocol}//${host}/checkin.html`;
     const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
-    console.log('📱 URL del QR:', url);
-    
-    // Update URL display
+
     const urlInput = document.getElementById('stationUrl');
     if (urlInput) urlInput.value = url;
-    
-    // Render QR
+
     const loading = document.getElementById('stationQrLoading');
     const qrDiv = document.getElementById('stationQrCode');
-    console.log('QR elements:', { loading: !!loading, qrDiv: !!qrDiv });
-    
-    if (!qrDiv) {
-        console.error('❌ No se encontró el elemento stationQrCode');
-        return;
-    }
-    
+    if (!qrDiv) return;
+
     qrDiv.innerHTML = '';
     qrDiv.style.display = 'block';
     if (loading) loading.style.display = 'none';
-    
-    console.log('🎨 Generando código QR visual...');
+
     try {
-        new QRCode(qrDiv, { 
-            text: url, 
-            width: 240, 
-            height: 240, 
-            colorDark: '#07071a', 
-            colorLight: '#ffffff', 
-            correctLevel: QRCode.CorrectLevel.M 
+        new QRCode(qrDiv, {
+            text: url,
+            width: 240,
+            height: 240,
+            colorDark: '#07071a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
         });
-        console.log('✅ QR generado exitosamente');
-    } catch (e) {
-        console.error('❌ Error al generar QR:', e);
-        showToast('Error al generar QR: ' + e.message, 'error');
+    } catch(e) {
+        console.error('Error al generar QR visual:', e);
+        qrDiv.innerHTML = `<div style="color:red;padding:20px">Error al generar QR: ${e.message}</div>`;
         return;
     }
-    
-    // Update token info
+
     const p = result.payload;
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('stationTokenId', p.nonce.slice(0, 16) + '…');
     setEl('stationGenTime', new Date(p.ts * 1000).toLocaleTimeString('es-MX'));
     setEl('stationExpTime', new Date(result.expiresAt).toLocaleTimeString('es-MX'));
     setEl('stationSig', p.sig.slice(0, 20) + '…');
-    
-    // Show countdown
+
     const cd = document.getElementById('stationCountdown');
     if (cd) cd.style.display = 'flex';
     updateStationRing(state.config.tokenLife, state.config.tokenLife);
-    console.log('✅ Renderizado completo');
 }
 
 function updateStationRing(remaining, total) {
@@ -544,36 +530,25 @@ function startPolling() {
             if (res.ok) {
                 const d = await res.json();
                 const newLogs = d.logs || [];
-                
-                // DIAGNÓSTICO: Esto aparecerá en tu consola (F12)
-                console.log(`🛰️ Consulta exitosa. Logs en servidor: ${newLogs.length}, Locales: ${lastLogCount}`);
 
-                // Si hay CUALQUIER cambio en la cantidad de logs o presentes
                 if (newLogs.length !== lastLogCount || (d.presentSet && d.presentSet.length !== state.presentSet.size)) {
-                    console.warn('🚀 ¡ACTUALIZACIÓN GLOBAL DETECTADA! Sincronizando ecosistema...');
-                    
                     lastLogCount = newLogs.length;
-                    
-                    // Sincronización total de datos
                     state.logs = newLogs;
                     state.employees = d.employees || state.employees;
                     state.presentSet = new Set(d.presentSet || []);
                     state.stats = d.stats || state.stats;
-                    
-                    // Sincronización de configuración (Ecosistema uniforme)
                     state.departments = d.departments || state.departments;
                     state.adminConfig = d.adminConfig || state.adminConfig;
                     state.config = d.config || state.config;
-                    
-                    renderAll(); 
+                    renderAll();
                     updateStationStats();
-                    showToast('🔄 Ecosistema sincronizado en tiempo real', 'info');
                 }
+                updateConnStatus(true);
             }
         } catch (e) {
-            console.error('❌ Error de conexión en polling:', e.message);
+            updateConnStatus(false);
         }
-    }, 2000); 
+    }, 3000);
 }
 
 function updateConnStatus(online, failCount = 0) {
