@@ -716,7 +716,8 @@ function renderLogs() {
     document.getElementById('logTableFooter').textContent = `${list.length} registros encontrados`;
 }
 function exportLogs() {
-    if (!state.logs.length) {
+    const allLogs = [..._logsHistory, ...state.logs].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    if (!allLogs.length) {
         showToast('⚠️ No hay registros para exportar', 'warning');
         return;
     }
@@ -724,8 +725,8 @@ function exportLogs() {
     const today = new Date().toLocaleDateString('es-MX').replace(/\//g, '-');
     const filename = `Asistencia_${today}.xlsx`;
 
-    // Preparar datos para Excel
-    const data = state.logs.map((l, i) => ({
+    // Preparar datos para Excel (todos los registros, incluyendo historial)
+    const data = allLogs.map((l, i) => ({
         '#': i + 1,
         'Empleado': l.empName,
         'Movimiento': l.type === 'entry' ? 'Entrada' : (l.type === 'exit' ? 'Salida' : 'Rechazado'),
