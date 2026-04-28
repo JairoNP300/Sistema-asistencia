@@ -162,34 +162,55 @@ app.post('/api/employees/upsert', async (req, res) => {
 app.post('/api/checkin', async (req, res) => {
     try {
         const logEntry = req.body;
+
+        // Validación básica
+        if (!logEntry.empId || !logEntry.type) {
+            return res.status(400).json({ error: 'empId y type son requeridos' });
+        }
+
         let data;
-        
         if (useMongo) {
             data = await State.findOne();
+            if (!data) return res.status(500).json({ error: 'Estado del sistema no encontrado' });
         } else {
+            if (!fs.existsSync(DATA_FILE)) return res.status(500).json({ error: 'Archivo de datos no encontrado' });
             data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
         }
 
-        // Actualizar datos
+        // Asegurar que los arrays existen
+        if (!data.logs) data.logs = [];
+        if (!data.presentSet) data.presentSet = [];
+        if (!data.stats) data.stats = { present: 0, entries: 0, exits: 0, blocked: 0 };
+        if (!data.usedTokens) data.usedTokens = [];
+
+        // Registrar el log
         data.logs.push(logEntry);
+
         if (logEntry.type === 'entry') {
             if (!data.presentSet.includes(logEntry.empId)) data.presentSet.push(logEntry.empId);
-            data.stats.entries++;
+            data.stats.entries = (data.stats.entries || 0) + 1;
         } else if (logEntry.type === 'exit') {
             data.presentSet = data.presentSet.filter(id => id !== logEntry.empId);
-            data.stats.exits++;
-        } else {
-            data.stats.blocked++;
+            data.stats.exits = (data.stats.exits || 0) + 1;
         }
 
-        const emp = data.employees.find(e => e.id === logEntry.empId);
+        const emp = (data.employees || []).find(e => e.id === logEntry.empId);
         if (emp) emp.lastAccess = logEntry.ts;
         if (logEntry.tokenNonce) data.usedTokens.push(logEntry.tokenNonce);
 
-        if (useMongo) await data.save(); else fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-        
+        if (useMongo) {
+            data.markModified('logs');
+            data.markModified('presentSet');
+            data.markModified('stats');
+            data.markModified('employees');
+            await data.save();
+        } else {
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
         res.json({ success: true });
     } catch (e) {
+        console.error('Error en /api/checkin:', e.message);
         res.status(500).json({ error: e.message });
     }
 });
