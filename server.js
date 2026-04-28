@@ -44,24 +44,25 @@ async function migrateToCloud() {
     try {
         const cloudState = await State.findOne();
         if (!cloudState) {
-            console.log('📦 Base de datos en la nube vacía. Buscando datos locales para migrar...');
-            if (fs.existsSync(DATA_FILE)) {
-                const localData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-                const newState = new State(localData);
-                await newState.save();
-                console.log('✅ Migración exitosa: data.json -> MongoDB Cloud');
-            } else {
-                console.log('ℹ️ No hay datos locales para migrar. Iniciando base de datos limpia.');
-                const defaultState = new State({
-                    employees: [], logs: [], departments: ['TI', 'RRHH', 'Ventas', 'Operaciones', 'Finanzas'],
-                    config: { tokenLife: 30, timeWindow: 30, maxRetries: 3, antiReplay: true },
-                    adminConfig: { company: 'Mi Empresa S.A.', logo: '🏢', entryTime: '08:00', exitTime: '18:00', grace: 10 },
-                    stats: { present: 0, entries: 0, exits: 0, blocked: 0 },
-                    presentSet: [], secretKey: '', usedTokens: [], securityLog: [], currentDate: new Date().toLocaleDateString('es-MX')
-                });
-                await defaultState.save();
-            }
+            console.log('📦 Base de datos en la nube vacía. Iniciando base de datos limpia.');
+            const defaultState = new State({
+                employees: [], logs: [], departments: ['TI', 'RRHH', 'Ventas', 'Operaciones', 'Finanzas'],
+                config: { tokenLife: 30, timeWindow: 300, maxRetries: 3, antiReplay: true },
+                adminConfig: { company: 'Mi Empresa S.A.', logo: '🏢', entryTime: '08:00', exitTime: '18:00', grace: 10 },
+                stats: { present: 0, entries: 0, exits: 0, blocked: 0 },
+                presentSet: [], secretKey: '', usedTokens: [], securityLog: [],
+                currentDate: new Date().toLocaleDateString('es-MX')
+            });
+            await defaultState.save();
         } else {
+            // Corregir timeWindow si está mal configurado (< 60s)
+            if (!cloudState.config) cloudState.config = {};
+            if (!cloudState.config.timeWindow || cloudState.config.timeWindow < 60) {
+                cloudState.config.timeWindow = 300;
+                cloudState.markModified('config');
+                await cloudState.save();
+                console.log('✅ timeWindow corregido a 300s');
+            }
             console.log('🌐 Sistema sincronizado con la Nube.');
         }
     } catch (e) {
