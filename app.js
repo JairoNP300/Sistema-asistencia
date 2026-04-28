@@ -179,7 +179,7 @@ function showPage(id) {
     if (id !== 'scanner') stopScanner();
     if (id === 'generate') startStationQR();
     if (id === 'employees') renderEmployeeTable();
-    if (id === 'logs') renderLogs();
+    if (id === 'logs') { loadLogsHistory().then(() => renderLogs()); }
     if (id === 'reports') renderReports();
     if (id === 'security') renderSecurityPage();
     if (id === 'admin') renderAdminPage();
