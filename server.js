@@ -327,6 +327,33 @@ app.get('/api/config', (req, res) => {
     res.json({ ip: getLocalIP(), port: PORT, mode: useMongo ? 'Cloud' : 'Local' });
 });
 
+// GET /api/logs/history — Historial de logs de días anteriores
+app.get('/api/logs/history', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        let history = {};
+        if (useMongo) {
+            const state = await State.findOne();
+            if (state && state.history) {
+                state.history.forEach((logs, date) => { history[date] = logs; });
+            }
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            history = data.history || {};
+        }
+        // Devolver todos los logs históricos aplanados con su fecha
+        const allHistoricLogs = [];
+        Object.entries(history).forEach(([date, logs]) => {
+            (logs || []).forEach(l => allHistoricLogs.push({ ...l, _historyDate: date }));
+        });
+        // Ordenar por timestamp descendente
+        allHistoricLogs.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+        res.json({ history, allLogs: allHistoricLogs, dates: Object.keys(history).sort().reverse() });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // GET /api/version — hash del build para auto-refresh del navegador
 app.get('/api/version', (req, res) => {
     res.set('Cache-Control', 'no-store');
