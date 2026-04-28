@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initWakeLock();
     showPage('dashboard');
     startVersionCheck();
+    // Cargar historial de logs en segundo plano
+    loadLogsHistory();
 });
 
 /* ---- AUTO-REFRESH: detecta nueva versión en Render y recarga ---- */
