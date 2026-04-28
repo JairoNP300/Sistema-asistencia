@@ -209,6 +209,33 @@ app.post('/api/employees/upsert', async (req, res) => {
     }
 });
 
+// DELETE /api/employees/:id - Eliminar empleado
+app.delete('/api/employees/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (useMongo) {
+            const state = await State.findOne();
+            const before = state.employees.length;
+            state.employees = state.employees.filter(e => e.id !== id);
+            state.presentSet = (state.presentSet || []).filter(eid => eid !== id);
+            state.markModified('employees');
+            state.markModified('presentSet');
+            await state.save();
+            if (state.employees.length === before) return res.status(404).json({ error: 'Empleado no encontrado' });
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const before = data.employees.length;
+            data.employees = data.employees.filter(e => e.id !== id);
+            data.presentSet = (data.presentSet || []).filter(eid => eid !== id);
+            if (data.employees.length === before) return res.status(404).json({ error: 'Empleado no encontrado' });
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // POST /api/checkin - Registro de acceso desde móviles
 app.post('/api/checkin', async (req, res) => {
     try {
