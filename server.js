@@ -194,7 +194,15 @@ app.post('/api/checkin', async (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
-    res.json({ ip: getLocalIP(), port: PORT, mode: useMongo ? 'Cloud同步' : 'Local (Sin Nube)' });
+    res.json({ ip: getLocalIP(), port: PORT, mode: useMongo ? 'Cloud' : 'Local' });
+});
+
+// GET /api/version — hash del build para auto-refresh del navegador
+app.get('/api/version', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const hashFile = path.join(__dirname, 'build.hash');
+    const version = fs.existsSync(hashFile) ? fs.readFileSync(hashFile, 'utf8').trim() : 'init';
+    res.json({ version, ts: Date.now() });
 });
 
 // --- LOCATION ENDPOINTS ---

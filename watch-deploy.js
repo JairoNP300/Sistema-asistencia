@@ -1,20 +1,17 @@
 /**
- * watch-deploy.js — Sube cambios a GitHub automáticamente
- * Cada vez que se modifica un archivo, hace git add + commit + push
+ * watch-deploy.js — Auto-deploy a GitHub con debounce reducido
  */
 
-const { execSync, exec } = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname);
-const DEBOUNCE_MS = 3000; // Espera 3s después del último cambio antes de subir
+const DEBOUNCE_MS = 1500; // 1.5s después del último cambio
 
-// Archivos/carpetas a ignorar
-const IGNORE = ['node_modules', '.git', 'tunnel.log', 'tunnel.err', 'data.json'];
+const IGNORE = ['node_modules', '.git', 'tunnel.log', 'tunnel.err', 'data.json', 'build.hash'];
 
 let timer = null;
-let pendingChanges = false;
 
 function shouldIgnore(filename) {
     return IGNORE.some(ig => filename.includes(ig));
@@ -22,46 +19,34 @@ function shouldIgnore(filename) {
 
 function deploy() {
     try {
-        console.log('\n📤 Cambios detectados. Subiendo a GitHub...');
-        const timestamp = new Date().toLocaleString('es-MX');
         execSync('git add .', { cwd: ROOT, stdio: 'pipe' });
-        
-        // Verificar si hay algo que commitar
         const status = execSync('git status --porcelain', { cwd: ROOT }).toString().trim();
-        if (!status) {
-            console.log('✅ No hay cambios nuevos para subir.');
-            return;
-        }
+        if (!status) { console.log('✅ Sin cambios nuevos.'); return; }
 
-        execSync(`git commit -m "Actualización automática: ${timestamp}"`, { cwd: ROOT, stdio: 'pipe' });
+        const timestamp = new Date().toLocaleString('es-MX');
+        execSync(`git commit -m "Auto: ${timestamp}"`, { cwd: ROOT, stdio: 'pipe' });
         execSync('git push origin main', { cwd: ROOT, stdio: 'pipe' });
-        console.log(`✅ Cambios subidos a GitHub exitosamente.`);
-        console.log(`🚀 Render se está actualizando automáticamente...`);
-        console.log(`   (La URL pública reflejará los cambios en ~2 minutos)\n`);
+
+        // Escribir hash del build para que el frontend detecte la nueva versión
+        const hash = Date.now().toString(36);
+        fs.writeFileSync(path.join(ROOT, 'build.hash'), hash);
+
+        console.log(`✅ [${new Date().toLocaleTimeString()}] Subido a GitHub → Render actualizando...`);
     } catch (e) {
-        console.error('❌ Error al subir cambios:', e.message);
+        console.error('❌ Error:', e.message);
     }
 }
 
 function scheduleDeployment() {
-    pendingChanges = true;
     if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-        if (pendingChanges) {
-            pendingChanges = false;
-            deploy();
-        }
-    }, DEBOUNCE_MS);
+    timer = setTimeout(deploy, DEBOUNCE_MS);
 }
 
-// Vigilar cambios en archivos
 fs.watch(ROOT, { recursive: true }, (event, filename) => {
     if (filename && !shouldIgnore(filename)) {
-        console.log(`📝 Cambio detectado: ${filename}`);
+        process.stdout.write(`\r📝 ${filename} → subiendo en ${DEBOUNCE_MS/1000}s...`);
         scheduleDeployment();
     }
 });
 
-console.log('👀 Vigilando cambios en archivos...');
-console.log('   Cada cambio que hagas se subirá automáticamente a GitHub y Render.');
-console.log('   No cierres esta ventana.\n');
+console.log('👀 Auto-deploy activo. Cambios → GitHub → Render automáticamente.\n');

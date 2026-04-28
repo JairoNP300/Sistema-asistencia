@@ -26,7 +26,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     startPolling();
     initWakeLock();
     showPage('dashboard');
+    startVersionCheck();
 });
+
+/* ---- AUTO-REFRESH: detecta nueva versión en Render y recarga ---- */
+function startVersionCheck() {
+    let currentVersion = null;
+    setInterval(async () => {
+        try {
+            const res = await fetch('/api/version', { cache: 'no-store' });
+            if (!res.ok) return;
+            const { version } = await res.json();
+            if (currentVersion === null) { currentVersion = version; return; }
+            if (version !== currentVersion) {
+                currentVersion = version;
+                showToast('🔄 Nueva versión disponible. Actualizando...', 'info');
+                setTimeout(() => location.reload(true), 1500);
+            }
+        } catch { /* ignore */ }
+    }, 30000); // cada 30s
+}
 
 /* ---- SCREEN WAKE LOCK (Keep display on) ---- */
 let wakeLock = null;
