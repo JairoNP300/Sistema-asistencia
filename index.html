@@ -591,8 +591,13 @@
             <!-- === RRHH === -->
             <section class="page" id="page-hr">
                 <div class="hr-tabs">
-                    <button class="hr-tab active" onclick="showHRTab('applications')">📋 Solicitudes de Empleo</button>
-                    <button class="hr-tab" onclick="showHRTab('payroll')">💰 Planilla de Sueldos</button>
+                    <button class="hr-tab active" onclick="showHRTab('applications')">📋 Solicitudes</button>
+                    <button class="hr-tab" onclick="showHRTab('contracts')">📄 Contratos</button>
+                    <button class="hr-tab" onclick="showHRTab('confidentiality')">🔒 Confidencialidad</button>
+                    <button class="hr-tab" onclick="showHRTab('documents')">📁 Documentos</button>
+                    <button class="hr-tab" onclick="showHRTab('permissions')">🗓 Permisos</button>
+                    <button class="hr-tab" onclick="showHRTab('certificates')">📜 Constancias</button>
+                    <button class="hr-tab" onclick="showHRTab('payroll')">💰 Planilla</button>
                 </div>
 
                 <!-- Tab: Solicitudes de Empleo -->
@@ -616,6 +621,229 @@
                                 </thead>
                                 <tbody id="applicationsTableBody">
                                     <tr><td colspan="6" class="empty-feed">No hay solicitudes registradas</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Contratos -->
+                <div class="hr-tab-content" id="hr-tab-contracts">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>📄 Contratos Laborales</h3>
+                            <button class="btn-primary" onclick="openContractModal()">+ Nuevo Contrato</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Cargo</th>
+                                        <th>Tipo</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Salario</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contractsTableBody">
+                                    <tr><td colspan="7" class="empty-feed">No hay contratos registrados</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Carta de Confidencialidad -->
+                <div class="hr-tab-content" id="hr-tab-confidentiality">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>🔒 Cartas de Confidencialidad</h3>
+                            <button class="btn-primary" onclick="openConfidentialityModal()">+ Nueva Carta</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Cargo</th>
+                                        <th>Estado</th>
+                                        <th>Fecha Firma</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="confidentialityTableBody">
+                                    <tr><td colspan="5" class="empty-feed">No hay cartas registradas</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Documentos Personales -->
+                <div class="hr-tab-content" id="hr-tab-documents">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>📁 Documentos Personales Escaneados</h3>
+                        </div>
+                        <div class="doc-upload-section">
+                            <div class="form-row" style="margin-bottom:16px">
+                                <div class="form-group">
+                                    <label>Empleado</label>
+                                    <select id="docEmpSelect" class="form-input">
+                                        <option value="">Seleccionar empleado...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo de Documento</label>
+                                    <select id="docType" class="form-input">
+                                        <option value="dui_front">DUI (Frente)</option>
+                                        <option value="dui_back">DUI (Reverso)</option>
+                                        <option value="nit">NIT</option>
+                                        <option value="photo">Foto del Empleado</option>
+                                        <option value="certificate">Certificado de Estudios</option>
+                                        <option value="recommendation">Carta de Recomendación</option>
+                                        <option value="isss">Carnet ISSS</option>
+                                        <option value="afp">Carnet AFP</option>
+                                        <option value="other">Otro Documento</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Descripción (opcional)</label>
+                                    <input type="text" id="docDescription" class="form-input" placeholder="Descripción del documento" />
+                                </div>
+                            </div>
+                            <div class="upload-drop-zone" id="uploadDropZone" onclick="document.getElementById('docFileInput').click()" ondragover="event.preventDefault()" ondrop="handleDocDrop(event)">
+                                <div class="upload-icon">📂</div>
+                                <p>Arrastra archivos aquí o haz clic para seleccionar</p>
+                                <p class="upload-hint">PDF, JPG, PNG, JPEG — Máx. 10MB</p>
+                                <input type="file" id="docFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocFileSelect(event)" />
+                            </div>
+                            <button class="btn-primary" onclick="uploadDocument()" style="margin-top:12px">📤 Subir Documento</button>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>📋 Documentos Subidos</h3>
+                            <div class="form-group" style="margin:0;min-width:200px">
+                                <select id="docFilterEmp" class="form-input" onchange="loadDocuments()">
+                                    <option value="">Todos los empleados</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Tipo</th>
+                                        <th>Archivo</th>
+                                        <th>Tamaño</th>
+                                        <th>Fecha Subida</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="documentsTableBody">
+                                    <tr><td colspan="6" class="empty-feed">No hay documentos subidos</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Formulario de Permisos -->
+                <div class="hr-tab-content" id="hr-tab-permissions">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>🗓 Solicitudes de Permiso</h3>
+                            <button class="btn-primary" onclick="openPermissionModal()">+ Nueva Solicitud</button>
+                        </div>
+                        <div class="log-filters">
+                            <select id="permFilterStatus" class="form-input" onchange="loadPermissions()">
+                                <option value="">Todos los estados</option>
+                                <option value="pending">Pendientes</option>
+                                <option value="approved">Aprobados</option>
+                                <option value="rejected">Rechazados</option>
+                            </select>
+                            <select id="permFilterEmp" class="form-input" onchange="loadPermissions()">
+                                <option value="">Todos los empleados</option>
+                            </select>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Tipo</th>
+                                        <th>Fecha Inicio</th>
+                                        <th>Fecha Fin</th>
+                                        <th>Días</th>
+                                        <th>Motivo</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="permissionsTableBody">
+                                    <tr><td colspan="8" class="empty-feed">No hay solicitudes de permiso</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Constancias de Tiempo Laboral -->
+                <div class="hr-tab-content" id="hr-tab-certificates">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>📜 Generar Constancia de Tiempo Laboral</h3>
+                        </div>
+                        <div class="cert-gen-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Empleado *</label>
+                                    <select id="certEmpSelect" class="form-input">
+                                        <option value="">Seleccionar empleado...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Propósito de la Constancia</label>
+                                    <select id="certPurpose" class="form-input">
+                                        <option value="tramites_bancarios">Trámites Bancarios</option>
+                                        <option value="visa">Solicitud de Visa</option>
+                                        <option value="alquiler">Alquiler de Vivienda</option>
+                                        <option value="credito">Solicitud de Crédito</option>
+                                        <option value="estudios">Estudios / Beca</option>
+                                        <option value="general">Uso General</option>
+                                        <option value="otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:24px">
+                                    <input type="checkbox" id="certIncludeSalary" />
+                                    <label for="certIncludeSalary">Incluir salario en la constancia</label>
+                                </div>
+                            </div>
+                            <button class="btn-primary" onclick="generateCertificate()">📜 Generar Constancia</button>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>📚 Constancias Generadas</h3>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Cargo</th>
+                                        <th>Propósito</th>
+                                        <th>Incluye Salario</th>
+                                        <th>Fecha Generación</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="certificatesTableBody">
+                                    <tr><td colspan="6" class="empty-feed">No hay constancias generadas</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -649,7 +877,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Año</label>
-                                    <input type="number" id="payrollYear" class="form-input" value="2024" min="2020" max="2030" />
+                                    <input type="number" id="payrollYear" class="form-input" value="2025" min="2020" max="2030" />
                                 </div>
                                 <button class="btn-primary" onclick="generatePayroll()" style="align-self:flex-end;">🔄 Generar Planilla</button>
                             </div>
