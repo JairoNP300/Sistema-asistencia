@@ -98,10 +98,6 @@
                     </svg>
                     Reportes
                 </button>
-                <button class="nav-item" id="nav-timeoff" onclick="showPage('timeoff')">&#127958; Time Off</button>
-                <button class="nav-item" id="nav-schedules" onclick="showPage('schedules')">&#128197; Horarios</button>
-                <button class="nav-item" id="nav-reports-advanced" onclick="showPage('reports-advanced')">&#128202; Reportes Avanzados</button>
-                <button class="nav-item" id="nav-geofences" onclick="showPage('geofences')">&#128205; Geofences</button>
             </div>
 
             <div class="nav-section">
@@ -267,42 +263,6 @@
                     </div>
                     <div class="chart-wrap" id="chartWrap">
                         <canvas id="timelineChart" height="120"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === Jibble MVP Integration (UI) === -->
-            <section class="page" id="page-jibble">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>🪪 Integración Jibble MVP</h3>
-                    </div>
-                    <div class="jb-grid">
-                        <div class="jb-block">
-                            <h4>Presentes</h4>
-                            <button class="btn-ghost sm" onclick="jbRefreshPresent()">Refrescar</button>
-                            <div id="jb_presentList" class="present-list small"></div>
-                        </div>
-                        <div class="jb-block">
-                            <h4>Registrar Entrada / Salida</h4>
-                            <select id="jb_empSelect" class="form-input" style="width:100%;"></select>
-                            <div class="jb-actions" style="margin-top:8px; display:flex; gap:8px;">
-                                <button class="btn-primary sm" onclick="jbRegister('entry')">Entrada</button>
-                                <button class="btn-danger sm" onclick="jbRegister('exit')">Salida</button>
-                            </div>
-                        </div>
-                        <div class="jb-block" style="min-width:320px;">
-                            <h4>Reportes</h4>
-                            <select id="jb_reportRange" class="form-input" style="width:60%;"></select>
-                            <button class="btn-primary sm" style="margin-left:8px" onclick="jbShowSummary()">Ver resumen</button>
-                            <pre id="jb_reportResult" class="jb-output" style="max-height:180px; overflow:auto; margin-top:6px;"></pre>
-                        </div>
-                        <div class="jb-block" style="min-width:320px;">
-                            <h4>Exportar Logs</h4>
-                            <select id="jb_exportRange" class="form-input" style="width:60%;"></select>
-                            <button class="btn-ghost sm" style="margin-left:8px" onclick="jbExportLogs()">Exportar CSV</button>
-                            <div id="jb_exportStatus" class="info-text muted" style="margin-top:6px;"></div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -571,7 +531,6 @@
                                     <th>Fecha/Hora</th>
                                     <th>Token ID</th>
                                     <th>Estado</th>
-                                    <th>📍</th>
                                     <th>Motivo</th>
                                 </tr>
                             </thead>
@@ -785,111 +744,6 @@
                 </div>
             </section>
 
-
-        <!-- === INVOICING - REMOVED === -->
-
-        <!-- === REPORTS ADVANCED === -->
-        <section class="page" id="page-timeoff">
-          <div class="panel">
-            <div class="panel-header"><h3>&#127958; Time Off — Ausencias y Permisos</h3></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
-              <div>
-                <label class="form-label">Tipo</label>
-                <select id="toType" class="form-input" style="width:100%">
-                  <option value="vacation">Vacaciones</option>
-                  <option value="sick">Enfermedad</option>
-                  <option value="personal">Personal</option>
-                  <option value="unpaid">Sin goce</option>
-                  <option value="other">Otro</option>
-                </select>
-              </div>
-              <div>
-                <label class="form-label">Fecha inicio</label>
-                <input type="date" id="toStart" class="form-input" style="width:100%" />
-              </div>
-              <div>
-                <label class="form-label">Fecha fin</label>
-                <input type="date" id="toEnd" class="form-input" style="width:100%" />
-              </div>
-              <div>
-                <label class="form-label">Motivo</label>
-                <input type="text" id="toReason" class="form-input" placeholder="Motivo..." style="width:100%" />
-              </div>
-            </div>
-            <div style="margin-bottom:16px">
-              <label class="form-label">Empleado</label>
-              <select id="toEmpSelect" class="form-input" style="width:100%;max-width:300px"><option value="">Seleccionar...</option></select>
-            </div>
-            <button class="btn-primary" onclick="submitTimeOff()">Solicitar</button>
-            <div class="panel-header" style="margin-top:20px"><h3>Solicitudes</h3></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Empleado</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Dias</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="timeoffTableBody"></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- === APPROVALS - REMOVED === -->
-
-        <!-- === SCHEDULES === -->
-        <section class="page" id="page-schedules">
-          <div class="panel">
-            <div class="panel-header"><h3>&#128197; Horarios</h3></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
-              <div><label class="form-label">Nombre</label><input type="text" id="schName" class="form-input" placeholder="Horario Matutino" style="width:100%" /></div>
-              <div><label class="form-label">Asignado a</label><select id="schAssignedTo" class="form-input" style="width:100%"><option value="employee">Empleado</option><option value="group">Grupo</option></select></div>
-              <div><label class="form-label">ID Asignado</label><input type="text" id="schAssignedId" class="form-input" placeholder="ID del empleado o grupo" style="width:100%" /></div>
-              <div><label class="form-label">Desde</label><input type="date" id="schFrom" class="form-input" style="width:100%" /></div>
-            </div>
-            <button class="btn-primary" onclick="saveSchedule()">Guardar Horario</button>
-            <div class="panel-header" style="margin-top:20px"><h3>Horarios Existentes</h3></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Nombre</th><th>Asignado a</th><th>ID</th><th>Desde</th><th>Acciones</th></tr></thead><tbody id="schedulesTableBody"></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- === INVOICING - REMOVED === -->
-
-        <!-- === REPORTS ADVANCED === -->
-        <section class="page" id="page-reports-advanced">
-          <div class="panel">
-            <div class="panel-header"><h3>&#128202; Reportes Avanzados</h3></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
-              <div><label class="form-label">Empleado</label><select id="rptEmp" class="form-input" style="width:100%"><option value="">Todos</option></select></div>
-              <div><label class="form-label">Departamento</label><input type="text" id="rptDept" class="form-input" placeholder="TI, RRHH..." style="width:100%" /></div>
-              <div><label class="form-label">Proyecto</label><select id="rptProject" class="form-input" style="width:100%"><option value="">Todos</option></select></div>
-              <div><label class="form-label">Desde</label><input type="date" id="rptFrom" class="form-input" style="width:100%" /></div>
-              <div><label class="form-label">Hasta</label><input type="date" id="rptTo" class="form-input" style="width:100%" /></div>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:16px">
-              <button class="btn-primary" onclick="runAdvancedReport()">Ver Reporte</button>
-              <button class="btn-ghost" onclick="runAdvancedReport('csv')">Exportar CSV</button>
-              <button class="btn-ghost" onclick="runAdvancedReport('xls')">Exportar XLS</button>
-            </div>
-            <div class="panel-header"><h3>Actividad en Vivo</h3></div>
-            <div id="liveActivityFeed" class="activity-feed" style="margin-bottom:16px"><div class="empty-feed">Cargando...</div></div>
-            <div class="panel-header"><h3>Resultados</h3></div>
-            <div class="table-wrap"><table class="data-table"><thead><tr><th>Empleado</th><th>Dept</th><th>Proyecto</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody id="advReportTableBody"></tbody></table></div>
-            <div id="advReportTotals" style="margin-top:8px;font-weight:600;color:var(--text-muted)"></div>
-          </div>
-        </section>
-
-        <!-- === GEOFENCES === -->
-        <section class="page" id="page-geofences">
-          <div class="panel">
-            <div class="panel-header"><h3>📍 Geofences — Zonas Permitidas</h3></div>
-            <p class="info-text muted" style="margin-bottom:16px">Define zonas geográficas. Los empleados solo podrán registrar asistencia si están dentro de una zona activa.</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px">
-              <div><label class="form-label">Nombre de la zona</label><input type="text" id="gfName" class="form-input" placeholder="Oficina Central" style="width:100%" /></div>
-              <div><label class="form-label">Latitud</label><input type="number" id="gfLat" class="form-input" placeholder="19.4326" step="any" style="width:100%" /></div>
-              <div><label class="form-label">Longitud</label><input type="number" id="gfLon" class="form-input" placeholder="-99.1332" step="any" style="width:100%" /></div>
-              <div><label class="form-label">Radio (metros)</label><input type="number" id="gfRadius" class="form-input" placeholder="100" style="width:100%" /></div>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:24px">
-              <button class="btn-primary" onclick="addGeofence()">+ Agregar Geofence</button>
-              <button class="btn-ghost" onclick="useMyLocation()" title="Usar mi ubicación actual">📡 Usar mi ubicación</button>
-            </div>
-            <div class="panel-header" style="margin-top:4px"><h3>Zonas Configuradas</h3></div>
-            <div id="geofencesList" class="activity-feed"><div class="empty-feed">No hay geofences configurados.</div></div>
-          </div>
-        </section>
-
         </main>
     </div>
 
@@ -980,30 +834,6 @@
 
     <script src="crypto-utils.js"></script>
     <script src="app.js"></script>
-    
-    <!-- Login Overlay (Auth) -->
-    <div class="modal-overlay" id="loginOverlay" style="display:none; z-index: 9999;">
-        <div class="modal" id="loginModal">
-            <div class="modal-header">
-                <h3>Iniciar sesión</h3>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="loginUser">Usuario</label>
-                    <input type="text" id="loginUser" class="form-input" placeholder="admin" />
-                </div>
-                <div class="form-group">
-                    <label for="loginPass">Contraseña</label>
-                    <input type="password" id="loginPass" class="form-input" placeholder="******" />
-                </div>
-                <div class="info-text" id="loginError" style="color:#f87171; display:none;">Credenciales inválidas</div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-ghost" onclick="hideLoginOverlay()">Cancelar</button>
-                <button class="btn-primary" onclick="loginSubmit()">Entrar</button>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>

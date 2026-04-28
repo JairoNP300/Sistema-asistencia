@@ -610,39 +610,3 @@ body::after {
     text-align: center;
     padding: 32px;
 }
-
-/* ---------- GPS STATUS BAR ---------- */
-.gps-status-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin-bottom: 20px;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-.gps-status-bar.gps-ok {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: rgba(16, 185, 129, 0.4);
-}
-.gps-status-bar.gps-error {
-    background: rgba(244, 63, 94, 0.08);
-    border-color: rgba(244, 63, 94, 0.25);
-}
-.gps-status-bar.gps-blocked {
-    background: rgba(251, 191, 36, 0.08);
-    border-color: rgba(251, 191, 36, 0.3);
-}
-.gps-icon { font-size: 1.1rem; flex-shrink: 0; }
-.gps-text { color: var(--text); flex: 1; font-weight: 500; }
-.gps-coords { color: var(--muted); font-size: 0.75rem; font-family: monospace; }
-
-/* GPS pulse animation while acquiring */
-@keyframes gpsPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-.gps-acquiring .gps-icon { animation: gpsPulse 1.2s ease-in-out infinite; }

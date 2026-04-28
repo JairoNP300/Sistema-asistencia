@@ -14,32 +14,11 @@ let state = {
 };
 
 /* ---- INIT ---- */
-// Global fetch wrapper to automatically attach JWT when available
-(function() {
-    const orig = window.fetch.bind(window);
-    window.fetch = function(input, init = {}) {
-        init.headers = init.headers || {};
-        const token = localStorage.getItem('jwt');
-        if (token) init.headers['Authorization'] = 'Bearer ' + token;
-        return orig(input, init);
-    };
-})();
-
 document.addEventListener('DOMContentLoaded', async () => {
-    // If no token yet, prompt login and halt further initialization
-    const token = localStorage.getItem('jwt');
-    if (!token) { showLoginOverlay(); return; }
-
-    try { await loadFromStorage(); } catch(e) { console.warn('loadFromStorage error:', e); }
-
-    // Always ensure we have a secret key
-    if (!state.secretKey) {
-        try { state.secretKey = await CryptoUtils.generateKey(); } catch(e) { console.warn('generateKey error:', e); }
-    }
+    await loadFromStorage();
+    if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
     if (!state.employees.length) seedDemoEmployees();
-
-    try { await saveToStorage(); } catch(e) { console.warn('saveToStorage error:', e); }
-
+    await saveToStorage();
     initClock();
     initTokenTimer();
     renderAll();
@@ -47,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     startPolling();
     initWakeLock();
     showPage('dashboard');
-    initJibblePanelUI();
 });
 
 /* ---- SCREEN WAKE LOCK (Keep display on) ---- */
@@ -95,18 +73,11 @@ async function loadFromStorage() {
             const d = await res.json();
             Object.assign(state, {
                 employees: d.employees || [], logs: d.logs || [], departments: d.departments || state.departments,
-                // Never overwrite secretKey with empty — generate if missing
-                secretKey: d.secretKey || state.secretKey || '',
-                config: { ...state.config, ...(d.config || {}) },
+                secretKey: d.secretKey || '', config: { ...state.config, ...(d.config || {}) },
                 adminConfig: { ...state.adminConfig, ...(d.adminConfig || {}) }, securityLog: d.securityLog || [],
                 stats: d.stats || state.stats, presentSet: new Set(d.presentSet || []),
                 usedTokens: new Set(d.usedTokens || [])
             });
-            return;
-        } else if (res.status === 401 || res.status === 403) {
-            // JWT expired — clear and re-login
-            localStorage.removeItem('jwt');
-            showLoginOverlay();
             return;
         }
     } catch (e) { console.warn('Server not available, falling back to localStorage'); }
@@ -117,7 +88,7 @@ async function loadFromStorage() {
         const d = JSON.parse(raw);
         Object.assign(state, {
             employees: d.employees || [], logs: d.logs || [], departments: d.departments || state.departments,
-            secretKey: d.secretKey || state.secretKey || '', config: { ...state.config, ...(d.config || {}) },
+            secretKey: d.secretKey || '', config: { ...state.config, ...(d.config || {}) },
             adminConfig: { ...state.adminConfig, ...(d.adminConfig || {}) }, securityLog: d.securityLog || [],
             stats: d.stats || state.stats, presentSet: new Set(d.presentSet || [])
         });
@@ -153,23 +124,16 @@ function initClock() {
 function initTokenTimer() {
     const circumference = 2 * Math.PI * 15; // r=15
     function tick() {
-        const life = state.config.tokenLife || 30;
-        const now = Math.floor(Date.now() / 1000);
-        const elapsed = now % life;
+        const life = state.config.tokenLife;
+        const elapsed = Math.floor(Date.now() / 1000) % life;
         const remaining = life - elapsed;
         const progress = remaining / life;
         const offset = circumference * (1 - progress);
         const ring = document.getElementById('timerRing');
-        const count = document.getElementById('timerCount');
-        if (ring) {
-            ring.style.strokeDasharray = circumference;
-            ring.style.strokeDashoffset = offset;
-            ring.style.stroke = remaining <= 5 ? '#f43f5e' : remaining <= 10 ? '#fbbf24' : '#6366f1';
-        }
-        if (count) count.textContent = `${remaining}s`;
+        if (ring) { ring.style.strokeDashoffset = offset; ring.style.stroke = remaining <= 5 ? '#f43f5e' : remaining <= 10 ? '#fbbf24' : '#6366f1'; }
+        document.getElementById('timerCount').textContent = `${remaining}s`;
     }
-    tick();
-    setInterval(tick, 1000);
+    tick(); setInterval(tick, 1000);
 }
 
 /* ---- PAGE NAVIGATION ---- */
@@ -182,10 +146,6 @@ const pageTitles = {
     reports: ['Reportes', 'Estadísticas y análisis'],
     security: ['Seguridad', 'Criptografía y configuración de tokens'],
     admin: ['Configuración', 'Ajustes del sistema'],
-    timeoff: ['Time Off', 'Gestión de ausencias y permisos'],
-    schedules: ['Horarios', 'Programación de turnos de trabajo'],
-    'reports-advanced': ['Reportes Avanzados', 'Análisis detallado de asistencia y tiempo'],
-    geofences: ['Geofences', 'Zonas geográficas permitidas'],
 };
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -202,10 +162,6 @@ function showPage(id) {
     if (id === 'reports') renderReports();
     if (id === 'security') renderSecurityPage();
     if (id === 'admin') renderAdminPage();
-    if (id === 'timeoff') renderTimeOff();
-    if (id === 'schedules') renderSchedules();
-    if (id === 'reports-advanced') renderReportsAdvanced();
-    if (id === 'geofences') renderGeofences();
 }
 
 function toggleSidebar() {
@@ -222,100 +178,6 @@ function renderAll() {
     renderSecurityPage();
     renderAdminPage();
     fillDeptDropdowns();
-    // Ensure the Jibble MVP UI is populated alongside other data
-    populateJibbleUIElements();
-}
-
-// --- Jibble MVP UI helpers ---
-function initJibblePanelUI() {
-    // Prepare static select options for employees on the MVP panel
-    const empOptions = (state.employees || []).filter(e => e.status === 'active')
-        .map(e => `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.empNum})</option>`)
-        .join('');
-    const sel = document.getElementById('jb_empSelect');
-    if (sel) sel.innerHTML = `<option value="">Seleccionar empleado...</option>${empOptions}`;
-    // Populate range options for reports/exports
-    const rep = document.getElementById('jb_reportRange');
-    if (rep) rep.innerHTML = `<option value="today">Hoy</option><option value="week">Esta semana</option>`;
-    const exp = document.getElementById('jb_exportRange');
-    if (exp) exp.innerHTML = `<option value="today">Hoy</option><option value="week">Esta semana</option>`;
-}
-
-async function populateJibbleUIElements() {
-    // Fill presentes immediately if available
-    await jbRefreshPresent();
-}
-
-async function jbRefreshPresent() {
-    try {
-        const res = await fetch('/api/attendance/present');
-        if (!res.ok) throw new Error('No se pudo obtener presencia');
-        const data = await res.json();
-        const wrap = document.getElementById('jb_presentList');
-        if (!wrap) return;
-        wrap.innerHTML = (data.present || [])
-            .map(p => `<div class="present-item">${p.avatar || p.name?.[0] || '👤'} ${p.name} <small>(${p.dept || ''} • ${p.empNum || ''})</small></div>`)
-            .join('') || '<div class="empty-feed">Sin presencia</div>';
-    } catch (e) {
-        console.warn('JB: error obteniendo presentes', e.message);
-    }
-}
-
-async function jbRegister(type) {
-    const sel = document.getElementById('jb_empSelect');
-    const empId = sel?.value;
-    if (!empId) { showToast('Selecciona un empleado', 'warning'); return; }
-    const payload = { empId, type, ts: new Date().toISOString() };
-    try {
-        const res = await fetch('/api/entries', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error('Fallo al registrar');
-        const data = await res.json();
-        showToast(`✅ ${type === 'entry' ? 'Entrada' : 'Salida'} registrada`, 'success');
-        await jbRefreshPresent();
-        jbShowSummary();
-        // Update any existing logs/panels if needed
-    } catch (e) {
-        showToast('❌ Error registrando: ' + e.message, 'error');
-    }
-}
-
-async function jbShowSummary() {
-    const range = document.getElementById('jb_reportRange')?.value || 'today';
-    try {
-        const res = await fetch(`/api/reports/summary?range=${range}`);
-        if (!res.ok) throw new Error('No se pudo obtener resumen');
-        const data = await res.json();
-        const out = JSON.stringify(data, null, 2);
-        const el = document.getElementById('jb_reportResult');
-        if (el) el.textContent = out;
-        // Also show human-friendly tip
-        showToast('Resumen obtenido', 'info');
-    } catch (e) {
-        showToast('❌ Error obteniendo resumen: ' + e.message, 'error');
-    }
-}
-
-async function jbExportLogs() {
-    const range = document.getElementById('jb_exportRange')?.value || 'today';
-    try {
-        const res = await fetch('/api/export/logs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ range })
-        });
-        if (!res.ok) throw new Error('Exportación fallida');
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'logs.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-        const status = document.getElementById('jb_exportStatus'); if (status) status.textContent = 'Descarga iniciada';
-    } catch (e) {
-        showToast('❌ Error exportando: ' + e.message, 'error');
-    }
 }
 
 /* ---- DASHBOARD ---- */
@@ -405,11 +267,6 @@ function renderMiniChart() {
 
 /* ---- STATION QR GENERATION ---- */
 async function generateStationToken() {
-    // Ensure we have a secret key
-    if (!state.secretKey) {
-        state.secretKey = await CryptoUtils.generateKey();
-        await saveToStorage();
-    }
     const now = Math.floor(Date.now() / 1000);
     const life = state.config.tokenLife;
     const quantizedTs = Math.floor(now / life) * life;
@@ -436,59 +293,35 @@ async function startStationQR() {
 }
 
 async function renderStationQR() {
-    // Ensure secret key exists
-    if (!state.secretKey) {
-        state.secretKey = await CryptoUtils.generateKey();
-        await saveToStorage();
-    }
-
-    let result;
-    try {
-        result = await generateStationToken();
-    } catch(e) {
-        console.error('Error generando token:', e);
-        return;
-    }
+    const result = await generateStationToken();
     state.currentStationToken = result;
-
+    // Utilizamos el dominio real en el que el administrador está viendo la página
+    // Esto asegura que si se usa Cloudflare (o localhost), el celular entra al mismo lugar
     const host = window.location.host;
     const protocol = window.location.protocol;
+
+    // Generar la URL completa de check-in
     const baseUrl = `${protocol}//${host}/checkin.html`;
     const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
-
+    // Update URL display
     const urlInput = document.getElementById('stationUrl');
     if (urlInput) urlInput.value = url;
-
+    // Render QR
     const loading = document.getElementById('stationQrLoading');
     const qrDiv = document.getElementById('stationQrCode');
     if (!qrDiv) return;
-
     qrDiv.innerHTML = '';
     qrDiv.style.display = 'block';
     if (loading) loading.style.display = 'none';
-
-    try {
-        new QRCode(qrDiv, {
-            text: url,
-            width: 240,
-            height: 240,
-            colorDark: '#07071a',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-        });
-    } catch(e) {
-        console.error('Error al generar QR visual:', e);
-        qrDiv.innerHTML = `<div style="color:red;padding:20px">Error al generar QR: ${e.message}</div>`;
-        return;
-    }
-
+    new QRCode(qrDiv, { text: url, width: 240, height: 240, colorDark: '#07071a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    // Update token info
     const p = result.payload;
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('stationTokenId', p.nonce.slice(0, 16) + '…');
     setEl('stationGenTime', new Date(p.ts * 1000).toLocaleTimeString('es-MX'));
     setEl('stationExpTime', new Date(result.expiresAt).toLocaleTimeString('es-MX'));
     setEl('stationSig', p.sig.slice(0, 20) + '…');
-
+    // Show countdown
     const cd = document.getElementById('stationCountdown');
     if (cd) cd.style.display = 'flex';
     updateStationRing(state.config.tokenLife, state.config.tokenLife);
@@ -547,25 +380,36 @@ function startPolling() {
             if (res.ok) {
                 const d = await res.json();
                 const newLogs = d.logs || [];
+                
+                // DIAGNÓSTICO: Esto aparecerá en tu consola (F12)
+                console.log(`🛰️ Consulta exitosa. Logs en servidor: ${newLogs.length}, Locales: ${lastLogCount}`);
 
+                // Si hay CUALQUIER cambio en la cantidad de logs o presentes
                 if (newLogs.length !== lastLogCount || (d.presentSet && d.presentSet.length !== state.presentSet.size)) {
+                    console.warn('🚀 ¡ACTUALIZACIÓN GLOBAL DETECTADA! Sincronizando ecosistema...');
+                    
                     lastLogCount = newLogs.length;
+                    
+                    // Sincronización total de datos
                     state.logs = newLogs;
                     state.employees = d.employees || state.employees;
                     state.presentSet = new Set(d.presentSet || []);
                     state.stats = d.stats || state.stats;
+                    
+                    // Sincronización de configuración (Ecosistema uniforme)
                     state.departments = d.departments || state.departments;
                     state.adminConfig = d.adminConfig || state.adminConfig;
                     state.config = d.config || state.config;
-                    renderAll();
+                    
+                    renderAll(); 
                     updateStationStats();
+                    showToast('🔄 Ecosistema sincronizado en tiempo real', 'info');
                 }
-                updateConnStatus(true);
             }
         } catch (e) {
-            updateConnStatus(false);
+            console.error('❌ Error de conexión en polling:', e.message);
         }
-    }, 3000);
+    }, 2000); 
 }
 
 function updateConnStatus(online, failCount = 0) {
@@ -737,18 +581,6 @@ function renderEmployeeTable() {
 
 function goToQR(empId) { showPage('generate'); selectEmpForQR(empId); }
 
-/* ---- SELECT EMPLOYEE FOR QR (Generate page) ---- */
-function selectEmpForQR(empId) {
-    state.selectedEmpForQR = empId;
-    // The generate page uses station QR mode — just show the page
-    // Individual employee QR is handled via station token
-}
-
-async function generateAndShowQR() {
-    // Re-render station QR after key rotation
-    await renderStationQR();
-}
-
 /* ---- EMPLOYEE CRUD ---- */
 function openEmpModal(emp = null) {
     document.getElementById('empModalTitle').textContent = emp ? 'Editar Empleado' : 'Nuevo Empleado';
@@ -843,11 +675,6 @@ function renderLogs() {
         const typeClass = l.type === 'entry' ? 'type-entry' : l.type === 'exit' ? 'type-exit' : 'type-rejected';
         const typeLabel = l.type === 'entry' ? '🟢 Entrada' : l.type === 'exit' ? '🔴 Salida' : '⛔ Rechazado';
         const statusClass = l.status === 'valid' ? 'status-active' : 'status-inactive';
-        const gpsCell = l.location && l.location.lat != null
-            ? `<a href="https://maps.google.com/?q=${l.location.lat},${l.location.lon}" target="_blank"
-                  title="${l.location.lat.toFixed(5)}, ${l.location.lon.toFixed(5)}"
-                  style="color:var(--primary);text-decoration:none;font-size:1rem">📍</a>`
-            : '<span style="color:var(--text-muted);font-size:0.75rem">—</span>';
         return `<tr>
       <td><span class="token-mono">${list.length - i}</span></td>
       <td>${l.empName}</td>
@@ -855,7 +682,6 @@ function renderLogs() {
       <td><span class="token-mono">${formatDateTime(l.ts)}</span></td>
       <td><span class="token-mono">${l.tokenNonce?.slice(0, 12) || '—'}…</span></td>
       <td><span class="status-chip ${statusClass}">${l.status === 'valid' ? '✓ Válido' : '✗ Rechazado'}</span></td>
-      <td>${gpsCell}</td>
       <td style="font-size:0.8rem;color:var(--text-muted)">${l.reason}</td>
     </tr>`;
     }).join('');
@@ -1174,572 +1000,4 @@ function downloadFile(name, content, mime) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([content], { type: mime }));
     a.download = name; a.click();
-}
-
-// --- Login UI and auto-auth wiring ---
-function showLoginOverlay() {
-    const el = document.getElementById('loginOverlay');
-    if (el) el.style.display = 'flex';
-    if (document.getElementById('loginError')) document.getElementById('loginError').style.display = 'none';
-    // clear fields
-    if (document.getElementById('loginUser')) document.getElementById('loginUser').value = '';
-    if (document.getElementById('loginPass')) document.getElementById('loginPass').value = '';
-}
-function hideLoginOverlay() {
-    const el = document.getElementById('loginOverlay');
-    if (el) el.style.display = 'none';
-}
-async function loginSubmit() {
-    const u = document.getElementById('loginUser')?.value;
-    const p = document.getElementById('loginPass')?.value;
-    if (!u || !p) { showToast('Ingresa credenciales', 'warning'); return; }
-    try {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: u, password: p })
-        });
-        if (!res.ok) { document.getElementById('loginError').style.display = 'block'; return; }
-        const data = await res.json();
-        localStorage.setItem('jwt', data.token);
-        hideLoginOverlay();
-        location.reload();
-    } catch (e) {
-        showToast('Error de autenticación', 'error');
-    }
-}
-
-/* ============================================================
-   TIMER — Registro de tiempo en tiempo real
-   ============================================================ */
-let activeTimerId = null;
-let timerInterval = null;
-
-async function renderTimer() {
-    // Populate employee select
-    const empSel = document.getElementById('timerEmpSelect');
-    if (empSel) {
-        empSel.innerHTML = '<option value="">Seleccionar empleado...</option>' +
-            state.employees.filter(e => e.status === 'active')
-                .map(e => `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.empNum})</option>`).join('');
-    }
-    // Populate project select
-    try {
-        const res = await fetch('/api/projects?status=active');
-        if (res.ok) {
-            const data = await res.json();
-            const projSel = document.getElementById('timerProjectSelect');
-            if (projSel) {
-                projSel.innerHTML = '<option value="">Sin proyecto</option>' +
-                    (data.projects || []).map(p => `<option value="${p._id}">${p.name}</option>`).join('');
-            }
-        }
-    } catch (e) { /* ignore */ }
-    await refreshTimerActive();
-    // Offline badge
-    const badge = document.getElementById('timerOfflineBadge');
-    if (badge) badge.style.display = !navigator.onLine ? 'inline' : 'none';
-}
-
-async function refreshTimerActive() {
-    try {
-        const res = await fetch('/api/timer/active');
-        if (!res.ok) return;
-        const data = await res.json();
-        const list = document.getElementById('timerActiveList');
-        if (!list) return;
-        const active = data.active || [];
-        if (!active.length) { list.innerHTML = '<div class="empty-feed">No hay entradas activas.</div>'; return; }
-        list.innerHTML = active.map(e => {
-            const emp = state.employees.find(em => em.id === e.empId);
-            const name = emp ? `${emp.firstName} ${emp.lastName}` : e.empId;
-            const elapsed = Math.floor((Date.now() - new Date(e.clockIn).getTime()) / 1000);
-            const h = Math.floor(elapsed / 3600), m = Math.floor((elapsed % 3600) / 60), s = elapsed % 60;
-            const dayH = ((e.accumulatedTodayMs || 0) / 3600000).toFixed(1);
-            const weekH = ((e.accumulatedWeekMs || 0) / 3600000).toFixed(1);
-            return `<div class="activity-item">
-              <div class="activity-avatar">${emp?.avatar || name[0] || '?'}</div>
-              <div class="activity-body">
-                <div class="activity-name">${name}</div>
-                <div class="activity-detail">Hoy: ${dayH}h &nbsp;|&nbsp; Semana: ${weekH}h</div>
-              </div>
-              <span class="activity-type type-entry" style="font-family:monospace">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</span>
-              <button class="btn-table del" onclick="timerClockOutById('${e._id}')">Stop</button>
-            </div>`;
-        }).join('');
-    } catch (e) { /* ignore */ }
-}
-
-async function timerClockIn() {
-    const empId = document.getElementById('timerEmpSelect')?.value;
-    const projectId = document.getElementById('timerProjectSelect')?.value || null;
-    if (!empId) { showToast('Selecciona un empleado', 'warning'); return; }
-    // Offline support
-    if (!navigator.onLine) {
-        const queue = JSON.parse(localStorage.getItem('jibble_offline_queue') || '[]');
-        queue.push({ empId, projectId, clockIn: new Date().toISOString(), offlineSync: true });
-        localStorage.setItem('jibble_offline_queue', JSON.stringify(queue));
-        showToast('Sin conexion — guardado offline', 'warning');
-        return;
-    }
-    try {
-        const res = await fetch('/api/timer/clockin', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ empId, projectId, source: 'manual' })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        activeTimerId = data.timerId;
-        showToast('Entrada registrada', 'success');
-        await refreshTimerActive();
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-async function timerClockOut() {
-    if (!activeTimerId) { showToast('No hay entrada activa', 'warning'); return; }
-    await timerClockOutById(activeTimerId);
-}
-
-async function timerClockOutById(timerId) {
-    try {
-        const res = await fetch('/api/timer/clockout', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ timerId })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error');
-        const mins = Math.round((data.durationMs || 0) / 60000);
-        showToast(`Salida registrada — ${mins} min`, 'success');
-        activeTimerId = null;
-        await refreshTimerActive();
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-// Sync offline queue when back online
-window.addEventListener('online', async () => {
-    const queue = JSON.parse(localStorage.getItem('jibble_offline_queue') || '[]');
-    if (!queue.length) return;
-    try {
-        const res = await fetch('/api/sync/offline', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ entries: queue })
-        });
-        if (res.ok) {
-            const d = await res.json();
-            localStorage.removeItem('jibble_offline_queue');
-            showToast(`Sincronizado: ${d.synced} entradas`, 'success');
-            const badge = document.getElementById('timerOfflineBadge');
-            if (badge) badge.style.display = 'none';
-        }
-    } catch (e) { /* retry later */ }
-});
-
-/* ============================================================
-   TIME OFF — Ausencias y permisos
-   ============================================================ */
-
-async function renderTimeOff() {
-    const empSel = document.getElementById('toEmpSelect');
-    if (empSel) {
-        empSel.innerHTML = '<option value="">Seleccionar empleado...</option>' +
-            state.employees.filter(e => e.status === 'active')
-                .map(e => `<option value="${e.id}">${e.firstName} ${e.lastName}</option>`).join('');
-    }
-    try {
-        const res = await fetch('/api/timeoff');
-        if (!res.ok) return;
-        const data = await res.json();
-        const tbody = document.getElementById('timeoffTableBody');
-        if (!tbody) return;
-        const requests = data.requests || [];
-        if (!requests.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-feed">Sin solicitudes</td></tr>'; return; }
-        tbody.innerHTML = requests.map(r => {
-            const emp = state.employees.find(e => e.id === r.empId);
-            const name = emp ? `${emp.firstName} ${emp.lastName}` : r.empId;
-            const statusClass = r.status === 'approved' ? 'status-active' : r.status === 'rejected' ? 'status-inactive' : 'status-pending';
-            const typeLabel = { vacation: 'Vacaciones', sick: 'Enfermedad', personal: 'Personal', unpaid: 'Sin goce', other: 'Otro' }[r.type] || r.type;
-            return `<tr>
-              <td>${name}</td><td>${typeLabel}</td><td>${r.startDate}</td><td>${r.endDate}</td>
-              <td>${r.days}</td>
-              <td><span class="status-chip ${statusClass}">${r.status}</span></td>
-              <td>${r.status === 'pending' ? `<button class="btn-table del" onclick="cancelTimeOff('${r._id}')">Cancelar</button>` : '—'}</td>
-            </tr>`;
-        }).join('');
-    } catch (e) { showToast('Error cargando solicitudes', 'error'); }
-}
-
-async function submitTimeOff() {
-    const empId = document.getElementById('toEmpSelect')?.value;
-    const type = document.getElementById('toType')?.value;
-    const startDate = document.getElementById('toStart')?.value;
-    const endDate = document.getElementById('toEnd')?.value;
-    const reason = document.getElementById('toReason')?.value || '';
-    if (!empId || !type || !startDate || !endDate) { showToast('Completa todos los campos', 'warning'); return; }
-    try {
-        const res = await fetch('/api/timeoff', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ empId, type, startDate, endDate, reason })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            if (data.error === 'INSUFFICIENT_BALANCE') { showToast(`Saldo insuficiente (disponible: ${data.available} dias)`, 'error'); return; }
-            throw new Error(data.error || 'Error');
-        }
-        showToast(`Solicitud creada — ${data.daysRequested} dias habiles`, 'success');
-        await renderTimeOff();
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-async function cancelTimeOff(id) {
-    showConfirm('Cancelar solicitud', 'Cancelar esta solicitud de ausencia?', async () => {
-        try {
-            const res = await fetch(`/api/timeoff/${id}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error((await res.json()).error || 'Error');
-            showToast('Solicitud cancelada', 'warning');
-            await renderTimeOff();
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
-    });
-}
-
-/* ============================================================
-   SCHEDULES — Horarios de trabajo
-   ============================================================ */
-
-async function renderSchedules() {
-    try {
-        const res = await fetch('/api/schedules');
-        if (!res.ok) return;
-        const data = await res.json();
-        const tbody = document.getElementById('schedulesTableBody');
-        if (!tbody) return;
-        const schedules = data.schedules || [];
-        if (!schedules.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-feed">Sin horarios</td></tr>'; return; }
-        tbody.innerHTML = schedules.map(s => `<tr>
-          <td>${s.name}</td><td>${s.assignedTo}</td><td><span class="token-mono">${s.assignedId}</span></td>
-          <td>${s.effectiveFrom || '—'}</td>
-          <td><button class="btn-table del" onclick="deleteSchedule('${s._id}')">🗑</button></td>
-        </tr>`).join('');
-    } catch (e) { /* ignore */ }
-}
-
-async function saveSchedule() {
-    const name = document.getElementById('schName')?.value.trim();
-    const assignedTo = document.getElementById('schAssignedTo')?.value;
-    const assignedId = document.getElementById('schAssignedId')?.value.trim();
-    const effectiveFrom = document.getElementById('schFrom')?.value;
-    if (!name || !assignedId) { showToast('Nombre e ID requeridos', 'warning'); return; }
-    try {
-        const res = await fetch('/api/schedules', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, assignedTo, assignedId, effectiveFrom, days: [], timezone: 'America/Mexico_City' })
-        });
-        if (!res.ok) throw new Error((await res.json()).error || 'Error');
-        showToast('Horario guardado', 'success');
-        ['schName','schAssignedId','schFrom'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        await renderSchedules();
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-async function deleteSchedule(id) {
-    showConfirm('Eliminar horario', 'Eliminar este horario?', async () => {
-        await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
-        showToast('Horario eliminado', 'warning');
-        await renderSchedules();
-    });
-}
-
-/* ============================================================
-   GROUPS — Grupos y roles
-   ============================================================ */
-
-async function renderGroups() {
-    try {
-        const res = await fetch('/api/groups');
-        if (!res.ok) return;
-        const data = await res.json();
-        const tbody = document.getElementById('groupsTableBody');
-        if (!tbody) return;
-        const groups = data.groups || [];
-        if (!groups.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-feed">Sin grupos</td></tr>'; return; }
-        tbody.innerHTML = groups.map(g => `<tr>
-          <td>${g.name}</td><td>${g.description || '—'}</td>
-          <td>${(g.memberIds || []).length} miembros</td>
-          <td><button class="btn-table del" onclick="deleteGroup('${g._id}')">🗑</button></td>
-        </tr>`).join('');
-    } catch (e) { /* ignore */ }
-}
-
-async function saveGroup() {
-    const name = document.getElementById('grpName')?.value.trim();
-    const description = document.getElementById('grpDesc')?.value.trim();
-    const managerIds = (document.getElementById('grpManagers')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
-    const memberIds = (document.getElementById('grpMembers')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
-    if (!name) { showToast('Nombre requerido', 'warning'); return; }
-    try {
-        const res = await fetch('/api/groups', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, description, managerIds, memberIds, permissions: { canApproveTimesheets: false, canManageTimeOff: true, canViewReports: true, canManageSchedules: false } })
-        });
-        if (!res.ok) throw new Error((await res.json()).error || 'Error');
-        showToast('Grupo guardado', 'success');
-        ['grpName','grpDesc','grpManagers','grpMembers'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        await renderGroups();
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-async function deleteGroup(id) {
-    showConfirm('Eliminar grupo', 'Eliminar este grupo?', async () => {
-        await fetch(`/api/groups/${id}`, { method: 'DELETE' });
-        showToast('Grupo eliminado', 'warning');
-        await renderGroups();
-    });
-}
-
-/* ============================================================
-   PROJECTS — Proyectos
-   ============================================================ */
-
-async function renderProjects() {
-    try {
-        const res = await fetch('/api/projects');
-        if (!res.ok) return;
-        const data = await res.json();
-        const tbody = document.getElementById('projectsTableBody');
-        if (!tbody) return;
-        const projects = data.projects || [];
-        if (!projects.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-feed">Sin proyectos</td></tr>'; return; }
-        tbody.innerHTML = projects.map(p => {
-            const statusClass = p.status === 'active' ? 'status-active' : 'status-inactive';
-            return `<tr>
-              <td>${p.name}</td><td><span class="token-mono">${p.code}</span></td>
-              <td>${p.clientName || '—'}</td><td>${p.hourlyRate || 0} ${p.currency || 'MXN'}/h</td>
-              <td><span class="status-chip ${statusClass}">${p.status}</span></td>
-              <td>
-                ${p.status === 'active' ? `<button class="btn-table" onclick="archiveProject('${p._id}')">Archivar</button>` : ''}
-                <button class="btn-table del" onclick="deleteProject('${p._id}')">🗑</button>
-              </td>
-            </tr>`;
-        }).join('');
-    } catch (e) { /* ignore */ }
-}
-
-async function saveProject() {
-    const name = document.getElementById('projName')?.value.trim();
-    const code = document.getElementById('projCode')?.value.trim();
-    const clientName = document.getElementById('projClient')?.value.trim();
-    const hourlyRate = parseFloat(document.getElementById('projRate')?.value) || 0;
-    const currency = document.getElementById('projCurrency')?.value.trim() || 'MXN';
-    const billable = document.getElementById('projBillable')?.value === 'true';
-    if (!name || !code) { showToast('Nombre y codigo requeridos', 'warning'); return; }
-    try {
-        const res = await fetch('/api/projects', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, code, clientName, hourlyRate, currency, billable, status: 'active' })
-        });
-        if (!res.ok) throw new Error((await res.json()).error || 'Error');
-        showToast('Proyecto guardado', 'success');
-        ['projName','projCode','projClient','projRate'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        await renderProjects();
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-async function archiveProject(id) {
-    await fetch(`/api/projects/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'archived' }) });
-    showToast('Proyecto archivado', 'warning');
-    await renderProjects();
-}
-
-async function deleteProject(id) {
-    showConfirm('Eliminar proyecto', 'Eliminar este proyecto?', async () => {
-        await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-        showToast('Proyecto eliminado', 'warning');
-        await renderProjects();
-    });
-}
-
-/* ============================================================
-   REPORTS ADVANCED — Reportes avanzados + actividad en vivo
-   ============================================================ */
-
-async function renderReportsAdvanced() {
-    // Populate employee and project selects
-    const rptEmp = document.getElementById('rptEmp');
-    if (rptEmp) {
-        rptEmp.innerHTML = '<option value="">Todos</option>' +
-            state.employees.map(e => `<option value="${e.id}">${e.firstName} ${e.lastName}</option>`).join('');
-    }
-    try {
-        const res = await fetch('/api/projects');
-        if (res.ok) {
-            const data = await res.json();
-            const rptProj = document.getElementById('rptProject');
-            if (rptProj) {
-                rptProj.innerHTML = '<option value="">Todos</option>' +
-                    (data.projects || []).map(p => `<option value="${p._id}">${p.name}</option>`).join('');
-            }
-        }
-    } catch (e) { /* ignore */ }
-    // Load live activity feed
-    await refreshLiveActivity();
-}
-
-async function refreshLiveActivity() {
-    try {
-        const res = await fetch('/api/activity/live');
-        if (!res.ok) return;
-        const data = await res.json();
-        const feed = document.getElementById('liveActivityFeed');
-        if (!feed) return;
-        const items = data.feed || [];
-        if (!items.length) { feed.innerHTML = '<div class="empty-feed">Nadie trabajando ahora mismo.</div>'; return; }
-        feed.innerHTML = items.map(f => {
-            const elapsed = Math.floor((f.elapsedMs || 0) / 60000);
-            return `<div class="activity-item">
-              <div class="activity-avatar">${f.avatar || f.empName?.[0] || '?'}</div>
-              <div class="activity-body">
-                <div class="activity-name">${f.empName}</div>
-                <div class="activity-detail">${f.dept || '—'} ${f.projectName ? '• ' + f.projectName : ''}</div>
-              </div>
-              <span class="activity-type type-entry">${elapsed}min</span>
-            </div>`;
-        }).join('');
-    } catch (e) { /* ignore */ }
-}
-
-async function runAdvancedReport(format) {
-    const empId = document.getElementById('rptEmp')?.value || '';
-    const dept = document.getElementById('rptDept')?.value || '';
-    const projectId = document.getElementById('rptProject')?.value || '';
-    const from = document.getElementById('rptFrom')?.value || '';
-    const to = document.getElementById('rptTo')?.value || '';
-    const params = new URLSearchParams();
-    if (empId) params.set('empId', empId);
-    if (dept) params.set('dept', dept);
-    if (projectId) params.set('projectId', projectId);
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    if (format) params.set('format', format);
-
-    if (format === 'csv' || format === 'xls') {
-        window.open(`/api/reports/advanced?${params}`, '_blank');
-        return;
-    }
-
-    try {
-        const res = await fetch(`/api/reports/advanced?${params}`);
-        if (!res.ok) throw new Error('Error en reporte');
-        const data = await res.json();
-        const tbody = document.getElementById('advReportTableBody');
-        const totals = document.getElementById('advReportTotals');
-        if (!tbody) return;
-        const rows = data.rows || [];
-        if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-feed">Sin resultados</td></tr>'; return; }
-        tbody.innerHTML = rows.map(r => `<tr>
-          <td>${r.empName}</td><td>${r.dept || '—'}</td><td>${r.projectId || '—'}</td>
-          <td class="token-mono">${r.clockIn ? new Date(r.clockIn).toLocaleString('es-MX') : '—'}</td>
-          <td class="token-mono">${r.clockOut ? new Date(r.clockOut).toLocaleString('es-MX') : 'Activo'}</td>
-          <td>${r.hours}h</td>
-        </tr>`).join('');
-        if (totals) totals.textContent = `Total: ${data.totals?.totalHours || 0}h en ${data.totals?.totalEntries || 0} registros`;
-    } catch (e) { showToast('Error: ' + e.message, 'error'); }
-}
-
-/* ============================================================
-   GEOFENCES — Gestión de zonas geográficas permitidas
-   ============================================================ */
-
-async function renderGeofences() {
-    try {
-        const res = await fetch('/api/geofences');
-        const data = res.ok ? await res.json() : { geofences: [] };
-        const list = data.geofences || [];
-        const el = document.getElementById('geofencesList');
-        if (!el) return;
-        if (!list.length) {
-            el.innerHTML = '<div class="empty-feed">No hay geofences configurados. Agrega uno arriba.</div>';
-            return;
-        }
-        el.innerHTML = list.map(g => `
-            <div class="activity-item" style="align-items:center">
-                <div class="activity-avatar" style="background:rgba(99,102,241,0.15);color:#6366f1">📍</div>
-                <div class="activity-body">
-                    <div class="activity-name">${g.name}</div>
-                    <div class="activity-detail">
-                        Lat: ${Number(g.lat).toFixed(5)} · Lon: ${Number(g.lon).toFixed(5)} · Radio: ${g.radiusMeters}m
-                    </div>
-                </div>
-                <a href="https://maps.google.com/?q=${g.lat},${g.lon}" target="_blank"
-                   style="font-size:0.75rem;color:var(--primary);text-decoration:none;margin-right:8px">🗺 Ver</a>
-                <button class="btn-table del" onclick="deleteGeofence('${g.id}')">🗑</button>
-            </div>`).join('');
-    } catch (e) {
-        showToast('Error cargando geofences: ' + e.message, 'error');
-    }
-}
-
-async function addGeofence() {
-    const name = document.getElementById('gfName')?.value.trim();
-    const lat  = parseFloat(document.getElementById('gfLat')?.value);
-    const lon  = parseFloat(document.getElementById('gfLon')?.value);
-    const radiusMeters = parseInt(document.getElementById('gfRadius')?.value);
-
-    if (!name || isNaN(lat) || isNaN(lon) || isNaN(radiusMeters) || radiusMeters <= 0) {
-        showToast('⚠️ Completa todos los campos correctamente', 'warning');
-        return;
-    }
-    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        showToast('⚠️ Coordenadas fuera de rango', 'warning');
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/geofences', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, lat, lon, radiusMeters })
-        });
-        if (!res.ok) throw new Error((await res.json()).error || 'Error');
-        showToast(`✅ Geofence "${name}" agregado`, 'success');
-        // Limpiar campos
-        ['gfName','gfLat','gfLon','gfRadius'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        renderGeofences();
-    } catch (e) {
-        showToast('❌ Error: ' + e.message, 'error');
-    }
-}
-
-async function deleteGeofence(id) {
-    showConfirm('Eliminar Geofence', '¿Eliminar esta zona geográfica?', async () => {
-        try {
-            const res = await fetch(`/api/geofences/${id}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error((await res.json()).error || 'Error');
-            showToast('🗑 Geofence eliminado', 'warning');
-            renderGeofences();
-        } catch (e) {
-            showToast('❌ Error: ' + e.message, 'error');
-        }
-    });
-}
-
-/* ---- Obtener ubicación actual del admin (para autocompletar geofence) ---- */
-function useMyLocation() {
-    if (!('geolocation' in navigator)) {
-        showToast('GPS no disponible en este navegador', 'warning');
-        return;
-    }
-    showToast('📡 Obteniendo tu ubicación…', 'info');
-    navigator.geolocation.getCurrentPosition(
-        pos => {
-            const latEl = document.getElementById('gfLat');
-            const lonEl = document.getElementById('gfLon');
-            if (latEl) latEl.value = pos.coords.latitude.toFixed(6);
-            if (lonEl) lonEl.value = pos.coords.longitude.toFixed(6);
-            showToast(`📍 Ubicación obtenida (±${Math.round(pos.coords.accuracy)}m)`, 'success');
-        },
-        err => showToast('⚠️ No se pudo obtener ubicación: ' + err.message, 'warning'),
-        { enableHighAccuracy: true, timeout: 10000 }
-    );
 }
