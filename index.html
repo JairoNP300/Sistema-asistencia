@@ -1440,6 +1440,174 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: CONTRATO ===== -->
+    <div class="modal-overlay" id="contractModal" style="display:none">
+        <div class="modal-box" style="max-width:700px">
+            <div class="modal-header">
+                <h3>📄 Contrato Laboral</h3>
+                <button class="modal-close" onclick="closeContractModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Empleado *</label>
+                        <select id="contractEmpId" class="form-input">
+                            <option value="">Seleccionar empleado...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo / Puesto *</label>
+                        <input type="text" id="contractPosition" class="form-input" placeholder="Ej: Analista de Sistemas" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo de Contrato *</label>
+                        <select id="contractType" class="form-input">
+                            <option value="indefinido">Tiempo Indefinido</option>
+                            <option value="temporal">Temporal</option>
+                            <option value="proyecto">Por Proyecto</option>
+                            <option value="prueba">Período de Prueba</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Inicio *</label>
+                        <input type="date" id="contractStartDate" class="form-input" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Salario Mensual ($) *</label>
+                        <input type="number" id="contractSalary" class="form-input" placeholder="0.00" step="0.01" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Horario de Trabajo</label>
+                        <input type="text" id="contractSchedule" class="form-input" placeholder="Ej: Lunes a Viernes 8:00-17:00" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Beneficios Adicionales</label>
+                    <textarea id="contractBenefits" class="form-input" rows="2" placeholder="Ej: Seguro médico, bono de transporte, etc."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Términos y Condiciones Especiales</label>
+                    <textarea id="contractTerms" class="form-input" rows="3" placeholder="Cláusulas especiales del contrato..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Adjuntar Contrato Firmado (PDF/Imagen)</label>
+                    <div class="upload-drop-zone sm" onclick="document.getElementById('contractFileInput').click()">
+                        <span>📎 Clic para adjuntar archivo</span>
+                        <input type="file" id="contractFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" />
+                    </div>
+                    <span id="contractFileName" style="font-size:12px;color:#888;margin-top:4px;display:block"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closeContractModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveContract()">💾 Guardar Contrato</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: CARTA DE CONFIDENCIALIDAD ===== -->
+    <div class="modal-overlay" id="confidentialityModal" style="display:none">
+        <div class="modal-box" style="max-width:700px">
+            <div class="modal-header">
+                <h3>🔒 Carta de Confidencialidad</h3>
+                <button class="modal-close" onclick="closeConfidentialityModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Empleado *</label>
+                        <select id="confEmpId" class="form-input">
+                            <option value="">Seleccionar empleado...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo / Puesto *</label>
+                        <input type="text" id="confPosition" class="form-input" placeholder="Ej: Gerente de Ventas" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Términos de Confidencialidad</label>
+                    <textarea id="confTerms" class="form-input" rows="5" placeholder="El empleado se compromete a mantener en estricta confidencialidad toda la información..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Adjuntar Carta Firmada (PDF/Imagen)</label>
+                    <div class="upload-drop-zone sm" onclick="document.getElementById('confFileInput').click()">
+                        <span>📎 Clic para adjuntar archivo</span>
+                        <input type="file" id="confFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" />
+                    </div>
+                    <span id="confFileName" style="font-size:12px;color:#888;margin-top:4px;display:block"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closeConfidentialityModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveConfidentiality()">💾 Guardar Carta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: PERMISO ===== -->
+    <div class="modal-overlay" id="permissionModal" style="display:none">
+        <div class="modal-box" style="max-width:600px">
+            <div class="modal-header">
+                <h3>🗓 Solicitud de Permiso</h3>
+                <button class="modal-close" onclick="closePermissionModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Empleado *</label>
+                        <select id="permEmpId" class="form-input">
+                            <option value="">Seleccionar empleado...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Permiso *</label>
+                        <select id="permType" class="form-input">
+                            <option value="medico">Médico / Enfermedad</option>
+                            <option value="personal">Personal</option>
+                            <option value="vacaciones">Vacaciones</option>
+                            <option value="maternidad">Maternidad</option>
+                            <option value="paternidad">Paternidad</option>
+                            <option value="estudio">Estudio / Capacitación</option>
+                            <option value="duelo">Duelo Familiar</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha de Inicio *</label>
+                        <input type="date" id="permStartDate" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Fin *</label>
+                        <input type="date" id="permEndDate" class="form-input" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Motivo / Descripción *</label>
+                    <textarea id="permReason" class="form-input" rows="3" placeholder="Describa el motivo del permiso..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Adjuntar Documento de Soporte (opcional)</label>
+                    <div class="upload-drop-zone sm" onclick="document.getElementById('permFileInput').click()">
+                        <span>📎 Clic para adjuntar archivo (receta médica, etc.)</span>
+                        <input type="file" id="permFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" />
+                    </div>
+                    <span id="permFileName" style="font-size:12px;color:#888;margin-top:4px;display:block"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ghost" onclick="closePermissionModal()">Cancelar</button>
+                <button class="btn-primary" onclick="savePermission()">💾 Guardar Solicitud</button>
+            </div>
+        </div>
+    </div>
+
     <script src="crypto-utils.js"></script>
     <script src="app.js"></script>
 </body>
