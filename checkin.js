@@ -361,28 +361,50 @@ async function sendWithRetry(url, body, maxRetries = 3, delayMs = 2000) {
 }
 
 function showConsentDialog(type) {
+    // Re-habilitar botones por si quedaron deshabilitados de un intento anterior
+    const btnEntry = document.getElementById('btnEntry');
+    const btnExit = document.getElementById('btnExit');
+
     const overlay = document.getElementById('consentOverlay');
     if (!overlay) { submitCheckin(type); return; }
     overlay.classList.remove('hidden');
 
-    document.getElementById('btnConsentAccept').onclick = () => {
+    // Clonar botones para eliminar listeners anteriores acumulados
+    const acceptBtn = document.getElementById('btnConsentAccept');
+    const rejectBtn = document.getElementById('btnConsentReject');
+    const newAccept = acceptBtn.cloneNode(true);
+    const newReject = rejectBtn.cloneNode(true);
+    acceptBtn.parentNode.replaceChild(newAccept, acceptBtn);
+    rejectBtn.parentNode.replaceChild(newReject, rejectBtn);
+
+    newAccept.onclick = () => {
         overlay.classList.add('hidden');
-        if (!navigator.geolocation) { submitCheckin(type); return; }
+        if (!navigator.geolocation) {
+            submitCheckin(type);
+            return;
+        }
+        // Mostrar feedback visual mientras se obtiene GPS
+        newAccept.textContent = '📍 Obteniendo ubicación…';
+        newAccept.disabled = true;
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const emp = window._selectedEmployee;
                 if (emp) {
                     const record = buildLocationRecord(position.coords, emp, type);
-                    await sendWithRetry('/api/location/checkin', record);
+                    // Enviar ubicación en paralelo, no bloquear el check-in
+                    sendWithRetry('/api/location/checkin', record).catch(() => {});
                 }
                 submitCheckin(type);
             },
-            () => { submitCheckin(type); },
-            { timeout: 10000, maximumAge: 0 }
+            () => {
+                // Si falla el GPS, continuar igual sin ubicación
+                submitCheckin(type);
+            },
+            { timeout: 8000, maximumAge: 30000, enableHighAccuracy: false }
         );
     };
 
-    document.getElementById('btnConsentReject').onclick = () => {
+    newReject.onclick = () => {
         overlay.classList.add('hidden');
         submitCheckin(type);
     };
