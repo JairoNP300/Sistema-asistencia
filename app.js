@@ -662,19 +662,43 @@ async function deleteEmployee(id) {
 }
 
 /* ---- LOGS ---- */
+// Cache del historial de logs de días anteriores
+let _logsHistory = [];
+let _logsHistoryLoaded = false;
+
+async function loadLogsHistory() {
+    try {
+        const res = await fetch('/api/logs/history', { cache: 'no-store' });
+        if (res.ok) {
+            const d = await res.json();
+            _logsHistory = d.allLogs || [];
+            _logsHistoryLoaded = true;
+        }
+    } catch { /* ignorar si falla */ }
+}
+
 function renderLogs() {
     const date = document.getElementById('logDate')?.value;
     const type = document.getElementById('logType')?.value;
     const q = document.getElementById('logSearch')?.value.toLowerCase();
-    let list = [...state.logs].reverse().filter(l => {
+
+    // Combinar logs del día actual con historial de días anteriores
+    const allLogs = [..._logsHistory, ...state.logs];
+
+    let list = [...allLogs].sort((a, b) => new Date(b.ts) - new Date(a.ts)).filter(l => {
         const matchDate = !date || l.ts.startsWith(date);
         const matchType = !type || l.type === type;
         const matchQ = !q || l.empName?.toLowerCase().includes(q) || l.reason?.toLowerCase().includes(q);
         return matchDate && matchType && matchQ;
     });
+
     const tbody = document.getElementById('logTableBody');
     if (!tbody) return;
-    if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-feed">No hay registros</td></tr>'; document.getElementById('logTableFooter').textContent = ''; return; }
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-feed">No hay registros</td></tr>';
+        document.getElementById('logTableFooter').textContent = '';
+        return;
+    }
     tbody.innerHTML = list.map((l, i) => {
         const typeClass = l.type === 'entry' ? 'type-entry' : l.type === 'exit' ? 'type-exit' : 'type-rejected';
         const typeLabel = l.type === 'entry' ? '🟢 Entrada' : l.type === 'exit' ? '🔴 Salida' : '⛔ Rechazado';
