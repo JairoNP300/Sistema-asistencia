@@ -55,14 +55,34 @@ async function migrateToCloud() {
             });
             await defaultState.save();
         } else {
-            // Corregir timeWindow si está mal configurado (< 60s)
+            let needsSave = false;
             if (!cloudState.config) cloudState.config = {};
+            // Corregir timeWindow si está mal configurado (< 60s)
             if (!cloudState.config.timeWindow || cloudState.config.timeWindow < 60) {
                 cloudState.config.timeWindow = 300;
                 cloudState.markModified('config');
-                await cloudState.save();
+                needsSave = true;
                 console.log('✅ timeWindow corregido a 300s');
             }
+            // Limpiar usedTokens acumulados: los nonces de tokens de estación
+            // se guardaban incorrectamente, bloqueando check-ins de otros empleados
+            if (cloudState.usedTokens && cloudState.usedTokens.length > 100) {
+                cloudState.usedTokens = [];
+                cloudState.markModified('usedTokens');
+                needsSave = true;
+                console.log('✅ usedTokens limpiados para desbloquear check-ins');
+            }
+            // Sincronizar stats.present con el tamaño real del presentSet
+            if (cloudState.stats && cloudState.presentSet) {
+                const realPresent = cloudState.presentSet.length;
+                if (cloudState.stats.present !== realPresent) {
+                    cloudState.stats.present = realPresent;
+                    cloudState.markModified('stats');
+                    needsSave = true;
+                    console.log(`✅ stats.present corregido a ${realPresent}`);
+                }
+            }
+            if (needsSave) await cloudState.save();
             console.log('🌐 Sistema sincronizado con la Nube.');
         }
     } catch (e) {
