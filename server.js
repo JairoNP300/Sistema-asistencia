@@ -127,7 +127,22 @@ app.post('/api/save', async (req, res) => {
     try {
         const newData = req.body;
         if (useMongo) {
-            await State.findOneAndUpdate({}, newData, { upsert: true });
+            // Usar $set para actualizar campos específicos sin perder locationRecords
+            await State.findOneAndUpdate({}, {
+                $set: {
+                    employees: newData.employees || [],
+                    logs: newData.logs || [],
+                    departments: newData.departments || [],
+                    secretKey: newData.secretKey || '',
+                    config: newData.config || {},
+                    adminConfig: newData.adminConfig || {},
+                    securityLog: newData.securityLog || [],
+                    stats: newData.stats || {},
+                    presentSet: newData.presentSet || [],
+                    usedTokens: newData.usedTokens || [],
+                    currentDate: newData.currentDate || new Date().toLocaleDateString('es-MX')
+                }
+            }, { upsert: true, new: true });
         } else {
             fs.writeFileSync(DATA_FILE, JSON.stringify(newData, null, 2));
         }
