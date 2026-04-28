@@ -1295,11 +1295,22 @@ function showHRTab(tab) {
     currentHRTab = tab;
     document.querySelectorAll('.hr-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.hr-tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector(`.hr-tab:nth-child(${tab === 'applications' ? 1 : 2})`).classList.add('active');
-    document.getElementById(`hr-tab-${tab}`).classList.add('active');
-    
+    const tabOrder = ['applications','contracts','confidentiality','documents','permissions','certificates','payroll'];
+    const idx = tabOrder.indexOf(tab);
+    const tabBtn = document.querySelector(`.hr-tab:nth-child(${idx + 1})`);
+    if (tabBtn) tabBtn.classList.add('active');
+    const tabContent = document.getElementById(`hr-tab-${tab}`);
+    if (tabContent) tabContent.classList.add('active');
+
     if (tab === 'applications') loadApplications();
     else if (tab === 'payroll') loadPayrolls();
+    else if (tab === 'contracts') loadContracts();
+    else if (tab === 'confidentiality') loadConfidentiality();
+    else if (tab === 'documents') loadDocuments();
+    else if (tab === 'permissions') loadPermissions();
+    else if (tab === 'certificates') loadCertificates();
+    // Populate employee selects for new tabs
+    populateHREmpSelects();
 }
 
 // ========== SOLICITUDES DE EMPLEO ==========
