@@ -706,6 +706,499 @@ app.delete('/api/hr/payrolls/:id', async (req, res) => {
     }
 });
 
+// ========== CONFIGURACIÓN DE MULTER PARA SUBIDA DE ARCHIVOS ==========
+const multer = require('multer');
+const uploadsDir = path.join(__dirname, 'uploads');
+
+// Crear carpeta uploads si no existe
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configuración de almacenamiento
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos de imagen, PDF o documentos'));
+        }
+    }
+});
+
+// Servir archivos estáticos de uploads
+app.use('/uploads', express.static(uploadsDir));
+
+// ========== ENDPOINTS DE DOCUMENTOS PERSONALES ==========
+
+// POST /api/hr/documents/upload — Subir documento personal
+app.post('/api/hr/documents/upload', upload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No se proporcionó ningún archivo' });
+        }
+
+        const { empId, empName, documentType, description } = req.body;
+
+        const document = {
+            id: `doc_${Date.now()}`,
+            empId,
+            empName,
+            documentType,
+            fileName: req.file.originalname,
+            filePath: `/uploads/${req.file.filename}`,
+            fileSize: req.file.size,
+            mimeType: req.file.mimetype,
+            description: description || '',
+            uploadedAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            if (!state.personalDocuments) state.personalDocuments = [];
+            state.personalDocuments.push(document);
+            state.markModified('personalDocuments');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            if (!data.personalDocuments) data.personalDocuments = [];
+            data.personalDocuments.push(document);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true, document });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/documents — Obtener todos los documentos
+app.get('/api/hr/documents', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { empId } = req.query;
+        let documents = [];
+
+        if (useMongo) {
+            const state = await State.findOne();
+            documents = state ? (state.personalDocuments || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            documents = data.personalDocuments || [];
+        }
+
+        if (empId) {
+            documents = documents.filter(d => d.empId === empId);
+        }
+
+        res.json(documents);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/hr/documents/:id — Eliminar documento
+app.delete('/api/hr/documents/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        let document;
+
+        if (useMongo) {
+            const state = await State.findOne();
+            document = state.personalDocuments.find(d => d.id === id);
+            if (!document) return res.status(404).json({ error: 'Documento no encontrado' });
+            
+            // Eliminar archivo físico
+            const filePath = path.join(__dirname, document.filePath);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            
+            state.personalDocuments = state.personalDocuments.filter(d => d.id !== id);
+            state.markModified('personalDocuments');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            document = data.personalDocuments.find(d => d.id === id);
+            if (!document) return res.status(404).json({ error: 'Documento no encontrado' });
+            
+            // Eliminar archivo físico
+            const filePath = path.join(__dirname, document.filePath);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            
+            data.personalDocuments = data.personalDocuments.filter(d => d.id !== id);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ========== ENDPOINTS DE PERMISOS ==========
+
+// POST /api/hr/permissions — Crear solicitud de permiso
+app.post('/api/hr/permissions', async (req, res) => {
+    try {
+        const permission = {
+            ...req.body,
+            id: `perm_${Date.now()}`,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            if (!state.permissionRequests) state.permissionRequests = [];
+            state.permissionRequests.push(permission);
+            state.markModified('permissionRequests');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            if (!data.permissionRequests) data.permissionRequests = [];
+            data.permissionRequests.push(permission);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true, permission });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/permissions — Obtener todas las solicitudes de permiso
+app.get('/api/hr/permissions', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { empId, status } = req.query;
+        let permissions = [];
+
+        if (useMongo) {
+            const state = await State.findOne();
+            permissions = state ? (state.permissionRequests || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            permissions = data.permissionRequests || [];
+        }
+
+        if (empId) permissions = permissions.filter(p => p.empId === empId);
+        if (status) permissions = permissions.filter(p => p.status === status);
+
+        res.json(permissions);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// PUT /api/hr/permissions/:id — Actualizar solicitud de permiso
+app.put('/api/hr/permissions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = { ...req.body, updatedAt: new Date().toISOString() };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            const idx = state.permissionRequests.findIndex(p => p.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Permiso no encontrado' });
+            state.permissionRequests[idx] = { ...state.permissionRequests[idx], ...updates };
+            state.markModified('permissionRequests');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const idx = data.permissionRequests.findIndex(p => p.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Permiso no encontrado' });
+            data.permissionRequests[idx] = { ...data.permissionRequests[idx], ...updates };
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/hr/permissions/:id — Eliminar solicitud de permiso
+app.delete('/api/hr/permissions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (useMongo) {
+            const state = await State.findOne();
+            state.permissionRequests = state.permissionRequests.filter(p => p.id !== id);
+            state.markModified('permissionRequests');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            data.permissionRequests = data.permissionRequests.filter(p => p.id !== id);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ========== ENDPOINTS DE CONTRATOS ==========
+
+// POST /api/hr/contracts — Crear contrato
+app.post('/api/hr/contracts', async (req, res) => {
+    try {
+        const contract = {
+            ...req.body,
+            id: `contract_${Date.now()}`,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            if (!state.contracts) state.contracts = [];
+            state.contracts.push(contract);
+            state.markModified('contracts');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            if (!data.contracts) data.contracts = [];
+            data.contracts.push(contract);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true, contract });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/contracts — Obtener todos los contratos
+app.get('/api/hr/contracts', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { empId } = req.query;
+        let contracts = [];
+
+        if (useMongo) {
+            const state = await State.findOne();
+            contracts = state ? (state.contracts || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            contracts = data.contracts || [];
+        }
+
+        if (empId) contracts = contracts.filter(c => c.empId === empId);
+
+        res.json(contracts);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// PUT /api/hr/contracts/:id — Actualizar contrato
+app.put('/api/hr/contracts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = { ...req.body, updatedAt: new Date().toISOString() };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            const idx = state.contracts.findIndex(c => c.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Contrato no encontrado' });
+            state.contracts[idx] = { ...state.contracts[idx], ...updates };
+            state.markModified('contracts');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const idx = data.contracts.findIndex(c => c.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Contrato no encontrado' });
+            data.contracts[idx] = { ...data.contracts[idx], ...updates };
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ========== ENDPOINTS DE CARTAS DE CONFIDENCIALIDAD ==========
+
+// POST /api/hr/confidentiality — Crear carta de confidencialidad
+app.post('/api/hr/confidentiality', async (req, res) => {
+    try {
+        const letter = {
+            ...req.body,
+            id: `conf_${Date.now()}`,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            if (!state.confidentialityLetters) state.confidentialityLetters = [];
+            state.confidentialityLetters.push(letter);
+            state.markModified('confidentialityLetters');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            if (!data.confidentialityLetters) data.confidentialityLetters = [];
+            data.confidentialityLetters.push(letter);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true, letter });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/confidentiality — Obtener todas las cartas
+app.get('/api/hr/confidentiality', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { empId } = req.query;
+        let letters = [];
+
+        if (useMongo) {
+            const state = await State.findOne();
+            letters = state ? (state.confidentialityLetters || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            letters = data.confidentialityLetters || [];
+        }
+
+        if (empId) letters = letters.filter(l => l.empId === empId);
+
+        res.json(letters);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// PUT /api/hr/confidentiality/:id — Actualizar carta
+app.put('/api/hr/confidentiality/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = { ...req.body, updatedAt: new Date().toISOString() };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            const idx = state.confidentialityLetters.findIndex(l => l.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Carta no encontrada' });
+            state.confidentialityLetters[idx] = { ...state.confidentialityLetters[idx], ...updates };
+            state.markModified('confidentialityLetters');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const idx = data.confidentialityLetters.findIndex(l => l.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Carta no encontrada' });
+            data.confidentialityLetters[idx] = { ...data.confidentialityLetters[idx], ...updates };
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ========== ENDPOINTS DE CONSTANCIAS DE TIEMPO LABORAL ==========
+
+// POST /api/hr/certificates/generate — Generar constancia
+app.post('/api/hr/certificates/generate', async (req, res) => {
+    try {
+        const { empId, includeSalary, purpose } = req.body;
+        
+        let state;
+        if (useMongo) {
+            state = await State.findOne();
+        } else {
+            state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        }
+
+        const employee = state.employees.find(e => e.id === empId);
+        if (!employee) {
+            return res.status(404).json({ error: 'Empleado no encontrado' });
+        }
+
+        // Calcular tiempo laborado
+        const startDate = new Date(employee.createdAt || Date.now());
+        const now = new Date();
+        const diffTime = Math.abs(now - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const years = Math.floor(diffDays / 365);
+        const months = Math.floor((diffDays % 365) / 30);
+
+        const certificate = {
+            id: `cert_${Date.now()}`,
+            empId: employee.id,
+            empName: `${employee.firstName} ${employee.lastName}`,
+            position: employee.role || 'Empleado',
+            startDate: employee.createdAt || new Date().toISOString(),
+            salary: includeSalary ? (employee.monthlySalary || 0) : null,
+            includeSalary: includeSalary || false,
+            purpose: purpose || '',
+            timeWorked: `${years} años y ${months} meses`,
+            generatedAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            if (!state.workCertificates) state.workCertificates = [];
+            state.workCertificates.push(certificate);
+            state.markModified('workCertificates');
+            await state.save();
+        } else {
+            if (!state.workCertificates) state.workCertificates = [];
+            state.workCertificates.push(certificate);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+        }
+
+        res.json({ success: true, certificate });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/certificates — Obtener todas las constancias
+app.get('/api/hr/certificates', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { empId } = req.query;
+        let certificates = [];
+
+        if (useMongo) {
+            const state = await State.findOne();
+            certificates = state ? (state.workCertificates || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            certificates = data.workCertificates || [];
+        }
+
+        if (empId) certificates = certificates.filter(c => c.empId === empId);
+
+        res.json(certificates);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Iniciar
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`=========================================`);
