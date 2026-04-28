@@ -209,15 +209,28 @@ app.post('/api/checkin', async (req, res) => {
             data.stats.exits = (data.stats.exits || 0) + 1;
         }
 
+        // Mantener stats.present sincronizado con el tamaño real del presentSet
+        data.stats.present = data.presentSet.length;
+
         const emp = (data.employees || []).find(e => e.id === logEntry.empId);
         if (emp) emp.lastAccess = logEntry.ts;
-        if (logEntry.tokenNonce) data.usedTokens.push(logEntry.tokenNonce);
+
+        // NO guardar el nonce del token de estación en usedTokens:
+        // El token de estación es compartido entre todos los empleados, por lo que
+        // guardar su nonce bloquearía a todos los demás empleados que intenten
+        // hacer check-in con el mismo QR en la misma ventana de tiempo.
+        // Los tokens de estación ya tienen expiración por tiempo (tokenLife).
+        // Solo guardar nonces de tokens personales (tipo 'employee').
+        if (logEntry.tokenNonce && logEntry.source !== 'checkin') {
+            data.usedTokens.push(logEntry.tokenNonce);
+        }
 
         if (useMongo) {
             data.markModified('logs');
             data.markModified('presentSet');
             data.markModified('stats');
             data.markModified('employees');
+            data.markModified('usedTokens');
             await data.save();
         } else {
             fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
