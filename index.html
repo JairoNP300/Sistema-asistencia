@@ -1378,61 +1378,128 @@
                 </div>
             </div>
 
-            <h4 class="section-title">💼 Referencias Laborales (mínimo 2)</h4>
+            <h4 class="section-title">💼 IV. Referencias Laborales (mínimo 2)</h4>
             <div id="workRefsContainer">
                 <div class="ref-item">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Empresa</label>
+                            <label>Nombre de la Empresa</label>
                             <input type="text" class="form-input work-ref-company" />
                         </div>
                         <div class="form-group">
-                            <label>Cargo</label>
+                            <label>Cargo Desempeñado</label>
                             <input type="text" class="form-input work-ref-position" />
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Período</label>
-                            <input type="text" class="form-input work-ref-period" placeholder="2020-2022" />
+                            <label>Período (inicio - fin)</label>
+                            <input type="text" class="form-input work-ref-period" placeholder="Ej: Enero 2020 - Marzo 2022" />
                         </div>
                         <div class="form-group">
-                            <label>Teléfono</label>
+                            <label>Teléfono de la Empresa</label>
                             <input type="tel" class="form-input work-ref-phone" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Dirección</label>
+                        <label>Dirección de la Empresa</label>
                         <input type="text" class="form-input work-ref-address" />
                     </div>
                 </div>
                 <div class="ref-item">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Empresa</label>
+                            <label>Nombre de la Empresa</label>
                             <input type="text" class="form-input work-ref-company" />
                         </div>
                         <div class="form-group">
-                            <label>Cargo</label>
+                            <label>Cargo Desempeñado</label>
                             <input type="text" class="form-input work-ref-position" />
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Período</label>
-                            <input type="text" class="form-input work-ref-period" placeholder="2020-2022" />
+                            <label>Período (inicio - fin)</label>
+                            <input type="text" class="form-input work-ref-period" placeholder="Ej: Enero 2020 - Marzo 2022" />
                         </div>
                         <div class="form-group">
-                            <label>Teléfono</label>
+                            <label>Teléfono de la Empresa</label>
                             <input type="tel" class="form-input work-ref-phone" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Dirección</label>
+                        <label>Dirección de la Empresa</label>
                         <input type="text" class="form-input work-ref-address" />
                     </div>
                 </div>
             </div>
+            <button class="btn-ghost sm" onclick="addWorkRef()" style="margin-top:8px">+ Agregar Referencia Laboral</button>
+
+            <h4 class="section-title">🎓 V. Educación</h4>
+            <div id="educationContainer">
+                <div class="ref-item edu-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nivel Académico</label>
+                            <select class="form-input edu-level">
+                                <option value="">Seleccionar...</option>
+                                <option value="primaria">Primaria</option>
+                                <option value="secundaria">Secundaria / Bachillerato</option>
+                                <option value="tecnico">Técnico</option>
+                                <option value="universitario">Universitario</option>
+                                <option value="postgrado">Postgrado / Maestría</option>
+                                <option value="doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre de la Institución</label>
+                            <input type="text" class="form-input edu-institution" placeholder="Ej: Universidad de El Salvador" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Título o Diploma Obtenido</label>
+                            <input type="text" class="form-input edu-degree" placeholder="Ej: Licenciatura en Administración" />
+                        </div>
+                        <div class="form-group">
+                            <label>Año de Graduación</label>
+                            <input type="text" class="form-input edu-year" placeholder="Ej: 2018" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-ghost sm" onclick="addEducation()" style="margin-top:8px">+ Agregar Educación</button>
+
+            <h4 class="section-title">🏢 VI. Experiencia Laboral</h4>
+            <div id="workExpContainer">
+                <div class="ref-item exp-item">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre de la Empresa</label>
+                            <input type="text" class="form-input exp-company" />
+                        </div>
+                        <div class="form-group">
+                            <label>Cargo Desempeñado</label>
+                            <input type="text" class="form-input exp-position" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Período (inicio - fin)</label>
+                            <input type="text" class="form-input exp-period" placeholder="Ej: Enero 2019 - Diciembre 2022" />
+                        </div>
+                        <div class="form-group">
+                            <label>Motivo de Retiro</label>
+                            <input type="text" class="form-input exp-reason" placeholder="Ej: Búsqueda de nuevas oportunidades" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Funciones Principales</label>
+                        <textarea class="form-input exp-functions" rows="2" placeholder="Describa las principales funciones desempeñadas..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-ghost sm" onclick="addWorkExp()" style="margin-top:8px">+ Agregar Experiencia</button>
         </div>
         <div class="modal-footer">
             <button class="btn-ghost" onclick="closeApplicationModal()">Cancelar</button>
