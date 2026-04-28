@@ -197,6 +197,86 @@ app.get('/api/config', (req, res) => {
     res.json({ ip: getLocalIP(), port: PORT, mode: useMongo ? 'Cloud同步' : 'Local (Sin Nube)' });
 });
 
+// --- LOCATION ENDPOINTS ---
+
+// POST /api/location/checkin — Registrar ubicación GPS (sin autenticación, igual que /api/checkin)
+app.post('/api/location/checkin', async (req, res) => {
+    try {
+        const { empId, lat, lng, timestamp } = req.body;
+        if (!empId || lat === undefined || lng === undefined || !timestamp) {
+            return res.status(400).json({ error: 'Missing required fields: empId, lat, lng, timestamp' });
+        }
+
+        if (useMongo) {
+            const state = await State.findOne();
+            state.locationRecords.push(req.body);
+            state.locationRecords = state.locationRecords.slice(-500);
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            if (!data.locationRecords) data.locationRecords = [];
+            data.locationRecords.push(req.body);
+            data.locationRecords = data.locationRecords.slice(-500);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/location/records — Obtener último registro por empId (sin autenticación)
+app.get('/api/location/records', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.set('Pragma', 'no-cache');
+
+    try {
+        let records;
+        if (useMongo) {
+            const state = await State.findOne();
+            records = state ? (state.locationRecords || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            records = data.locationRecords || [];
+        }
+
+        // Deduplicar: conservar solo el registro más reciente por empId
+        const latest = {};
+        for (const rec of records) {
+            if (!latest[rec.empId] || rec.timestamp > latest[rec.empId].timestamp) {
+                latest[rec.empId] = rec;
+            }
+        }
+
+        res.json(Object.values(latest));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/location/records — Vaciar historial de ubicaciones (requiere autenticación)
+app.delete('/api/location/records', async (req, res) => {
+    try {
+        let N;
+        if (useMongo) {
+            const state = await State.findOne();
+            N = state.locationRecords ? state.locationRecords.length : 0;
+            state.locationRecords = [];
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            N = data.locationRecords ? data.locationRecords.length : 0;
+            data.locationRecords = [];
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true, deleted: N });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Iniciar
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`=========================================`);

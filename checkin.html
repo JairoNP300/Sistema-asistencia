@@ -84,12 +84,12 @@
         <div class="section-label">¿Qué deseas registrar?</div>
 
         <div class="action-buttons">
-            <button class="action-btn entry" id="btnEntry" onclick="submitCheckin('entry')">
+            <button class="action-btn entry" id="btnEntry" onclick="showConsentDialog('entry')">
                 <span class="action-icon">🟢</span>
                 <span class="action-label">Entrada</span>
                 <span class="action-sub" id="entryTimeSub"></span>
             </button>
-            <button class="action-btn exit" id="btnExit" onclick="submitCheckin('exit')">
+            <button class="action-btn exit" id="btnExit" onclick="showConsentDialog('exit')">
                 <span class="action-icon">🔴</span>
                 <span class="action-label">Salida</span>
                 <span class="action-sub" id="exitTimeSub"></span>
@@ -124,6 +124,20 @@
                 selecciona la opción correspondiente.</p>
             <button class="btn-primary full" onclick="goBack()">← Volver</button>
         </div>
+    </div>
+
+    <!-- CONSENT DIALOG DE UBICACIÓN -->
+    <div class="consent-overlay hidden" id="consentOverlay">
+      <div class="consent-card">
+        <div class="consent-icon">📍</div>
+        <h3>¿Compartir ubicación?</h3>
+        <p>El sistema registrará tu ubicación GPS en este momento para el control de asistencia.</p>
+        <p class="consent-privacy-note">Tu ubicación se usa únicamente para el registro de asistencia y puede ser eliminada por el administrador en cualquier momento.</p>
+        <div class="consent-actions">
+          <button class="btn-consent-accept" id="btnConsentAccept">📍 Sí, compartir</button>
+          <button class="btn-consent-reject" id="btnConsentReject">✕ No compartir</button>
+        </div>
+      </div>
     </div>
 
     <script src="crypto-utils.js"></script>

@@ -146,6 +146,7 @@ const pageTitles = {
     reports: ['Reportes', 'Estadísticas y análisis'],
     security: ['Seguridad', 'Criptografía y configuración de tokens'],
     admin: ['Configuración', 'Ajustes del sistema'],
+    location: ['Ubicación en Tiempo Real', 'Mapa de empleados activos'],
 };
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -162,6 +163,8 @@ function showPage(id) {
     if (id === 'reports') renderReports();
     if (id === 'security') renderSecurityPage();
     if (id === 'admin') renderAdminPage();
+    if (id === 'location') { initLocationMap(); startLocationAutoRefresh(); }
+    else { stopLocationAutoRefresh(); }
 }
 
 function toggleSidebar() {
@@ -1000,4 +1003,138 @@ function downloadFile(name, content, mime) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([content], { type: mime }));
     a.download = name; a.click();
+}
+
+/* ============================================================
+   LOCATION MODULE — Mapa de Ubicación en Tiempo Real
+   ============================================================ */
+
+let _locationMap = null;
+let _locationMarkers = {};
+let _locationRefreshTimer = null;
+
+function initLocationMap() {
+    if (typeof L === 'undefined') {
+        const el = document.getElementById('locationMap');
+        if (el) el.innerHTML = '<div class="loc-empty-msg" style="position:relative;height:400px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;"><span>⚠️ No se pudo cargar el mapa</span><span style="font-size:0.8rem;opacity:0.6;">Verifica tu conexión a internet</span></div>';
+        return;
+    }
+    if (!_locationMap) {
+        _locationMap = L.map('locationMap').setView([19.4326, -99.1332], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors', maxZoom: 19
+        }).addTo(_locationMap);
+    }
+    refreshLocationMap();
+}
+
+async function refreshLocationMap() {
+    try {
+        const res = await fetch('/api/location/records');
+        if (!res.ok) return;
+        const records = await res.json();
+        renderLocationPanel(records);
+        if (!_locationMap) return;
+        if (!records.length) {
+            document.getElementById('locEmptyMsg').style.display = 'flex';
+            document.getElementById('locationMap').style.opacity = '0.2';
+            return;
+        }
+        document.getElementById('locEmptyMsg').style.display = 'none';
+        document.getElementById('locationMap').style.opacity = '1';
+        // Limpiar marcadores anteriores
+        Object.values(_locationMarkers).forEach(m => _locationMap.removeLayer(m));
+        _locationMarkers = {};
+        const bounds = [];
+        records.forEach(rec => {
+            const emp = state.employees.find(e => e.id === rec.empId);
+            const typeLabel = rec.type === 'entry' ? '🟢 Entrada' : '🔴 Salida';
+            const time = new Date(rec.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+            const accuracyLabel = rec.accuracy < 50 ? 'Alta' : rec.accuracy < 200 ? 'Media' : 'Baja';
+            const icon = L.divIcon({
+                html: `<div style="background:${rec.type === 'entry' ? '#10b981' : '#f43f5e'};width:32px;height:32px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">${emp?.avatar || '👤'}</div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+            const marker = L.marker([rec.lat, rec.lng], { icon })
+                .addTo(_locationMap)
+                .bindPopup(`<div style="min-width:180px;font-family:Outfit,sans-serif">
+                    <strong>${rec.empName}</strong><br>
+                    <span style="color:#64748b;font-size:0.85em">${rec.dept || '—'}</span><br>
+                    <span>${typeLabel}</span> · <span>${time}</span><br>
+                    <span style="font-size:0.8em;color:#94a3b8">Precisión: ${rec.accuracy ? Math.round(rec.accuracy) + 'm (' + accuracyLabel + ')' : '—'}</span>
+                </div>`);
+            _locationMarkers[rec.empId] = marker;
+            bounds.push([rec.lat, rec.lng]);
+        });
+        if (bounds.length) _locationMap.fitBounds(bounds, { padding: [40, 40] });
+    } catch (e) {
+        console.warn('Error refreshing location map:', e.message);
+    }
+}
+
+function renderLocationPanel(records) {
+    const today = new Date().toDateString();
+    const todayEmpIds = new Set(
+        records.filter(r => new Date(r.timestamp).toDateString() === today).map(r => r.empId)
+    );
+    document.getElementById('locDayCount').textContent = todayEmpIds.size;
+    // Ordenar por timestamp descendente
+    const sorted = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const locList = document.getElementById('locList');
+    if (!sorted.length) {
+        locList.innerHTML = '<div class="empty-feed">No hay ubicaciones registradas aún.</div>';
+    } else {
+        locList.innerHTML = sorted.map(rec => {
+            const emp = state.employees.find(e => e.id === rec.empId);
+            const time = new Date(rec.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+            const typeLabel = rec.type === 'entry' ? '🟢 Entrada' : '🔴 Salida';
+            const acc = rec.accuracy;
+            const accClass = acc < 50 ? 'loc-accuracy-high' : acc < 200 ? 'loc-accuracy-mid' : 'loc-accuracy-low';
+            const accLabel = acc < 50 ? 'Alta' : acc < 200 ? 'Media' : 'Baja';
+            return `<div class="loc-item" onclick="focusLocationMarker('${rec.empId}')">
+                <div class="loc-item-avatar">${emp?.avatar || rec.empName?.[0] || '👤'}</div>
+                <div class="loc-item-body">
+                    <div class="loc-item-name">${rec.empName}</div>
+                    <div class="loc-item-meta">${rec.dept || '—'} · ${typeLabel} · ${time}</div>
+                </div>
+                <span class="loc-accuracy-badge ${accClass}">${accLabel}</span>
+            </div>`;
+        }).join('');
+    }
+    // Empleados sin ubicación
+    const withLocation = new Set(records.map(r => r.empId));
+    const noLocation = state.employees.filter(e => e.status === 'active' && !withLocation.has(e.id));
+    const noLocList = document.getElementById('locNoLocationList');
+    noLocList.innerHTML = noLocation.length
+        ? noLocation.map(e => `<div class="loc-no-location-item"><span>${e.avatar || '👤'}</span><span>${e.firstName} ${e.lastName} <small>(${e.dept})</small></span></div>`).join('')
+        : '<div style="font-size:0.8rem;color:var(--text-muted);padding:8px 0">Todos los empleados activos compartieron ubicación.</div>';
+}
+
+function focusLocationMarker(empId) {
+    if (!_locationMap || !_locationMarkers[empId]) return;
+    const marker = _locationMarkers[empId];
+    _locationMap.setView(marker.getLatLng(), 15);
+    marker.openPopup();
+}
+
+function startLocationAutoRefresh() {
+    if (_locationRefreshTimer) return;
+    _locationRefreshTimer = setInterval(refreshLocationMap, 30000);
+}
+
+function stopLocationAutoRefresh() {
+    if (_locationRefreshTimer) { clearInterval(_locationRefreshTimer); _locationRefreshTimer = null; }
+}
+
+async function clearLocationHistory() {
+    if (!confirm('¿Estás seguro de que deseas eliminar todo el historial de ubicaciones? Esta acción no se puede deshacer.')) return;
+    try {
+        const res = await fetch('/api/location/records', { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error del servidor');
+        const data = await res.json();
+        showToast(`🗑 ${data.deleted} registros eliminados`, 'success');
+        refreshLocationMap();
+    } catch (e) {
+        showToast('❌ Error al limpiar: ' + e.message, 'error');
+    }
 }

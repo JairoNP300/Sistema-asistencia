@@ -50,6 +50,18 @@ const LogSchema = new mongoose.Schema({
     geofenceValid: Boolean
 });
 
+const LocationRecordSchema = new mongoose.Schema({
+    empId: { type: String, required: true },
+    empName: { type: String, required: true },
+    dept: String,
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+    accuracy: Number,
+    timestamp: { type: String, required: true },
+    type: { type: String, enum: ['entry', 'exit'] },
+    consentGiven: { type: Boolean, default: true }
+});
+
 const StateSchema = new mongoose.Schema({
     currentDate: String,
     employees: [EmployeeSchema],
@@ -87,7 +99,8 @@ const StateSchema = new mongoose.Schema({
         lat: Number,
         lon: Number,
         radiusMeters: Number
-    }]
+    }],
+    locationRecords: { type: [LocationRecordSchema], default: [] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('State', StateSchema);

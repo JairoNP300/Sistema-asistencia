@@ -158,6 +158,7 @@ function selectEmployee(empId) {
     const emp = cState.employees.find(e => e.id === empId);
     if (!emp) return;
     cState.selectedEmployee = emp;
+    window._selectedEmployee = emp;
     const isInside = cState.presentSet.includes(emp.id);
 
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -288,4 +289,65 @@ function showToastLocal(msg, type = 'info') {
     d.textContent = msg;
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 3500);
+}
+
+// ---- LOCATION CAPTURE WITH CONSENT ----
+
+function buildLocationRecord(coords, emp, type) {
+    return {
+        empId: emp.id,
+        empName: emp.firstName + ' ' + emp.lastName,
+        dept: emp.dept || '',
+        lat: coords.latitude,
+        lng: coords.longitude,
+        accuracy: coords.accuracy,
+        timestamp: new Date().toISOString(),
+        type: type,
+        consentGiven: true
+    };
+}
+
+async function sendWithRetry(url, body, maxRetries = 3, delayMs = 2000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {
+            if (attempt === maxRetries) return null;
+            await new Promise(r => setTimeout(r, delayMs));
+        }
+    }
+    return null;
+}
+
+function showConsentDialog(type) {
+    const overlay = document.getElementById('consentOverlay');
+    if (!overlay) { submitCheckin(type); return; }
+    overlay.classList.remove('hidden');
+
+    document.getElementById('btnConsentAccept').onclick = () => {
+        overlay.classList.add('hidden');
+        if (!navigator.geolocation) { submitCheckin(type); return; }
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const emp = window._selectedEmployee;
+                if (emp) {
+                    const record = buildLocationRecord(position.coords, emp, type);
+                    await sendWithRetry('/api/location/checkin', record);
+                }
+                submitCheckin(type);
+            },
+            () => { submitCheckin(type); },
+            { timeout: 10000, maximumAge: 0 }
+        );
+    };
+
+    document.getElementById('btnConsentReject').onclick = () => {
+        overlay.classList.add('hidden');
+        submitCheckin(type);
+    };
 }
