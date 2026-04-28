@@ -600,6 +600,7 @@ function openEmpModal(emp = null) {
     document.getElementById('empPhone').value = emp?.phone || '';
     document.getElementById('empStatus').value = emp?.status || 'active';
     document.getElementById('empAvatar').value = emp?.avatar || '';
+    document.getElementById('empMonthlySalary').value = emp?.monthlySalary || 0;
     document.getElementById('empModalOverlay').classList.add('active');
     document.getElementById('empModal').classList.add('active');
     fillDeptDropdowns();
@@ -1278,3 +1279,468 @@ async function clearLocationHistory() {
         showToast('❌ Error al limpiar: ' + e.message, 'error');
     }
 }
+
+/* ============================================================
+   MÓDULO DE RRHH — Solicitudes de Empleo y Planillas
+   ============================================================ */
+
+let currentHRTab = 'applications';
+let currentPayroll = null;
+
+// Agregar 'hr' a pageTitles
+pageTitles.hr = ['Recursos Humanos', 'Gestión de solicitudes y planillas'];
+
+// Mostrar tabs de RRHH
+function showHRTab(tab) {
+    currentHRTab = tab;
+    document.querySelectorAll('.hr-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.hr-tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.hr-tab:nth-child(${tab === 'applications' ? 1 : 2})`).classList.add('active');
+    document.getElementById(`hr-tab-${tab}`).classList.add('active');
+    
+    if (tab === 'applications') loadApplications();
+    else if (tab === 'payroll') loadPayrolls();
+}
+
+// ========== SOLICITUDES DE EMPLEO ==========
+
+async function loadApplications() {
+    try {
+        const res = await fetch('/api/hr/applications');
+        if (!res.ok) throw new Error('Error cargando solicitudes');
+        const applications = await res.json();
+        renderApplicationsTable(applications);
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+function renderApplicationsTable(applications) {
+    const tbody = document.getElementById('applicationsTableBody');
+    if (!applications.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-feed">No hay solicitudes registradas</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = applications.map(app => {
+        const statusClass = app.status === 'approved' ? 'status-active' : app.status === 'rejected' ? 'status-inactive' : '';
+        const statusLabel = app.status === 'approved' ? '✓ Aprobada' : app.status === 'rejected' ? '✗ Rechazada' : '⏳ Pendiente';
+        const fullName = `${app.personalInfo?.firstName || ''} ${app.personalInfo?.lastName || ''}`;
+        return `<tr>
+            <td>${fullName}</td>
+            <td><span class="token-mono">${app.personalInfo?.dui || '—'}</span></td>
+            <td>${app.personalInfo?.phone || '—'}</td>
+            <td><span class="status-chip ${statusClass}">${statusLabel}</span></td>
+            <td><span class="token-mono">${formatDateTime(app.createdAt)}</span></td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-table edit" onclick="viewApplication('${app.id}')">👁 Ver</button>
+                    <button class="btn-table del" onclick="deleteApplication('${app.id}')">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function openApplicationModal(app = null) {
+    document.getElementById('appModalTitle').textContent = app ? 'Ver Solicitud de Empleo' : 'Nueva Solicitud de Empleo';
+    document.getElementById('appId').value = app?.id || '';
+    
+    // Limpiar formulario
+    if (!app) {
+        document.querySelectorAll('#appModal input, #appModal textarea, #appModal select').forEach(el => {
+            if (el.type === 'checkbox') el.checked = false;
+            else el.value = '';
+        });
+    } else {
+        // Llenar con datos existentes
+        document.getElementById('appFirstName').value = app.personalInfo?.firstName || '';
+        document.getElementById('appLastName').value = app.personalInfo?.lastName || '';
+        document.getElementById('appDUI').value = app.personalInfo?.dui || '';
+        document.getElementById('appNIT').value = app.personalInfo?.nit || '';
+        document.getElementById('appISSS').value = app.personalInfo?.isss || '';
+        document.getElementById('appAFP').value = app.personalInfo?.afp || '';
+        document.getElementById('appBirthDate').value = app.personalInfo?.birthDate || '';
+        document.getElementById('appBirthPlace').value = app.personalInfo?.birthPlace || '';
+        document.getElementById('appAddress').value = app.personalInfo?.address || '';
+        document.getElementById('appPhone').value = app.personalInfo?.phone || '';
+        document.getElementById('appEmail').value = app.personalInfo?.email || '';
+        document.getElementById('appMaritalStatus').value = app.personalInfo?.maritalStatus || '';
+        document.getElementById('appProfession').value = app.personalInfo?.profession || '';
+        
+        document.getElementById('appFatherName').value = app.family?.fatherName || '';
+        document.getElementById('appMotherName').value = app.family?.motherName || '';
+        document.getElementById('appSpouseName').value = app.family?.spouseName || '';
+        document.getElementById('appChildren').value = app.family?.children?.map(c => `${c.name} ${c.age}`).join(', ') || '';
+    }
+    
+    document.getElementById('appModalOverlay').classList.add('active');
+    document.getElementById('appModal').classList.add('active');
+}
+
+function closeApplicationModal() {
+    document.getElementById('appModalOverlay').classList.remove('active');
+    document.getElementById('appModal').classList.remove('active');
+}
+
+async function saveApplication() {
+    // Recopilar datos del formulario
+    const personalReferences = [];
+    document.querySelectorAll('#personalRefsContainer .ref-item').forEach(item => {
+        const name = item.querySelector('.personal-ref-name').value;
+        if (name) {
+            personalReferences.push({
+                name,
+                phone: item.querySelector('.personal-ref-phone').value,
+                address: item.querySelector('.personal-ref-address').value,
+                occupation: item.querySelector('.personal-ref-occupation').value
+            });
+        }
+    });
+    
+    const workReferences = [];
+    document.querySelectorAll('#workRefsContainer .ref-item').forEach(item => {
+        const company = item.querySelector('.work-ref-company').value;
+        if (company) {
+            workReferences.push({
+                company,
+                position: item.querySelector('.work-ref-position').value,
+                period: item.querySelector('.work-ref-period').value,
+                phone: item.querySelector('.work-ref-phone').value,
+                address: item.querySelector('.work-ref-address').value
+            });
+        }
+    });
+    
+    // Parsear hijos
+    const childrenText = document.getElementById('appChildren').value;
+    const children = childrenText ? childrenText.split(',').map(c => {
+        const parts = c.trim().split(' ');
+        const age = parseInt(parts[parts.length - 1]);
+        const name = parts.slice(0, -1).join(' ');
+        return { name, age: isNaN(age) ? 0 : age };
+    }) : [];
+    
+    const application = {
+        personalInfo: {
+            firstName: document.getElementById('appFirstName').value,
+            lastName: document.getElementById('appLastName').value,
+            dui: document.getElementById('appDUI').value,
+            nit: document.getElementById('appNIT').value,
+            isss: document.getElementById('appISSS').value,
+            afp: document.getElementById('appAFP').value,
+            birthDate: document.getElementById('appBirthDate').value,
+            birthPlace: document.getElementById('appBirthPlace').value,
+            address: document.getElementById('appAddress').value,
+            phone: document.getElementById('appPhone').value,
+            email: document.getElementById('appEmail').value,
+            maritalStatus: document.getElementById('appMaritalStatus').value,
+            profession: document.getElementById('appProfession').value
+        },
+        family: {
+            fatherName: document.getElementById('appFatherName').value,
+            motherName: document.getElementById('appMotherName').value,
+            spouseName: document.getElementById('appSpouseName').value,
+            children
+        },
+        personalReferences,
+        workReferences,
+        education: [],
+        workExperience: [],
+        status: 'pending'
+    };
+    
+    // Validar campos requeridos
+    if (!application.personalInfo.firstName || !application.personalInfo.lastName || 
+        !application.personalInfo.dui || !application.personalInfo.address || !application.personalInfo.phone) {
+        showToast('⚠️ Completa los campos obligatorios', 'warning');
+        return;
+    }
+    
+    try {
+        const appId = document.getElementById('appId').value;
+        const url = appId ? `/api/hr/applications/${appId}` : '/api/hr/applications';
+        const method = appId ? 'PUT' : 'POST';
+        
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(application)
+        });
+        
+        if (!res.ok) throw new Error('Error guardando solicitud');
+        
+        showToast('✅ Solicitud guardada exitosamente', 'success');
+        closeApplicationModal();
+        loadApplications();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function viewApplication(id) {
+    try {
+        const res = await fetch('/api/hr/applications');
+        if (!res.ok) throw new Error('Error cargando solicitud');
+        const applications = await res.json();
+        const app = applications.find(a => a.id === id);
+        if (app) openApplicationModal(app);
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteApplication(id) {
+    if (!confirm('¿Estás seguro de eliminar esta solicitud?')) return;
+    
+    try {
+        const res = await fetch(`/api/hr/applications/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error eliminando solicitud');
+        
+        showToast('🗑 Solicitud eliminada', 'warning');
+        loadApplications();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+// ========== PLANILLAS DE SUELDOS ==========
+
+async function loadPayrolls() {
+    try {
+        const res = await fetch('/api/hr/payrolls');
+        if (!res.ok) throw new Error('Error cargando planillas');
+        const payrolls = await res.json();
+        renderPayrollHistory(payrolls);
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+function renderPayrollHistory(payrolls) {
+    const tbody = document.getElementById('payrollHistoryBody');
+    if (!payrolls.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-feed">No hay planillas generadas</td></tr>';
+        return;
+    }
+    
+    const sorted = [...payrolls].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    tbody.innerHTML = sorted.map(p => {
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const period = `${monthNames[p.month - 1]} ${p.year}`;
+        return `<tr>
+            <td><strong>${period}</strong></td>
+            <td>${p.employees.length}</td>
+            <td>$${p.totals.totalSalary.toFixed(2)}</td>
+            <td>$${p.totals.totalDeductions.toFixed(2)}</td>
+            <td><strong>$${p.totals.totalNetPay.toFixed(2)}</strong></td>
+            <td><span class="token-mono">${formatDateTime(p.createdAt)}</span></td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-table edit" onclick="viewPayroll('${p.id}')">👁 Ver</button>
+                    <button class="btn-table qr" onclick="exportPayrollExcelById('${p.id}')">📥 Excel</button>
+                    <button class="btn-table del" onclick="deletePayroll('${p.id}')">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function generatePayroll() {
+    const month = parseInt(document.getElementById('payrollMonth').value);
+    const year = parseInt(document.getElementById('payrollYear').value);
+    
+    if (!month || !year) {
+        showToast('⚠️ Selecciona mes y año', 'warning');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/api/hr/payrolls/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ month, year })
+        });
+        
+        if (!res.ok) throw new Error('Error generando planilla');
+        
+        const data = await res.json();
+        currentPayroll = data.payroll;
+        
+        showToast('✅ Planilla generada exitosamente', 'success');
+        renderPayrollResult(data.payroll);
+        loadPayrolls();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+function renderPayrollResult(payroll) {
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const period = `${monthNames[payroll.month - 1]} ${payroll.year}`;
+    
+    const html = `
+        <div style="text-align:center;margin-bottom:20px;">
+            <h3>${state.adminConfig.company}</h3>
+            <h4>PLANILLA DE SUELDOS</h4>
+            <p>Período: ${period}</p>
+        </div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>NOMBRE COMPLETO</th>
+                        <th>DÍAS TRABAJADOS</th>
+                        <th>SALARIO MENSUAL</th>
+                        <th>ISSS (3%)</th>
+                        <th>AFP (7.25%)</th>
+                        <th>RENTA</th>
+                        <th>TOTAL DEDUCCIONES</th>
+                        <th>LÍQUIDO A RECIBIR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${payroll.employees.map((emp, i) => `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${emp.fullName}</td>
+                            <td>${emp.workedDays}</td>
+                            <td>$${emp.monthlySalary.toFixed(2)}</td>
+                            <td>$${emp.isss.toFixed(2)}</td>
+                            <td>$${emp.afp.toFixed(2)}</td>
+                            <td>$${emp.renta.toFixed(2)}</td>
+                            <td>$${emp.totalDeductions.toFixed(2)}</td>
+                            <td><strong>$${emp.netPay.toFixed(2)}</strong></td>
+                        </tr>
+                    `).join('')}
+                    <tr style="background:var(--surface2);font-weight:700;">
+                        <td colspan="3">TOTALES</td>
+                        <td>$${payroll.totals.totalSalary.toFixed(2)}</td>
+                        <td>$${payroll.totals.totalISS.toFixed(2)}</td>
+                        <td>$${payroll.totals.totalAFP.toFixed(2)}</td>
+                        <td>$${payroll.totals.totalRenta.toFixed(2)}</td>
+                        <td>$${payroll.totals.totalDeductions.toFixed(2)}</td>
+                        <td>$${payroll.totals.totalNetPay.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    document.getElementById('payrollResult').innerHTML = html;
+    document.getElementById('payrollResultPanel').style.display = 'block';
+}
+
+async function viewPayroll(id) {
+    try {
+        const res = await fetch('/api/hr/payrolls');
+        if (!res.ok) throw new Error('Error cargando planilla');
+        const payrolls = await res.json();
+        const payroll = payrolls.find(p => p.id === id);
+        if (payroll) {
+            currentPayroll = payroll;
+            renderPayrollResult(payroll);
+        }
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function deletePayroll(id) {
+    if (!confirm('¿Estás seguro de eliminar esta planilla?')) return;
+    
+    try {
+        const res = await fetch(`/api/hr/payrolls/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error eliminando planilla');
+        
+        showToast('🗑 Planilla eliminada', 'warning');
+        loadPayrolls();
+        document.getElementById('payrollResultPanel').style.display = 'none';
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+function exportPayrollExcel() {
+    if (!currentPayroll) {
+        showToast('⚠️ No hay planilla para exportar', 'warning');
+        return;
+    }
+    exportPayrollToExcel(currentPayroll);
+}
+
+async function exportPayrollExcelById(id) {
+    try {
+        const res = await fetch('/api/hr/payrolls');
+        if (!res.ok) throw new Error('Error cargando planilla');
+        const payrolls = await res.json();
+        const payroll = payrolls.find(p => p.id === id);
+        if (payroll) exportPayrollToExcel(payroll);
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+function exportPayrollToExcel(payroll) {
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const period = `${monthNames[payroll.month - 1]}_${payroll.year}`;
+    const filename = `Planilla_${period}.xlsx`;
+    
+    // Preparar datos para Excel
+    const data = payroll.employees.map((emp, i) => ({
+        'N°': i + 1,
+        'NOMBRE COMPLETO': emp.fullName,
+        'DÍAS TRABAJADOS': emp.workedDays,
+        'SALARIO MENSUAL': emp.monthlySalary,
+        'ISSS (3%)': emp.isss,
+        'AFP (7.25%)': emp.afp,
+        'RENTA': emp.renta,
+        'TOTAL DEDUCCIONES': emp.totalDeductions,
+        'LÍQUIDO A RECIBIR': emp.netPay
+    }));
+    
+    // Agregar fila de totales
+    data.push({
+        'N°': '',
+        'NOMBRE COMPLETO': '',
+        'DÍAS TRABAJADOS': 'TOTALES',
+        'SALARIO MENSUAL': payroll.totals.totalSalary,
+        'ISSS (3%)': payroll.totals.totalISS,
+        'AFP (7.25%)': payroll.totals.totalAFP,
+        'RENTA': payroll.totals.totalRenta,
+        'TOTAL DEDUCCIONES': payroll.totals.totalDeductions,
+        'LÍQUIDO A RECIBIR': payroll.totals.totalNetPay
+    });
+    
+    // Crear libro y hoja
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    
+    // Ajustar anchos de columna
+    ws['!cols'] = [
+        { wch: 5 },  // N°
+        { wch: 30 }, // NOMBRE
+        { wch: 15 }, // DÍAS
+        { wch: 15 }, // SALARIO
+        { wch: 12 }, // ISSS
+        { wch: 12 }, // AFP
+        { wch: 12 }, // RENTA
+        { wch: 18 }, // DEDUCCIONES
+        { wch: 18 }  // LÍQUIDO
+    ];
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'Planilla');
+    
+    // Descargar
+    XLSX.writeFile(wb, filename);
+    showToast('📊 Excel generado y descargado', 'success');
+}
+
+// Actualizar showPage para incluir RRHH
+const originalShowPage = showPage;
+showPage = function(id) {
+    originalShowPage(id);
+    if (id === 'hr') showHRTab(currentHRTab);
+};

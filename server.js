@@ -442,6 +442,270 @@ app.delete('/api/location/records', async (req, res) => {
     }
 });
 
+// ========== ENDPOINTS DE RRHH ==========
+
+// GET /api/hr/applications — Obtener todas las solicitudes de empleo
+app.get('/api/hr/applications', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        let applications = [];
+        if (useMongo) {
+            const state = await State.findOne();
+            applications = state ? (state.jobApplications || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            applications = data.jobApplications || [];
+        }
+        res.json(applications);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /api/hr/applications — Crear nueva solicitud de empleo
+app.post('/api/hr/applications', async (req, res) => {
+    try {
+        const application = {
+            ...req.body,
+            id: `app_${Date.now()}`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            if (!state.jobApplications) state.jobApplications = [];
+            state.jobApplications.push(application);
+            state.markModified('jobApplications');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            if (!data.jobApplications) data.jobApplications = [];
+            data.jobApplications.push(application);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true, application });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// PUT /api/hr/applications/:id — Actualizar solicitud de empleo
+app.put('/api/hr/applications/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = { ...req.body, updatedAt: new Date().toISOString() };
+
+        if (useMongo) {
+            const state = await State.findOne();
+            const idx = state.jobApplications.findIndex(a => a.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Solicitud no encontrada' });
+            state.jobApplications[idx] = { ...state.jobApplications[idx], ...updates };
+            state.markModified('jobApplications');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const idx = data.jobApplications.findIndex(a => a.id === id);
+            if (idx === -1) return res.status(404).json({ error: 'Solicitud no encontrada' });
+            data.jobApplications[idx] = { ...data.jobApplications[idx], ...updates };
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/hr/applications/:id — Eliminar solicitud de empleo
+app.delete('/api/hr/applications/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (useMongo) {
+            const state = await State.findOne();
+            state.jobApplications = state.jobApplications.filter(a => a.id !== id);
+            state.markModified('jobApplications');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            data.jobApplications = data.jobApplications.filter(a => a.id !== id);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/payrolls — Obtener todas las planillas
+app.get('/api/hr/payrolls', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        let payrolls = [];
+        if (useMongo) {
+            const state = await State.findOne();
+            payrolls = state ? (state.payrolls || []) : [];
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            payrolls = data.payrolls || [];
+        }
+        res.json(payrolls);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /api/hr/payrolls/generate — Generar planilla mensual
+app.post('/api/hr/payrolls/generate', async (req, res) => {
+    try {
+        const { month, year } = req.body;
+        
+        let state;
+        if (useMongo) {
+            state = await State.findOne();
+        } else {
+            state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        }
+
+        // Calcular días trabajados para cada empleado
+        const employees = state.employees.filter(e => e.status === 'active');
+        const payrollEmployees = [];
+        
+        // Obtener logs del mes (incluyendo historial)
+        const allLogs = [...(state.logs || [])];
+        if (state.history) {
+            state.history.forEach((logs, date) => {
+                allLogs.push(...logs.map(l => ({ ...l, _historyDate: date })));
+            });
+        }
+
+        // Filtrar logs del mes seleccionado
+        const monthLogs = allLogs.filter(log => {
+            const logDate = new Date(log.ts);
+            return logDate.getMonth() + 1 === month && logDate.getFullYear() === year;
+        });
+
+        let totals = {
+            totalSalary: 0,
+            totalISS: 0,
+            totalAFP: 0,
+            totalRenta: 0,
+            totalDeductions: 0,
+            totalNetPay: 0
+        };
+
+        for (const emp of employees) {
+            // Calcular días trabajados
+            const empLogs = monthLogs.filter(l => l.empId === emp.id && l.type === 'entry');
+            const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
+            const workedDays = uniqueDates.size;
+
+            // Salario base
+            const monthlySalary = emp.monthlySalary || 0;
+            const proportionalSalary = (monthlySalary / 30) * workedDays;
+
+            // Calcular deducciones según leyes de El Salvador
+            // ISSS: 3% con tope de $30
+            let isss = proportionalSalary * 0.03;
+            if (isss > 30) isss = 30;
+
+            // AFP: 7.25% sin tope
+            const afp = proportionalSalary * 0.0725;
+
+            // RENTA: Tramos progresivos
+            let renta = 0;
+            if (proportionalSalary > 472.00) {
+                if (proportionalSalary <= 895.24) {
+                    renta = (proportionalSalary - 472.00) * 0.10 + 17.67;
+                } else if (proportionalSalary <= 2038.10) {
+                    renta = (proportionalSalary - 895.24) * 0.10 + 60.00;
+                } else {
+                    renta = (proportionalSalary - 2038.10) * 0.30 + 288.57;
+                }
+            }
+
+            const totalDeductions = isss + afp + renta;
+            const netPay = proportionalSalary - totalDeductions;
+
+            payrollEmployees.push({
+                empId: emp.id,
+                empNum: emp.empNum,
+                fullName: `${emp.firstName} ${emp.lastName}`,
+                workedDays,
+                monthlySalary: parseFloat(proportionalSalary.toFixed(2)),
+                isss: parseFloat(isss.toFixed(2)),
+                afp: parseFloat(afp.toFixed(2)),
+                renta: parseFloat(renta.toFixed(2)),
+                totalDeductions: parseFloat(totalDeductions.toFixed(2)),
+                netPay: parseFloat(netPay.toFixed(2))
+            });
+
+            totals.totalSalary += proportionalSalary;
+            totals.totalISS += isss;
+            totals.totalAFP += afp;
+            totals.totalRenta += renta;
+            totals.totalDeductions += totalDeductions;
+            totals.totalNetPay += netPay;
+        }
+
+        // Redondear totales
+        Object.keys(totals).forEach(key => {
+            totals[key] = parseFloat(totals[key].toFixed(2));
+        });
+
+        const payroll = {
+            id: `payroll_${Date.now()}`,
+            month,
+            year,
+            employees: payrollEmployees,
+            totals,
+            createdAt: new Date().toISOString()
+        };
+
+        // Guardar planilla
+        if (useMongo) {
+            if (!state.payrolls) state.payrolls = [];
+            state.payrolls.push(payroll);
+            state.markModified('payrolls');
+            await state.save();
+        } else {
+            if (!state.payrolls) state.payrolls = [];
+            state.payrolls.push(payroll);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+        }
+
+        res.json({ success: true, payroll });
+    } catch (e) {
+        console.error('Error generando planilla:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/hr/payrolls/:id — Eliminar planilla
+app.delete('/api/hr/payrolls/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (useMongo) {
+            const state = await State.findOne();
+            state.payrolls = state.payrolls.filter(p => p.id !== id);
+            state.markModified('payrolls');
+            await state.save();
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            data.payrolls = data.payrolls.filter(p => p.id !== id);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Iniciar
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`=========================================`);

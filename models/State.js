@@ -29,7 +29,9 @@ const EmployeeSchema = new mongoose.Schema({
     hourlyRate: { type: Number, default: 0 },
     currency: { type: String, default: 'MXN' },
     pinAttempts: { type: Number, default: 0 },
-    pinLockedUntil: Date
+    pinLockedUntil: Date,
+    // Campos de RRHH
+    monthlySalary: { type: Number, default: 0 }
 });
 
 const LogSchema = new mongoose.Schema({
@@ -60,6 +62,98 @@ const LocationRecordSchema = new mongoose.Schema({
     timestamp: { type: String, required: true },
     type: { type: String, enum: ['entry', 'exit'] },
     consentGiven: { type: Boolean, default: true }
+});
+
+// Schema para Solicitudes de Empleo
+const JobApplicationSchema = new mongoose.Schema({
+    id: String,
+    // Información Personal
+    personalInfo: {
+        firstName: String,
+        lastName: String,
+        dui: String,
+        nit: String,
+        isss: String,
+        afp: String,
+        birthDate: String,
+        birthPlace: String,
+        address: String,
+        phone: String,
+        email: String,
+        maritalStatus: String,
+        profession: String
+    },
+    // Estructura Familiar
+    family: {
+        fatherName: String,
+        motherName: String,
+        spouseName: String,
+        children: [{
+            name: String,
+            age: Number
+        }]
+    },
+    // Referencias Personales
+    personalReferences: [{
+        name: String,
+        address: String,
+        phone: String,
+        occupation: String
+    }],
+    // Referencias Laborales
+    workReferences: [{
+        company: String,
+        position: String,
+        period: String,
+        address: String,
+        phone: String
+    }],
+    // Historial Educativo
+    education: [{
+        level: String,
+        institution: String,
+        degree: String,
+        graduationYear: String
+    }],
+    // Experiencia Laboral
+    workExperience: [{
+        company: String,
+        position: String,
+        period: String,
+        responsibilities: String,
+        reasonForLeaving: String
+    }],
+    status: { type: String, default: 'pending' }, // pending, approved, rejected
+    createdAt: String,
+    updatedAt: String
+});
+
+// Schema para Planillas de Sueldos
+const PayrollSchema = new mongoose.Schema({
+    id: String,
+    month: Number,
+    year: Number,
+    employees: [{
+        empId: String,
+        empNum: String,
+        fullName: String,
+        workedDays: Number,
+        monthlySalary: Number,
+        isss: Number,
+        afp: Number,
+        renta: Number,
+        totalDeductions: Number,
+        netPay: Number
+    }],
+    totals: {
+        totalSalary: Number,
+        totalISS: Number,
+        totalAFP: Number,
+        totalRenta: Number,
+        totalDeductions: Number,
+        totalNetPay: Number
+    },
+    createdAt: String
 });
 
 const StateSchema = new mongoose.Schema({
@@ -100,7 +194,10 @@ const StateSchema = new mongoose.Schema({
         lon: Number,
         radiusMeters: Number
     }],
-    locationRecords: { type: [LocationRecordSchema], default: [] }
+    locationRecords: { type: [LocationRecordSchema], default: [] },
+    // Datos de RRHH
+    jobApplications: { type: [JobApplicationSchema], default: [] },
+    payrolls: { type: [PayrollSchema], default: [] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('State', StateSchema);
