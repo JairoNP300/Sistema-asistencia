@@ -112,8 +112,24 @@ app.get('/api/data', async (req, res) => {
             data.logs = [];
             data.stats = { present: 0, entries: 0, exits: 0, blocked: 0 };
             data.presentSet = [];
+            data.usedTokens = []; // Limpiar tokens usados al cambiar de día
             data.currentDate = today;
-            if (useMongo) await data.save(); else fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+            if (useMongo) {
+                data.markModified('logs');
+                data.markModified('stats');
+                data.markModified('presentSet');
+                data.markModified('usedTokens');
+                await data.save();
+            } else {
+                fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+            }
+        }
+
+        // Limpiar usedTokens si tiene más de 500 entradas (evitar crecimiento indefinido)
+        if (data.usedTokens && data.usedTokens.length > 500) {
+            data.usedTokens = data.usedTokens.slice(-200);
+            if (useMongo) { data.markModified('usedTokens'); await data.save(); }
+            else fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
         }
 
         res.json(data);
