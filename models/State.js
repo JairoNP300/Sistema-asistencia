@@ -156,6 +156,89 @@ const PayrollSchema = new mongoose.Schema({
     createdAt: String
 });
 
+// Schema para Contratos
+const ContractSchema = new mongoose.Schema({
+    id: String,
+    empId: String,
+    empName: String,
+    position: String,
+    salary: Number,
+    startDate: String,
+    contractType: String, // indefinido, temporal, por proyecto
+    workSchedule: String,
+    benefits: String,
+    terms: String,
+    signatureEmployee: String, // Base64 de firma digital
+    signatureEmployer: String, // Base64 de firma digital
+    signedDate: String,
+    pdfPath: String,
+    status: { type: String, default: 'pending' }, // pending, signed, active, terminated
+    createdAt: String,
+    updatedAt: String
+});
+
+// Schema para Cartas de Confidencialidad
+const ConfidentialityLetterSchema = new mongoose.Schema({
+    id: String,
+    empId: String,
+    empName: String,
+    position: String,
+    terms: String,
+    signatureEmployee: String, // Base64 de firma digital
+    signatureEmployer: String, // Base64 de firma digital
+    signedDate: String,
+    pdfPath: String,
+    status: { type: String, default: 'pending' }, // pending, signed, active
+    createdAt: String,
+    updatedAt: String
+});
+
+// Schema para Documentos Personales
+const PersonalDocumentSchema = new mongoose.Schema({
+    id: String,
+    empId: String,
+    empName: String,
+    documentType: String, // dui_front, dui_back, nit, photo, certificate, recommendation, other
+    fileName: String,
+    filePath: String,
+    fileSize: Number,
+    mimeType: String,
+    description: String,
+    uploadedAt: String
+});
+
+// Schema para Permisos
+const PermissionRequestSchema = new mongoose.Schema({
+    id: String,
+    empId: String,
+    empName: String,
+    permissionType: String, // medico, personal, vacaciones, maternidad, paternidad, estudio, otro
+    startDate: String,
+    endDate: String,
+    reason: String,
+    attachments: [String], // Rutas de archivos adjuntos
+    status: { type: String, default: 'pending' }, // pending, approved, rejected
+    approvedBy: String,
+    approvedDate: String,
+    rejectionReason: String,
+    createdAt: String,
+    updatedAt: String
+});
+
+// Schema para Constancias de Tiempo Laboral
+const WorkCertificateSchema = new mongoose.Schema({
+    id: String,
+    empId: String,
+    empName: String,
+    position: String,
+    startDate: String,
+    salary: Number,
+    includeSalary: { type: Boolean, default: false },
+    purpose: String, // Para trámites bancarios, visa, etc.
+    pdfPath: String,
+    generatedAt: String
+});
+
 const StateSchema = new mongoose.Schema({
     currentDate: String,
     employees: [EmployeeSchema],
