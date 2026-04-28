@@ -280,7 +280,12 @@ const StateSchema = new mongoose.Schema({
     locationRecords: { type: [LocationRecordSchema], default: [] },
     // Datos de RRHH
     jobApplications: { type: [JobApplicationSchema], default: [] },
-    payrolls: { type: [PayrollSchema], default: [] }
+    payrolls: { type: [PayrollSchema], default: [] },
+    contracts: { type: [ContractSchema], default: [] },
+    confidentialityLetters: { type: [ConfidentialityLetterSchema], default: [] },
+    personalDocuments: { type: [PersonalDocumentSchema], default: [] },
+    permissionRequests: { type: [PermissionRequestSchema], default: [] },
+    workCertificates: { type: [WorkCertificateSchema], default: [] }
 }, { timestamps: true });
 
 module.exports = mongoose.model('State', StateSchema);
