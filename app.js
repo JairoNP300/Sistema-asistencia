@@ -417,8 +417,20 @@ async function startStationQR() {
 }
 
 async function renderStationQR() {
+    console.log('🔄 Generando QR de estación...');
+    console.log('Secret key exists:', !!state.secretKey);
+    console.log('Secret key length:', state.secretKey?.length);
+    
+    if (!state.secretKey) {
+        console.error('❌ No hay clave secreta generada');
+        showToast('Error: No hay clave secreta. Recarga la página.', 'error');
+        return;
+    }
+    
     const result = await generateStationToken();
+    console.log('✅ Token generado:', result);
     state.currentStationToken = result;
+    
     // Utilizamos el dominio real en el que el administrador está viendo la página
     // Esto asegura que si se usa Cloudflare (o localhost), el celular entra al mismo lugar
     const host = window.location.host;
@@ -427,17 +439,43 @@ async function renderStationQR() {
     // Generar la URL completa de check-in
     const baseUrl = `${protocol}//${host}/checkin.html`;
     const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
+    console.log('📱 URL del QR:', url);
+    
     // Update URL display
     const urlInput = document.getElementById('stationUrl');
     if (urlInput) urlInput.value = url;
+    
     // Render QR
     const loading = document.getElementById('stationQrLoading');
     const qrDiv = document.getElementById('stationQrCode');
-    if (!qrDiv) return;
+    console.log('QR elements:', { loading: !!loading, qrDiv: !!qrDiv });
+    
+    if (!qrDiv) {
+        console.error('❌ No se encontró el elemento stationQrCode');
+        return;
+    }
+    
     qrDiv.innerHTML = '';
     qrDiv.style.display = 'block';
     if (loading) loading.style.display = 'none';
-    new QRCode(qrDiv, { text: url, width: 240, height: 240, colorDark: '#07071a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    
+    console.log('🎨 Generando código QR visual...');
+    try {
+        new QRCode(qrDiv, { 
+            text: url, 
+            width: 240, 
+            height: 240, 
+            colorDark: '#07071a', 
+            colorLight: '#ffffff', 
+            correctLevel: QRCode.CorrectLevel.M 
+        });
+        console.log('✅ QR generado exitosamente');
+    } catch (e) {
+        console.error('❌ Error al generar QR:', e);
+        showToast('Error al generar QR: ' + e.message, 'error');
+        return;
+    }
+    
     // Update token info
     const p = result.payload;
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -445,10 +483,12 @@ async function renderStationQR() {
     setEl('stationGenTime', new Date(p.ts * 1000).toLocaleTimeString('es-MX'));
     setEl('stationExpTime', new Date(result.expiresAt).toLocaleTimeString('es-MX'));
     setEl('stationSig', p.sig.slice(0, 20) + '…');
+    
     // Show countdown
     const cd = document.getElementById('stationCountdown');
     if (cd) cd.style.display = 'flex';
     updateStationRing(state.config.tokenLife, state.config.tokenLife);
+    console.log('✅ Renderizado completo');
 }
 
 function updateStationRing(remaining, total) {
