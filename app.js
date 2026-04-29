@@ -1558,7 +1558,14 @@ function renderPayrollHistory(payrolls) {
     }).join('');
 }
 
+function onPayrollTypeChange() {
+    const type = document.getElementById('payrollType').value;
+    document.getElementById('biweeklyOptions').style.display = type === 'biweekly' ? 'flex' : 'none';
+    document.getElementById('weeklyOptions').style.display = type === 'weekly' ? 'flex' : 'none';
+}
+
 async function generatePayroll() {
+    const type = document.getElementById('payrollType').value;
     const month = parseInt(document.getElementById('payrollMonth').value);
     const year = parseInt(document.getElementById('payrollYear').value);
     
@@ -1567,11 +1574,25 @@ async function generatePayroll() {
         return;
     }
     
+    // Construir el cuerpo de la petición según el tipo
+    let requestBody = { month, year };
+    let endpoint = '/api/hr/payrolls/generate';
+    
+    if (type === 'biweekly') {
+        const periodNumber = parseInt(document.getElementById('payrollPeriodNumber').value);
+        requestBody.periodNumber = periodNumber;
+        endpoint = '/api/hr/payrolls/generate/biweekly';
+    } else if (type === 'weekly') {
+        const weekNumber = parseInt(document.getElementById('payrollWeekNumber').value);
+        requestBody.weekNumber = weekNumber;
+        endpoint = '/api/hr/payrolls/generate/weekly';
+    }
+    
     try {
-        const res = await fetch('/api/hr/payrolls/generate', {
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ month, year })
+            body: JSON.stringify(requestBody)
         });
         
         if (!res.ok) throw new Error('Error generando planilla');
