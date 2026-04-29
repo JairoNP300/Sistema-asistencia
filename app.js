@@ -1833,9 +1833,242 @@ async function exportPayrollCRECER() {
     }
 }
 
+// ========== DOCUMENTOS PERSONALES ==========
+
+let currentDocFile = null;
+
+// Variables para el estado de documentos
+let currentDocument = null;
+let currentDocuments = [];
+
+function initDocuments() {
+    populateDocEmployeeSelects();
+    loadDocuments();
+}
+
+function populateDocEmployeeSelects() {
+    const empSelect = document.getElementById('docEmpSelect');
+    const filterSelect = document.getElementById('docFilterEmp');
+    
+    if (!empSelect || !filterSelect) return;
+    
+    const activeEmps = state.employees.filter(e => e.status === 'active');
+    const options = activeEmps.map(e => `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.empNum})</option>`).join('');
+    
+    empSelect.innerHTML = '<option value="">Seleccionar empleado...</option>' + options;
+    filterSelect.innerHTML = '<option value="">Todos los empleados</option>' + options;
+}
+
+function handleDocDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        currentDocFile = files[0];
+        updateUploadZone();
+    }
+}
+
+function handleDocFileSelect(event) {
+    const files = event.target.files;
+    if (files.length > 0) {
+        currentDocFile = files[0];
+        updateUploadZone();
+    }
+}
+
+function updateUploadZone() {
+    const zone = document.getElementById('uploadDropZone');
+    if (!zone || !currentDocFile) return;
+    
+    zone.innerHTML = `
+        <div class="upload-icon">✅</div>
+        <p><strong>${currentDocFile.name}</strong></p>
+        <p class="upload-hint">${formatFileSize(currentDocFile.size)} — Listo para subir</p>
+        <button class="btn-text" onclick="clearDocSelection()" style="margin-top:8px;">Cambiar archivo</button>
+    `;
+}
+
+function clearDocSelection() {
+    currentDocFile = null;
+    const zone = document.getElementById('uploadDropZone');
+    if (zone) {
+        zone.innerHTML = `
+            <div class="upload-icon">📂</div>
+            <p>Arrastra archivos aquí o haz clic para seleccionar</p>
+            <p class="upload-hint">PDF, JPG, PNG, JPEG — Máx. 10MB</p>
+            <input type="file" id="docFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocFileSelect(event)" />
+        `;
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+async function uploadDocument() {
+    const empId = document.getElementById('docEmpSelect')?.value;
+    const docType = document.getElementById('docType')?.value;
+    const description = document.getElementById('docDescription')?.value;
+    
+    if (!empId) {
+        showToast('⚠️ Selecciona un empleado', 'warning');
+        return;
+    }
+    
+    if (!docType) {
+        showToast('⚠️ Selecciona un tipo de documento', 'warning');
+        return;
+    }
+    
+    if (!currentDocFile) {
+        showToast('⚠️ Selecciona un archivo', 'warning');
+        return;
+    }
+    
+    const emp = state.employees.find(e => e.id === empId);
+    if (!emp) {
+        showToast('❌ Empleado no encontrado', 'error');
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('document', currentDocFile);
+        formData.append('empId', empId);
+        formData.append('empName', `${emp.firstName} ${emp.lastName}`);
+        formData.append('documentType', docType);
+        formData.append('description', description || '');
+        
+        showToast('📤 Subiendo documento...', 'info');
+        
+        const res = await fetch('/api/hr/documents/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Error subiendo documento');
+        }
+        
+        const data = await res.json();
+        
+        showToast('✅ Documento subido exitosamente', 'success');
+        
+        // Limpiar formulario
+        document.getElementById('docEmpSelect').value = '';
+        document.getElementById('docType').value = 'dui_front';
+        document.getElementById('docDescription').value = '';
+        clearDocSelection();
+        
+        // Recargar lista
+        loadDocuments();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+        console.error('Error subiendo documento:', e);
+    }
+}
+
+async function loadDocuments() {
+    try {
+        const filterEmpId = document.getElementById('docFilterEmp')?.value;
+        const url = filterEmpId ? `/api/hr/documents?empId=${filterEmpId}` : '/api/hr/documents';
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Error cargando documentos');
+        
+        const documents = await res.json();
+        currentDocuments = documents;
+        renderDocumentsTable(documents);
+    } catch (e) {
+        showToast('❌ Error cargando documentos: ' + e.message, 'error');
+        console.error('Error cargando documentos:', e);
+    }
+}
+
+function renderDocumentsTable(documents) {
+    const tbody = document.getElementById('documentsTableBody');
+    if (!tbody) return;
+    
+    if (!documents.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-feed">No hay documentos subidos</td></tr>';
+        return;
+    }
+    
+    const docTypeLabels = {
+        dui_front: 'DUI (Frente)',
+        dui_back: 'DUI (Reverso)',
+        nit: 'NIT',
+        photo: 'Foto del Empleado',
+        certificate: 'Certificado de Estudios',
+        recommendation: 'Carta de Recomendación',
+        isss: 'Carnet ISSS',
+        afp: 'Carnet AFP',
+        other: 'Otro Documento'
+    };
+    
+    tbody.innerHTML = documents.map(doc => {
+        const emp = state.employees.find(e => e.id === doc.empId);
+        const empName = emp ? `${emp.firstName} ${emp.lastName}` : (doc.empName || 'Desconocido');
+        
+        return `<tr>
+            <td>${empName}</td>
+            <td><span class="badge">${docTypeLabels[doc.documentType] || doc.documentType}</span></td>
+            <td>${doc.fileName}</td>
+            <td>${formatFileSize(doc.fileSize)}</td>
+            <td>${formatDateTime(doc.uploadedAt)}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-table edit" onclick="viewDocument('${doc.id}')">👁 Ver</button>
+                    <button class="btn-table del" onclick="deleteDocument('${doc.id}')">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function viewDocument(docId) {
+    const doc = currentDocuments.find(d => d.id === docId);
+    if (!doc) {
+        showToast('❌ Documento no encontrado', 'error');
+        return;
+    }
+    
+    // Abrir documento en nueva pestaña
+    window.open(doc.filePath, '_blank');
+}
+
+async function deleteDocument(docId) {
+    if (!confirm('¿Estás seguro de eliminar este documento?')) return;
+    
+    try {
+        const res = await fetch(`/api/hr/documents/${docId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error eliminando documento');
+        
+        showToast('🗑 Documento eliminado', 'warning');
+        loadDocuments();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+// ========== INICIALIZACIÓN ==========
+
 // Actualizar showPage para incluir RRHH
 const originalShowPage = showPage;
 showPage = function(id) {
     originalShowPage(id);
-    if (id === 'hr') showHRTab(currentHRTab);
+    if (id === 'hr') {
+        showHRTab(currentHRTab);
+        // Inicializar documentos cuando se muestra la pestaña
+        if (currentHRTab === 'documents') {
+            initDocuments();
+        }
+    }
 };
