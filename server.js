@@ -263,6 +263,22 @@ app.post('/api/checkin', async (req, res) => {
             return res.status(400).json({ error: 'empId y type son requeridos' });
         }
 
+        // Validación obligatoria de ubicación
+        if (!logEntry.location || !logEntry.location.lat || !logEntry.location.lng) {
+            return res.status(400).json({ 
+                error: 'Ubicación obligatoria', 
+                details: 'Es obligatorio compartir tu ubicación GPS para registrar entrada o salida' 
+            });
+        }
+
+        // Validar precisión de la ubicación (opcional pero recomendado)
+        if (logEntry.location.accuracy > 100) {
+            return res.status(400).json({ 
+                error: 'Precisión de ubicación insuficiente', 
+                details: 'La precisión del GPS es muy baja. Intenta nuevamente en un lugar con mejor señal.' 
+            });
+        }
+
         let data;
         if (useMongo) {
             data = await State.findOne();
