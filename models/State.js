@@ -156,45 +156,6 @@ const PayrollSchema = new mongoose.Schema({
     createdAt: String
 });
 
-// Schema para Planillas Semanales (basado en el ejemplo de El Manguito)
-const WeeklyPayrollSchema = new mongoose.Schema({
-    id: String,
-    weekStart: String, // Fecha inicio semana (YYYY-MM-DD)
-    weekEnd: String,   // Fecha fin semana (YYYY-MM-DD)
-    companyName: { type: String, default: 'EMPRESA EL MANGUITO, S.A. DE C.V.' },
-    employees: [{
-        empId: String,
-        empNum: String,
-        fullName: String,
-        monthlySalary: Number,    // Sueldo Base Mensual
-        daysWorked: { type: Number, default: 7 },        // Días trabajados
-        commissions: { type: Number, default: 0 },         // Comisiones
-        extraHoursDay: { type: Number, default: 0 },      // Horas Extras Diurnas
-        extraHoursNight: { type: Number, default: 0 },    // Horas Extras Nocturnas
-        extraHoursAmount: { type: Number, default: 0 }, // Total Horas Extras (calculado)
-        subTotal: { type: Number, default: 0 },          // Sub Total
-        isss: { type: Number, default: 0 },              // Retención ISSS
-        afp: { type: Number, default: 0 },               // Retención AFP
-        renta: { type: Number, default: 0 },             // Retención Renta
-        otherDeductions: { type: Number, default: 0 },   // Otras Deducciones
-        netPay: { type: Number, default: 0 },            // Líquido a pagar
-        signature: { type: String, default: '' }       // Firma (base64)
-    }],
-    totals: {
-        totalMonthlySalary: Number,
-        totalCommissions: Number,
-        totalExtraHours: Number,
-        totalSubTotal: Number,
-        totalISSS: Number,
-        totalAFP: Number,
-        totalRenta: Number,
-        totalOtherDeductions: Number,
-        totalNetPay: Number
-    },
-    createdAt: String,
-    updatedAt: String
-});
-
 // Schema para Contratos
 const ContractSchema = new mongoose.Schema({
     id: String,
@@ -320,7 +281,6 @@ const StateSchema = new mongoose.Schema({
     // Datos de RRHH
     jobApplications: { type: [JobApplicationSchema], default: [] },
     payrolls: { type: [PayrollSchema], default: [] },
-    weeklyPayrolls: { type: [WeeklyPayrollSchema], default: [] },
     contracts: { type: [ContractSchema], default: [] },
     confidentialityLetters: { type: [ConfidentialityLetterSchema], default: [] },
     personalDocuments: { type: [PersonalDocumentSchema], default: [] },
