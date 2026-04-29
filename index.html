@@ -854,10 +854,18 @@
                 <div class="hr-tab-content" id="hr-tab-payroll">
                     <div class="panel">
                         <div class="panel-header">
-                            <h3>💰 Generar Planilla Mensual</h3>
+                            <h3>💰 Generar Planilla de Sueldos</h3>
                         </div>
                         <div class="payroll-gen-form">
                             <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tipo de Planilla</label>
+                                    <select id="payrollType" class="form-input" onchange="onPayrollTypeChange()">
+                                        <option value="monthly">📅 Mensual</option>
+                                        <option value="biweekly">📅 Quincenal</option>
+                                        <option value="weekly">📅 Semanal</option>
+                                    </select>
+                                </div>
                                 <div class="form-group">
                                     <label>Mes</label>
                                     <select id="payrollMonth" class="form-input">
@@ -879,6 +887,28 @@
                                     <label>Año</label>
                                     <input type="number" id="payrollYear" class="form-input" value="2025" min="2020" max="2030" />
                                 </div>
+                            </div>
+                            <div class="form-row" id="biweeklyOptions" style="display:none;">
+                                <div class="form-group">
+                                    <label>Quincena</label>
+                                    <select id="payrollPeriodNumber" class="form-input">
+                                        <option value="1">1ra Quincena (1-15)</option>
+                                        <option value="2">2da Quincena (16-fin)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row" id="weeklyOptions" style="display:none;">
+                                <div class="form-group">
+                                    <label>Semana</label>
+                                    <select id="payrollWeekNumber" class="form-input">
+                                        <option value="1">Semana 1</option>
+                                        <option value="2">Semana 2</option>
+                                        <option value="3">Semana 3</option>
+                                        <option value="4">Semana 4</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
                                 <button class="btn-primary" onclick="generatePayroll()" style="align-self:flex-end;">🔄 Generar Planilla</button>
                             </div>
                         </div>
@@ -887,7 +917,11 @@
                     <div class="panel" id="payrollResultPanel" style="display:none;">
                         <div class="panel-header">
                             <h3>📊 Planilla Generada</h3>
-                            <button class="btn-primary sm" onclick="exportPayrollExcel()">📥 Exportar Excel</button>
+                            <div class="btn-group">
+                                <button class="btn-primary sm" onclick="exportPayrollExcel()">� Excel General</button>
+                                <button class="btn-primary sm" onclick="exportPayrollISSS()" title="Exportar formato ISSS">🏥 ISSS</button>
+                                <button class="btn-primary sm" onclick="exportPayrollCRECER()" title="Exportar formato CRECER">📋 CRECER</button>
+                            </div>
                         </div>
                         <div id="payrollResult"></div>
                     </div>
