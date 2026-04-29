@@ -943,6 +943,127 @@ app.delete('/api/hr/payrolls/:id', async (req, res) => {
     }
 });
 
+// GET /api/hr/payrolls/export/isss — Exportar planilla en formato ISSS
+app.get('/api/hr/payrolls/export/isss/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        let payroll;
+        if (useMongo) {
+            const state = await State.findOne();
+            payroll = state.payrolls.find(p => p.id === id);
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            payroll = data.payrolls.find(p => p.id === id);
+        }
+
+        if (!payroll) {
+            return res.status(404).json({ error: 'Planilla no encontrada' });
+        }
+
+        // Formato ISSS: Campos específicos para el Instituto Salvadoreño del Seguro Social
+        const isssData = payroll.employees.map((emp, index) => ({
+            'N°': index + 1,
+            'NUP': emp.empNum || '',
+            'APELLIDOS Y NOMBRES': emp.fullName,
+            'SALARIO DEVENGADO': emp.monthlySalary || emp.biweeklySalary || emp.weeklySalary || 0,
+            'DÍAS': emp.workedDays || 30,
+            'APORTE ISSS (3%)': emp.isss || 0,
+            'APORTE AFP (7.25%)': emp.afp || 0,
+            'RENTA': emp.renta || 0,
+            'TOTAL APORTACIONES': (emp.isss || 0) + (emp.afp || 0) + (emp.renta || 0),
+            'AÑO': payroll.year,
+            'MES': payroll.month
+        }));
+
+        // Agregar fila de totales
+        isssData.push({
+            'N°': '',
+            'NUP': '',
+            'APELLIDOS Y NOMBRES': 'TOTALES',
+            'SALARIO DEVENGADO': payroll.totals.totalSalary,
+            'DÍAS': '',
+            'APORTE ISSS (3%)': payroll.totals.totalISS,
+            'APORTE AFP (7.25%)': payroll.totals.totalAFP,
+            'RENTA': payroll.totals.totalRenta,
+            'TOTAL APORTACIONES': payroll.totals.totalDeductions,
+            'AÑO': '',
+            'MES': ''
+        });
+
+        res.json({ success: true, format: 'ISSS', data: isssData, payroll });
+    } catch (e) {
+        console.error('Error exportando formato ISSS:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /api/hr/payrolls/export/crecer — Exportar planilla en formato CRECER
+app.get('/api/hr/payrolls/export/crecer/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        let payroll;
+        if (useMongo) {
+            const state = await State.findOne();
+            payroll = state.payrolls.find(p => p.id === id);
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            payroll = data.payrolls.find(p => p.id === id);
+        }
+
+        if (!payroll) {
+            return res.status(404).json({ error: 'Planilla no encontrada' });
+        }
+
+        // Formato CRECER: Planilla de Pago de Cotizaciones Provisionales
+        const crecerData = payroll.employees.map((emp, index) => {
+            const grossSalary = emp.monthlySalary || emp.biweeklySalary || emp.weeklySalary || 0;
+            return {
+                'N°': index + 1,
+                'TIPO': 'T', // T = Trabajador
+                'NÚMERO': emp.empNum || '',
+                '1° APELLIDO': emp.fullName.split(' ')[0] || '',
+                '2° APELLIDO': emp.fullName.split(' ')[1] || '',
+                'APELLIDO CASADA': '',
+                '1° NOMBRE': emp.fullName.split(' ')[2] || emp.fullName.split(' ')[0] || '',
+                '2° NOMBRE': emp.fullName.split(' ')[3] || '',
+                'HRS. JOR.': 8,
+                'DÍAS COT.': emp.workedDays || 30,
+                'INGRESO BASE COTIZACIÓN': grossSalary,
+                'COTIZACIÓN OBLIGATORIA ISSS': emp.isss || 0,
+                'COTIZACIÓN VOLUNTARIA AFILIADO': 0,
+                'CONTRIBUCIÓN EMPLEADOR': emp.afp || 0,
+                'TOTAL COTIZACIONES': (emp.isss || 0) + (emp.afp || 0)
+            };
+        });
+
+        // Agregar fila de totales
+        crecerData.push({
+            'N°': '',
+            'TIPO': '',
+            'NÚMERO': '',
+            '1° APELLIDO': '',
+            '2° APELLIDO': '',
+            'APELLIDO CASADA': '',
+            '1° NOMBRE': 'TOTALES',
+            '2° NOMBRE': '',
+            'HRS. JOR.': '',
+            'DÍAS COT.': '',
+            'INGRESO BASE COTIZACIÓN': payroll.totals.totalSalary,
+            'COTIZACIÓN OBLIGATORIA ISSS': payroll.totals.totalISS,
+            'COTIZACIÓN VOLUNTARIA AFILIADO': 0,
+            'CONTRIBUCIÓN EMPLEADOR': payroll.totals.totalAFP,
+            'TOTAL COTIZACIONES': payroll.totals.totalDeductions
+        });
+
+        res.json({ success: true, format: 'CRECER', data: crecerData, payroll });
+    } catch (e) {
+        console.error('Error exportando formato CRECER:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ========== CONFIGURACIÓN DE MULTER PARA SUBIDA DE ARCHIVOS ==========
 const multer = require('multer');
 const uploadsDir = path.join(__dirname, 'uploads');
