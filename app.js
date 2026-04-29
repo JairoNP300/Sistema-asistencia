@@ -1612,11 +1612,27 @@ function renderPayrollResult(payroll) {
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const period = `${monthNames[payroll.month - 1]} ${payroll.year}`;
     
+    // Determinar el tipo de planilla y texto apropiado
+    let payrollTypeText = 'MENSUAL';
+    let salaryColumnHeader = 'SALARIO MENSUAL';
+    let salaryField = 'monthlySalary';
+    
+    if (payroll.type === 'biweekly') {
+        payrollTypeText = `QUINCENAL - ${payroll.periodNumber === 1 ? '1ra Quincena (1-15)' : '2da Quincena (16-fin de mes)'}`;
+        salaryColumnHeader = 'SALARIO QUINCENAL';
+        salaryField = 'biweeklySalary';
+    } else if (payroll.type === 'weekly') {
+        payrollTypeText = `SEMANAL - Semana ${payroll.weekNumber}`;
+        salaryColumnHeader = 'SALARIO SEMANAL';
+        salaryField = 'weeklySalary';
+    }
+    
     const html = `
         <div style="text-align:center;margin-bottom:20px;">
             <h3>${state.adminConfig.company}</h3>
-            <h4>PLANILLA DE SUELDOS</h4>
+            <h4>PLANILLA DE SUELDOS ${payrollTypeText}</h4>
             <p>Período: ${period}</p>
+            ${payroll.startDate && payroll.endDate ? `<p>Fechas: ${payroll.startDate} al ${payroll.endDate}</p>` : ''}
         </div>
         <div class="table-wrap">
             <table class="data-table">
@@ -1624,13 +1640,13 @@ function renderPayrollResult(payroll) {
                     <tr>
                         <th>N°</th>
                         <th>NOMBRE COMPLETO</th>
-                        <th>DÍAS TRABAJADOS</th>
-                        <th>SALARIO MENSUAL</th>
+                        <th>DÍAS TRAB.</th>
+                        <th>${salaryColumnHeader}</th>
                         <th>ISSS (3%)</th>
                         <th>AFP (7.25%)</th>
                         <th>RENTA</th>
-                        <th>TOTAL DEDUCCIONES</th>
-                        <th>LÍQUIDO A RECIBIR</th>
+                        <th>TOTAL DEDUCC.</th>
+                        <th>LÍQUIDO</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1639,7 +1655,7 @@ function renderPayrollResult(payroll) {
                             <td>${i + 1}</td>
                             <td>${emp.fullName}</td>
                             <td>${emp.workedDays}</td>
-                            <td>$${emp.monthlySalary.toFixed(2)}</td>
+                            <td>$${(emp[salaryField] || emp.monthlySalary).toFixed(2)}</td>
                             <td>$${emp.isss.toFixed(2)}</td>
                             <td>$${emp.afp.toFixed(2)}</td>
                             <td>$${emp.renta.toFixed(2)}</td>
