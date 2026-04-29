@@ -366,7 +366,11 @@ function showConsentDialog(type) {
     const btnExit = document.getElementById('btnExit');
 
     const overlay = document.getElementById('consentOverlay');
-    if (!overlay) { submitCheckin(type); return; }
+    if (!overlay) { 
+        // Si no hay overlay, obtener ubicación directamente
+        getLocationAndSubmit(type);
+        return;
+    }
     overlay.classList.remove('hidden');
 
     // Clonar botones para eliminar listeners anteriores acumulados
@@ -377,35 +381,150 @@ function showConsentDialog(type) {
     acceptBtn.parentNode.replaceChild(newAccept, acceptBtn);
     rejectBtn.parentNode.replaceChild(newReject, rejectBtn);
 
+    // Actualizar texto para indicar que es obligatorio
+    const consentText = overlay.querySelector('p');
+    if (consentText) {
+        consentText.textContent = 'El sistema requiere tu ubicación GPS para el registro de asistencia. Es obligatorio compartir tu ubicación para continuar.';
+    }
+
+    // Ocultar botón de rechazar y hacer obligatorio
+    newReject.style.display = 'none';
+    newAccept.textContent = ' Compartir ubicación (obligatorio)';
+    newAccept.style.width = '100%';
+
     newAccept.onclick = () => {
-        overlay.classList.add('hidden');
         if (!navigator.geolocation) {
-            submitCheckin(type);
+            showToastLocal(' Tu dispositivo no soporta geolocalización. Contacta al administrador.', 'error');
             return;
         }
+        
         // Mostrar feedback visual mientras se obtiene GPS
-        newAccept.textContent = '📍 Obteniendo ubicación…';
+        newAccept.textContent = ' Obteniendo ubicación...';
         newAccept.disabled = true;
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const emp = window._selectedEmployee;
-                if (emp) {
-                    const record = buildLocationRecord(position.coords, emp, type);
-                    // Enviar ubicación en paralelo, no bloquear el check-in
-                    sendWithRetry('/api/location/checkin', record).catch(() => {});
+        
+        getLocationAndSubmit(type);
+    };
+}
+
+// Optimizar función para obtener ubicación y enviar check-in
+async function getLocationAndSubmit(type) {
+    const overlay = document.getElementById('consentOverlay');
+    
+    try {
+        // Optimizado: usar alta precisión pero con timeout razonable
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+                resolve,
+                reject,
+                { 
+                    timeout: 10000, 
+                    maximumAge: 60000, 
+                    enableHighAccuracy: true 
                 }
-                submitCheckin(type);
-            },
-            () => {
-                // Si falla el GPS, continuar igual sin ubicación
-                submitCheckin(type);
-            },
-            { timeout: 8000, maximumAge: 30000, enableHighAccuracy: false }
-        );
+            );
+        });
+
+        const emp = window._selectedEmployee;
+        if (emp) {
+            const record = buildLocationRecord(position.coords, emp, type);
+            
+            // Enviar ubicación primero (crítico para el proceso)
+            const locationResult = await sendWithRetry('/api/location/checkin', record);
+            
+            if (!locationResult) {
+                throw new Error('No se pudo registrar la ubicación');
+            }
+            
+            // Agregar información de ubicación al logEntry
+            window._locationData = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+            
+            // Ocultar overlay antes de continuar
+            if (overlay) overlay.classList.add('hidden');
+            
+            // Enviar check-in con ubicación validada
+            await submitCheckinWithLocation(type);
+        }
+    } catch (error) {
+        console.error('Error obteniendo ubicación:', error);
+        
+        let errorMsg = 'No se pudo obtener tu ubicación. ';
+        if (error.code === 1) {
+            errorMsg += 'Debes permitir el acceso a la ubicación en tu navegador.';
+        } else if (error.code === 3) {
+            errorMsg += 'Tiempo de espera agotado. Intenta de nuevo.';
+        } else {
+            errorMsg += 'Verifica que tu GPS esté activado.';
+        }
+        
+        showToastLocal(errorMsg, 'error');
+        
+        // Rehabilitar botón para reintentar
+        const acceptBtn = document.getElementById('btnConsentAccept');
+        if (acceptBtn) {
+            acceptBtn.textContent = ' Reintentar';
+            acceptBtn.disabled = false;
+        }
+    }
+}
+
+// ... (rest of the code remains the same)
+
+// Nueva función para enviar check-in con ubicación
+async function submitCheckinWithLocation(type) {
+    const emp = cState.selectedEmployee;
+    if (!emp) return;
+
+    const btnEntry = document.getElementById('btnEntry');
+    const btnExit = document.getElementById('btnExit');
+    if (btnEntry) btnEntry.disabled = true;
+    if (btnExit) btnExit.disabled = true;
+
+    const now = new Date();
+    const nonce = cState.tokenPayload?.nonce || null;
+
+    const logEntry = {
+        id: Date.now(),
+        empId: emp.id,
+        empName: `${emp.firstName} ${emp.lastName}`,
+        type,
+        ts: now.toISOString(),
+        tokenNonce: nonce,
+        status: 'valid',
+        reason: type === 'entry' ? 'Entrada registrada desde QR móvil' : 'Salida registrada desde QR móvil',
+        source: 'checkin',
+        location: window._locationData
     };
 
-    newReject.onclick = () => {
-        overlay.classList.add('hidden');
-        submitCheckin(type);
-    };
+    // Retry logic: 3 intentos con 2s de espera
+    let lastError = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const res = await fetch('/api/checkin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(logEntry),
+            });
+            const json = await res.json();
+
+            if (!res.ok || json.error) {
+                if (res.status === 409) { showAlreadyRegistered(type); return; }
+                throw new Error(json.error || 'Error del servidor');
+            }
+
+            showSuccess(emp, type, now);
+            return;
+        } catch (e) {
+            lastError = e;
+            if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
+        }
+    }
+
+    // Todos los intentos fallaron
+    showToastLocal('❌ No se pudo conectar. Intenta de nuevo.', 'error');
+    if (btnEntry) btnEntry.disabled = false;
+    if (btnExit) btnExit.disabled = false;
 }
