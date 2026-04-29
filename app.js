@@ -1786,6 +1786,53 @@ function exportPayrollToExcel(payroll) {
     showToast('📊 Excel generado y descargado', 'success');
 }
 
+// Funciones para exportar a formatos específicos
+async function exportPayrollISSS() {
+    if (!currentPayroll) {
+        showToast('⚠️ No hay planilla para exportar', 'warning');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/hr/payrolls/export/isss/${currentPayroll.id}`);
+        if (!res.ok) throw new Error('Error generando formato ISSS');
+        const data = await res.json();
+        
+        // Exportar a Excel con formato ISSS
+        const filename = `ISSS_Planilla_${currentPayroll.month}_${currentPayroll.year}.xlsx`;
+        const ws = XLSX.utils.json_to_sheet(data.data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'ISSS');
+        XLSX.writeFile(wb, filename);
+        showToast('🏥 Formato ISSS generado y descargado', 'success');
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function exportPayrollCRECER() {
+    if (!currentPayroll) {
+        showToast('⚠️ No hay planilla para exportar', 'warning');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/hr/payrolls/export/crecer/${currentPayroll.id}`);
+        if (!res.ok) throw new Error('Error generando formato CRECER');
+        const data = await res.json();
+        
+        // Exportar a Excel con formato CRECER
+        const filename = `CRECER_Planilla_${currentPayroll.month}_${currentPayroll.year}.xlsx`;
+        const ws = XLSX.utils.json_to_sheet(data.data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'CRECER');
+        XLSX.writeFile(wb, filename);
+        showToast('📋 Formato CRECER generado y descargado', 'success');
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
 // Actualizar showPage para incluir RRHH
 const originalShowPage = showPage;
 showPage = function(id) {
