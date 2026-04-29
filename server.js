@@ -13,6 +13,7 @@ const fs = require('fs');
 const os = require('os');
 const mongoose = require('mongoose');
 const State = require('./models/State'); // Nuestro modelo de datos
+const deductions = require('./utils/deductions'); // Utilidades para cálculo de deducciones de El Salvador
 
 const app = express();
 const PORT = process.env.PORT || 3000;
