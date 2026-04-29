@@ -669,6 +669,22 @@ body::after {
     margin-top: 4px;
 }
 
+.consent-warning {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 0.85rem;
+    color: var(--yellow);
+    line-height: 1.5;
+}
+
+.consent-warning strong {
+    color: var(--yellow);
+    font-weight: 700;
+}
+
 .consent-actions {
     display: flex;
     flex-direction: column;
