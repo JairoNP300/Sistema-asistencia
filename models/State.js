@@ -320,6 +320,7 @@ const StateSchema = new mongoose.Schema({
     // Datos de RRHH
     jobApplications: { type: [JobApplicationSchema], default: [] },
     payrolls: { type: [PayrollSchema], default: [] },
+    weeklyPayrolls: { type: [WeeklyPayrollSchema], default: [] },
     contracts: { type: [ContractSchema], default: [] },
     confidentialityLetters: { type: [ConfidentialityLetterSchema], default: [] },
     personalDocuments: { type: [PersonalDocumentSchema], default: [] },
