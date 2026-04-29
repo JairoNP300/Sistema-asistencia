@@ -620,52 +620,34 @@ app.post('/api/hr/payrolls/generate', async (req, res) => {
             const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
             const workedDays = uniqueDates.size;
 
-            // Salario base
+            // Salario base mensual
             const monthlySalary = emp.monthlySalary || 0;
-            const proportionalSalary = (monthlySalary / 30) * workedDays;
-
-            // Calcular deducciones según leyes de El Salvador
-            // ISSS: 3% con tope de $30
-            let isss = proportionalSalary * 0.03;
-            if (isss > 30) isss = 30;
-
-            // AFP: 7.25% sin tope
-            const afp = proportionalSalary * 0.0725;
-
-            // RENTA: Tramos progresivos
-            let renta = 0;
-            if (proportionalSalary > 472.00) {
-                if (proportionalSalary <= 895.24) {
-                    renta = (proportionalSalary - 472.00) * 0.10 + 17.67;
-                } else if (proportionalSalary <= 2038.10) {
-                    renta = (proportionalSalary - 895.24) * 0.10 + 60.00;
-                } else {
-                    renta = (proportionalSalary - 2038.10) * 0.30 + 288.57;
-                }
-            }
-
-            const totalDeductions = isss + afp + renta;
-            const netPay = proportionalSalary - totalDeductions;
+            
+            // Calcular salario proporcional según días trabajados (30 días = mes completo)
+            const proportionalSalary = deductions.calculateProportionalSalary(monthlySalary, workedDays, 30);
+            
+            // Usar el nuevo módulo de deducciones para cálculos según tablas oficiales
+            const deductionResults = deductions.calculateAllDeductions(proportionalSalary, 'monthly');
 
             payrollEmployees.push({
                 empId: emp.id,
                 empNum: emp.empNum,
                 fullName: `${emp.firstName} ${emp.lastName}`,
                 workedDays,
-                monthlySalary: parseFloat(proportionalSalary.toFixed(2)),
-                isss: parseFloat(isss.toFixed(2)),
-                afp: parseFloat(afp.toFixed(2)),
-                renta: parseFloat(renta.toFixed(2)),
-                totalDeductions: parseFloat(totalDeductions.toFixed(2)),
-                netPay: parseFloat(netPay.toFixed(2))
+                monthlySalary: deductionResults.grossSalary,
+                isss: deductionResults.isss,
+                afp: deductionResults.afp,
+                renta: deductionResults.renta,
+                totalDeductions: deductionResults.totalDeductions,
+                netPay: deductionResults.netSalary
             });
 
-            totals.totalSalary += proportionalSalary;
-            totals.totalISS += isss;
-            totals.totalAFP += afp;
-            totals.totalRenta += renta;
-            totals.totalDeductions += totalDeductions;
-            totals.totalNetPay += netPay;
+            totals.totalSalary += deductionResults.grossSalary;
+            totals.totalISS += deductionResults.isss;
+            totals.totalAFP += deductionResults.afp;
+            totals.totalRenta += deductionResults.renta;
+            totals.totalDeductions += deductionResults.totalDeductions;
+            totals.totalNetPay += deductionResults.netSalary;
         }
 
         // Redondear totales
@@ -675,6 +657,7 @@ app.post('/api/hr/payrolls/generate', async (req, res) => {
 
         const payroll = {
             id: `payroll_${Date.now()}`,
+            type: 'monthly',
             month,
             year,
             employees: payrollEmployees,
@@ -697,6 +680,243 @@ app.post('/api/hr/payrolls/generate', async (req, res) => {
         res.json({ success: true, payroll });
     } catch (e) {
         console.error('Error generando planilla:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /api/hr/payrolls/generate/biweekly — Generar planilla quincenal
+app.post('/api/hr/payrolls/generate/biweekly', async (req, res) => {
+    try {
+        const { month, year, periodNumber } = req.body;
+        
+        let state;
+        if (useMongo) {
+            state = await State.findOne();
+        } else {
+            state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        }
+
+        const employees = state.employees.filter(e => e.status === 'active');
+        const payrollEmployees = [];
+        
+        // Obtener logs del período quincenal
+        const allLogs = [...(state.logs || [])];
+        if (state.history) {
+            state.history.forEach((logs, date) => {
+                allLogs.push(...logs.map(l => ({ ...l, _historyDate: date })));
+            });
+        }
+
+        // Calcular rango de fechas para la quincena (1-15 o 16-fin de mes)
+        const startDay = periodNumber === 1 ? 1 : 16;
+        const endDay = periodNumber === 1 ? 15 : new Date(year, month, 0).getDate();
+        
+        const startDate = new Date(year, month - 1, startDay);
+        const endDate = new Date(year, month - 1, endDay);
+
+        // Filtrar logs del período quincenal
+        const periodLogs = allLogs.filter(log => {
+            const logDate = new Date(log.ts);
+            return logDate >= startDate && logDate <= endDate;
+        });
+
+        let totals = {
+            totalSalary: 0,
+            totalISS: 0,
+            totalAFP: 0,
+            totalRenta: 0,
+            totalDeductions: 0,
+            totalNetPay: 0
+        };
+
+        for (const emp of employees) {
+            const empLogs = periodLogs.filter(l => l.empId === emp.id && l.type === 'entry');
+            const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
+            const workedDays = uniqueDates.size;
+
+            // Salario quincenal = mensual / 2
+            const monthlySalary = emp.monthlySalary || 0;
+            const biweeklySalaryBase = monthlySalary / 2;
+            
+            // Calcular proporcional según días trabajados (15 días = quincena completa)
+            const proportionalSalary = deductions.calculateProportionalSalary(biweeklySalaryBase, workedDays, 15);
+            
+            // Usar tabla quincenal
+            const deductionResults = deductions.calculateAllDeductions(proportionalSalary, 'biweekly');
+
+            payrollEmployees.push({
+                empId: emp.id,
+                empNum: emp.empNum,
+                fullName: `${emp.firstName} ${emp.lastName}`,
+                workedDays,
+                biweeklySalary: deductionResults.grossSalary,
+                isss: deductionResults.isss,
+                afp: deductionResults.afp,
+                renta: deductionResults.renta,
+                totalDeductions: deductionResults.totalDeductions,
+                netPay: deductionResults.netSalary
+            });
+
+            totals.totalSalary += deductionResults.grossSalary;
+            totals.totalISS += deductionResults.isss;
+            totals.totalAFP += deductionResults.afp;
+            totals.totalRenta += deductionResults.renta;
+            totals.totalDeductions += deductionResults.totalDeductions;
+            totals.totalNetPay += deductionResults.netSalary;
+        }
+
+        Object.keys(totals).forEach(key => {
+            totals[key] = parseFloat(totals[key].toFixed(2));
+        });
+
+        const payroll = {
+            id: `payroll_biweekly_${Date.now()}`,
+            type: 'biweekly',
+            month,
+            year,
+            periodNumber,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            employees: payrollEmployees,
+            totals,
+            createdAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            if (!state.payrolls) state.payrolls = [];
+            state.payrolls.push(payroll);
+            state.markModified('payrolls');
+            await state.save();
+        } else {
+            if (!state.payrolls) state.payrolls = [];
+            state.payrolls.push(payroll);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+        }
+
+        res.json({ success: true, payroll });
+    } catch (e) {
+        console.error('Error generando planilla quincenal:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /api/hr/payrolls/generate/weekly — Generar planilla semanal
+app.post('/api/hr/payrolls/generate/weekly', async (req, res) => {
+    try {
+        const { month, year, weekNumber } = req.body;
+        
+        let state;
+        if (useMongo) {
+            state = await State.findOne();
+        } else {
+            state = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        }
+
+        const employees = state.employees.filter(e => e.status === 'active');
+        const payrollEmployees = [];
+        
+        // Obtener logs de la semana
+        const allLogs = [...(state.logs || [])];
+        if (state.history) {
+            state.history.forEach((logs, date) => {
+                allLogs.push(...logs.map(l => ({ ...l, _historyDate: date })));
+            });
+        }
+
+        // Calcular rango de fechas para la semana (aproximadamente 7 días)
+        // Asumiendo que la semana comienza el lunes
+        const firstDayOfMonth = new Date(year, month - 1, 1);
+        const dayOfWeek = firstDayOfMonth.getDay(); // 0=Domingo, 1=Lunes, etc.
+        const daysToMonday = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
+        const firstMonday = new Date(year, month - 1, 1 + daysToMonday);
+        
+        const startDate = new Date(firstMonday);
+        startDate.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
+        
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+
+        const weeklyLogs = allLogs.filter(log => {
+            const logDate = new Date(log.ts);
+            return logDate >= startDate && logDate <= endDate;
+        });
+
+        let totals = {
+            totalSalary: 0,
+            totalISS: 0,
+            totalAFP: 0,
+            totalRenta: 0,
+            totalDeductions: 0,
+            totalNetPay: 0
+        };
+
+        for (const emp of employees) {
+            const empLogs = weeklyLogs.filter(l => l.empId === emp.id && l.type === 'entry');
+            const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
+            const workedDays = uniqueDates.size;
+
+            // Salario semanal = mensual / 4.33 (aproximadamente)
+            const monthlySalary = emp.monthlySalary || 0;
+            const weeklySalaryBase = monthlySalary / 4.33;
+            
+            // Calcular proporcional según días trabajados (7 días = semana completa)
+            const proportionalSalary = deductions.calculateProportionalSalary(weeklySalaryBase, workedDays, 7);
+            
+            // Usar tabla semanal
+            const deductionResults = deductions.calculateAllDeductions(proportionalSalary, 'weekly');
+
+            payrollEmployees.push({
+                empId: emp.id,
+                empNum: emp.empNum,
+                fullName: `${emp.firstName} ${emp.lastName}`,
+                workedDays,
+                weeklySalary: deductionResults.grossSalary,
+                isss: deductionResults.isss,
+                afp: deductionResults.afp,
+                renta: deductionResults.renta,
+                totalDeductions: deductionResults.totalDeductions,
+                netPay: deductionResults.netSalary
+            });
+
+            totals.totalSalary += deductionResults.grossSalary;
+            totals.totalISS += deductionResults.isss;
+            totals.totalAFP += deductionResults.afp;
+            totals.totalRenta += deductionResults.renta;
+            totals.totalDeductions += deductionResults.totalDeductions;
+            totals.totalNetPay += deductionResults.netSalary;
+        }
+
+        Object.keys(totals).forEach(key => {
+            totals[key] = parseFloat(totals[key].toFixed(2));
+        });
+
+        const payroll = {
+            id: `payroll_weekly_${Date.now()}`,
+            type: 'weekly',
+            month,
+            year,
+            weekNumber,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            employees: payrollEmployees,
+            totals,
+            createdAt: new Date().toISOString()
+        };
+
+        if (useMongo) {
+            if (!state.payrolls) state.payrolls = [];
+            state.payrolls.push(payroll);
+            state.markModified('payrolls');
+            await state.save();
+        } else {
+            if (!state.payrolls) state.payrolls = [];
+            state.payrolls.push(payroll);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
+        }
+
+        res.json({ success: true, payroll });
+    } catch (e) {
+        console.error('Error generando planilla semanal:', e);
         res.status(500).json({ error: e.message });
     }
 });
