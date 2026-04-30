@@ -349,26 +349,29 @@ function showConsentDialog(type) {
     }
     overlay.classList.remove('hidden');
 
-    // Clonar botones para eliminar listeners anteriores acumulados
+    // Obtener botón de aceptar
     const acceptBtn = document.getElementById('btnConsentAccept');
-    const rejectBtn = document.getElementById('btnConsentReject');
-    const newAccept = acceptBtn.cloneNode(true);
-    const newReject = rejectBtn.cloneNode(true);
-    acceptBtn.parentNode.replaceChild(newAccept, acceptBtn);
-    rejectBtn.parentNode.replaceChild(newReject, rejectBtn);
-
-    // Actualizar texto para indicar que es obligatorio
-    const consentText = overlay.querySelector('p');
-    if (consentText) {
-        consentText.textContent = 'El sistema requiere tu ubicación GPS para el registro de asistencia. Es obligatorio compartir tu ubicación para continuar.';
+    if (!acceptBtn) {
+        console.error(' Botón de consentimiento no encontrado');
+        getLocationAndSubmit(type);
+        return;
     }
-
-    // Ocultar botón de rechazar y hacer obligatorio
-    newReject.style.display = 'none';
-    newAccept.textContent = ' Compartir ubicación (obligatorio)';
-    newAccept.style.width = '100%';
-
-    newAccept.onclick = () => {
+    
+    // Asegurar que el botón esté habilitado y visible
+    acceptBtn.disabled = false;
+    acceptBtn.style.display = 'block';
+    acceptBtn.style.width = '100%';
+    acceptBtn.textContent = ' Compartir ubicación (obligatorio)';
+    
+    // Limpiar listeners anteriores clonando el botón
+    const newAccept = acceptBtn.cloneNode(true);
+    acceptBtn.parentNode.replaceChild(newAccept, acceptBtn);
+    
+    // Asignar nuevo listener
+    newAccept.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (!navigator.geolocation) {
             showToastLocal(' Tu dispositivo no soporta geolocalización. Contacta al administrador.', 'error');
             return;
