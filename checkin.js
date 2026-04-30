@@ -245,10 +245,32 @@ function showSuccess(emp, type, time) {
 function showAlreadyRegistered(type) {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('alreadyType', type === 'entry' ? 'entrada' : 'salida');
-    setEl('alreadyMsg', type === 'entry'
-        ? 'Ya tienes una entrada marcada con este QR. Si hubo un error, contacta al administrador.'
-        : 'Ya tienes una salida marcada con este QR. Si hubo un error, contacta al administrador.');
+    // Mensaje claro sobre la política de un registro por día
+    setEl('alreadyMsg', 
+        'El sistema permite marcar tu entrada y salida una sola vez por día. ' +
+        'Si necesitas corregir un registro o hubo un error técnico, presiona "Contactar Soporte".'
+    );
     showScreen('screen-already');
+}
+
+/* ---- SUPPORT CONTACT ---- */
+function contactSupport() {
+    // Obtener información del empleado si está disponible
+    const emp = cState.selectedEmployee;
+    const empInfo = emp ? `\n\nEmpleado: ${emp.firstName} ${emp.lastName} (${emp.empNum})` : '';
+    const companyInfo = cState.adminConfig?.company ? `\nEmpresa: ${cState.adminConfig.company}` : '';
+    const timestamp = `\nFecha/Hora: ${new Date().toLocaleString('es-MX')}`;
+    
+    const message = `Hola, necesito asistencia con el sistema de asistencia QR.${empInfo}${companyInfo}${timestamp}\n\nProblema: [Describe tu problema aquí]`;
+    
+    // Abrir WhatsApp o mailto
+    const phoneNumber = '50300000000'; // Número de soporte (personalizar)
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    // Intentar WhatsApp primero
+    window.open(whatsappUrl, '_blank');
+    
+    showToastLocal('📞 Redirigiendo a soporte técnico...', 'info');
 }
 
 /* ---- HELPERS ---- */
