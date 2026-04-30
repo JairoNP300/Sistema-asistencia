@@ -6,10 +6,10 @@
 const STORE_KEY = 'qr_asist';
 let state = {
     employees: [], logs: [], departments: ['TI', 'RRHH', 'Ventas', 'Operaciones', 'Finanzas'],
-    secretKey: '', config: { tokenLife: 30, timeWindow: 300, maxRetries: 3, antiReplay: true, deviceLock: false, alerts: true },
+    secretKey: '', config: { tokenLife: 60, timeWindow: 600, maxRetries: 3, antiReplay: true, deviceLock: false, alerts: true },
     usedTokens: new Set(), scannerStream: null, scannerActive: false,
     selectedEmpForQR: null, currentQRToken: null, qrRotateTimer: null,
-    securityLog: [], adminConfig: { company: 'Mi Empresa S.A.', logo: '🏢', entryTime: '08:00', exitTime: '18:00', grace: 10 },
+    securityLog: [], adminConfig: { company: 'Mi Empresa S.A.', logo: '', entryTime: '08:00', exitTime: '18:00', grace: 10 },
     stats: { present: 0, entries: 0, exits: 0, blocked: 0 }, presentSet: new Set(),
 };
 /* ---- INIT ---- */
@@ -305,7 +305,7 @@ async function startStationQR() {
     if (state._stationRingTimer) clearInterval(state._stationRingTimer);
     document.getElementById('instrTokenLife').textContent = state.config.tokenLife;
     await renderStationQR();
-    // Rotate on each token window boundary
+    // Rotate on each token window boundary (cada 60 segundos)
     state._stationQRTimer = setInterval(async () => { await renderStationQR(); }, state.config.tokenLife * 1000);
     // Ring countdown
     state._stationRingTimer = setInterval(() => {
