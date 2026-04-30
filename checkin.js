@@ -113,17 +113,19 @@ async function validateStationToken(encoded) {
     if (payload?.type !== 'station') return { valid: false, reason: 'Tipo de token incorrecto', code: 'WRONG_TYPE' };
     if (!payload.ts || !payload.nonce || !payload.sig) return { valid: false, reason: 'Token incompleto', code: 'INCOMPLETE' };
 
-    // Ventana generosa: mínimo 5 minutos de tolerancia para conexiones lentas en móvil
-    const life = cState.config.tokenLife || 30;
-    const tolerance = Math.max(cState.config.timeWindow || 300, 300);
+    // Ventana MUY generosa: hasta 10 minutos de tolerancia para problemas de conexión
+    const life = cState.config.tokenLife || 60;
+    // Aumentamos la tolerancia a 600 segundos (10 minutos) para dar margen suficiente
+    const tolerance = 600;
     const age = now - payload.ts;
 
+    // Permitimos tokens con hasta 10 minutos de antigüedad más el tiempo de vida del token
     if (age > life + tolerance) {
-        return { valid: false, reason: `Token expirado (${Math.round(age)}s de antigüedad)`, code: 'EXPIRED' };
+        return { valid: false, reason: `QR expirado. Escanea el código actualizado en la pantalla de entrada.`, code: 'EXPIRED' };
     }
-    // Tolerancia de 60s para diferencias de reloj entre dispositivos
-    if (payload.ts > now + 60) {
-        return { valid: false, reason: 'Token con timestamp futuro', code: 'FUTURE_TS' };
+    // Tolerancia de 120s para diferencias de reloj entre dispositivos
+    if (payload.ts > now + 120) {
+        return { valid: false, reason: 'QR con hora futura. Verifica la hora de tu dispositivo.', code: 'FUTURE_TS' };
     }
 
     // Si no hay secretKey en el servidor, aceptar el token (modo sin firma)
