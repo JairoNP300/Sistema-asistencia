@@ -1611,7 +1611,7 @@ async function generatePayroll() {
 
 function renderPayrollResult(payroll) {
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const period = `${monthNames[payroll.month - 1]} ${payroll.year}`;
+    const period = `${monthNames[(payroll.month || 1) - 1]} ${payroll.year || new Date().getFullYear()}`;
     
     // Determinar el tipo de planilla y texto apropiado
     let payrollTypeText = 'MENSUAL';
@@ -1623,10 +1623,13 @@ function renderPayrollResult(payroll) {
         salaryColumnHeader = 'SALARIO QUINCENAL';
         salaryField = 'biweeklySalary';
     } else if (payroll.type === 'weekly') {
-        payrollTypeText = `SEMANAL - Semana ${payroll.weekNumber}`;
+        payrollTypeText = `SEMANAL - Semana ${payroll.weekNumber || 1}`;
         salaryColumnHeader = 'SALARIO SEMANAL';
         salaryField = 'weeklySalary';
     }
+    
+    const totals = payroll.totals || {};
+    const employees = payroll.employees || [];
     
     const html = `
         <div style="text-align:center;margin-bottom:20px;">
@@ -1651,27 +1654,27 @@ function renderPayrollResult(payroll) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${payroll.employees.map((emp, i) => `
+                    ${employees.map((emp, i) => `
                         <tr>
                             <td>${i + 1}</td>
-                            <td>${emp.fullName}</td>
-                            <td>${emp.workedDays}</td>
-                            <td>$${(emp[salaryField] || emp.monthlySalary).toFixed(2)}</td>
-                            <td>$${emp.isss.toFixed(2)}</td>
-                            <td>$${emp.afp.toFixed(2)}</td>
-                            <td>$${emp.renta.toFixed(2)}</td>
-                            <td>$${emp.totalDeductions.toFixed(2)}</td>
-                            <td><strong>$${emp.netPay.toFixed(2)}</strong></td>
+                            <td>${emp.fullName || 'Sin nombre'}</td>
+                            <td>${emp.workedDays || 0}</td>
+                            <td>$${((emp[salaryField] || emp.monthlySalary || 0)).toFixed(2)}</td>
+                            <td>$${(emp.isss || 0).toFixed(2)}</td>
+                            <td>$${(emp.afp || 0).toFixed(2)}</td>
+                            <td>$${(emp.renta || 0).toFixed(2)}</td>
+                            <td>$${(emp.totalDeductions || 0).toFixed(2)}</td>
+                            <td><strong>$${(emp.netPay || 0).toFixed(2)}</strong></td>
                         </tr>
                     `).join('')}
                     <tr style="background:var(--surface2);font-weight:700;">
                         <td colspan="3">TOTALES</td>
-                        <td>$${payroll.totals.totalSalary.toFixed(2)}</td>
-                        <td>$${payroll.totals.totalISS.toFixed(2)}</td>
-                        <td>$${payroll.totals.totalAFP.toFixed(2)}</td>
-                        <td>$${payroll.totals.totalRenta.toFixed(2)}</td>
-                        <td>$${payroll.totals.totalDeductions.toFixed(2)}</td>
-                        <td>$${payroll.totals.totalNetPay.toFixed(2)}</td>
+                        <td>$${(totals.totalSalary || 0).toFixed(2)}</td>
+                        <td>$${(totals.totalISS || 0).toFixed(2)}</td>
+                        <td>$${(totals.totalAFP || 0).toFixed(2)}</td>
+                        <td>$${(totals.totalRenta || 0).toFixed(2)}</td>
+                        <td>$${(totals.totalDeductions || 0).toFixed(2)}</td>
+                        <td>$${(totals.totalNetPay || 0).toFixed(2)}</td>
                     </tr>
                 </tbody>
             </table>
