@@ -1539,13 +1539,14 @@ function renderPayrollHistory(payrolls) {
     
     tbody.innerHTML = sorted.map(p => {
         const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const period = `${monthNames[p.month - 1]} ${p.year}`;
+        const period = `${monthNames[(p.month || 1) - 1]} ${p.year || new Date().getFullYear()}`;
+        const totals = p.totals || {};
         return `<tr>
             <td><strong>${period}</strong></td>
-            <td>${p.employees.length}</td>
-            <td>$${p.totals.totalSalary.toFixed(2)}</td>
-            <td>$${p.totals.totalDeductions.toFixed(2)}</td>
-            <td><strong>$${p.totals.totalNetPay.toFixed(2)}</strong></td>
+            <td>${(p.employees || []).length}</td>
+            <td>$${(totals.totalSalary || 0).toFixed(2)}</td>
+            <td>$${(totals.totalDeductions || 0).toFixed(2)}</td>
+            <td><strong>$${(totals.totalNetPay || 0).toFixed(2)}</strong></td>
             <td><span class="token-mono">${formatDateTime(p.createdAt)}</span></td>
             <td>
                 <div class="action-btns">
