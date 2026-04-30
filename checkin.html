@@ -127,10 +127,17 @@
     <div class="screen hidden" id="screen-already">
         <div class="success-wrap">
             <div class="success-anim warning">⚠️</div>
-            <h2 class="success-title">Ya registraste tu <span id="alreadyType">entrada</span></h2>
-            <p class="success-note" id="alreadyMsg">Ya tienes una entrada registrada hoy. Si necesitas marcar tu salida,
-                selecciona la opción correspondiente.</p>
-            <button class="btn-primary full" onclick="goBack()">← Volver</button>
+            <h2 class="success-title">Ya registraste tu <span id="alreadyType">entrada</span> hoy</h2>
+            <p class="success-note" id="alreadyMsg">
+                El sistema permite solo un registro por día.<br>
+                Si necesitas corregir un error, contacta al administrador.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;width:100%">
+                <button class="btn-primary full" onclick="goBack()">← Volver</button>
+                <button class="btn-secondary full" onclick="contactSupport()" style="background:transparent;border:1px solid #f59e0b;color:#f59e0b">
+                    📞 Contactar Soporte
+                </button>
+            </div>
         </div>
     </div>
 
