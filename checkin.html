@@ -32,11 +32,19 @@
         </div>
         <div class="error-card">
             <div class="error-icon">⏱️</div>
-            <h2>Código Expirado</h2>
-            <p id="expiredMsg">Este código QR ya no es válido. Por favor escanea el código actualizado en la pantalla de la entrada.</p>
+            <h2>Código QR Expirado</h2>
+            <p id="expiredMsg">Este código QR ya no es válido. Los códigos se actualizan cada 60 segundos para seguridad.</p>
         </div>
         <div class="timer-note" id="expiredDetail"></div>
-        <button class="btn-primary full" style="margin-top:24px" onclick="location.reload()">🔄 Intentar de nuevo</button>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px">
+            <button class="btn-primary full" onclick="location.reload()">🔄 Intentar de nuevo</button>
+            <button class="btn-secondary full" onclick="contactSupport()" style="background:transparent;border:1px solid #6366f1;color:#6366f1">
+                📞 Asistencia Técnica
+            </button>
+        </div>
+        <p style="margin-top:20px;font-size:0.85rem;color:var(--text-muted);text-align:center">
+            💡 Tip: Asegúrate de escanear el QR actual que se muestra en la pantalla de entrada
+        </p>
     </div>
 
     <!-- STATUS: employee selection -->
