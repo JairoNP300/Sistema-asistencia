@@ -1737,20 +1737,23 @@ async function exportPayrollExcelById(id) {
 
 function exportPayrollToExcel(payroll) {
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const period = `${monthNames[payroll.month - 1]}_${payroll.year}`;
+    const period = `${monthNames[(payroll.month || 1) - 1]}_${payroll.year || new Date().getFullYear()}`;
     const filename = `Planilla_${period}.xlsx`;
     
+    const employees = payroll.employees || [];
+    const totals = payroll.totals || {};
+    
     // Preparar datos para Excel
-    const data = payroll.employees.map((emp, i) => ({
+    const data = employees.map((emp, i) => ({
         'N°': i + 1,
-        'NOMBRE COMPLETO': emp.fullName,
-        'DÍAS TRABAJADOS': emp.workedDays,
-        'SALARIO MENSUAL': emp.monthlySalary,
-        'ISSS (3%)': emp.isss,
-        'AFP (7.25%)': emp.afp,
-        'RENTA': emp.renta,
-        'TOTAL DEDUCCIONES': emp.totalDeductions,
-        'LÍQUIDO A RECIBIR': emp.netPay
+        'NOMBRE COMPLETO': emp.fullName || 'Sin nombre',
+        'DÍAS TRABAJADOS': emp.workedDays || 0,
+        'SALARIO MENSUAL': emp.monthlySalary || 0,
+        'ISSS (3%)': emp.isss || 0,
+        'AFP (7.25%)': emp.afp || 0,
+        'RENTA': emp.renta || 0,
+        'TOTAL DEDUCCIONES': emp.totalDeductions || 0,
+        'LÍQUIDO A RECIBIR': emp.netPay || 0
     }));
     
     // Agregar fila de totales
@@ -1758,12 +1761,12 @@ function exportPayrollToExcel(payroll) {
         'N°': '',
         'NOMBRE COMPLETO': '',
         'DÍAS TRABAJADOS': 'TOTALES',
-        'SALARIO MENSUAL': payroll.totals.totalSalary,
-        'ISSS (3%)': payroll.totals.totalISS,
-        'AFP (7.25%)': payroll.totals.totalAFP,
-        'RENTA': payroll.totals.totalRenta,
-        'TOTAL DEDUCCIONES': payroll.totals.totalDeductions,
-        'LÍQUIDO A RECIBIR': payroll.totals.totalNetPay
+        'SALARIO MENSUAL': totals.totalSalary || 0,
+        'ISSS (3%)': totals.totalISS || 0,
+        'AFP (7.25%)': totals.totalAFP || 0,
+        'RENTA': totals.totalRenta || 0,
+        'TOTAL DEDUCCIONES': totals.totalDeductions || 0,
+        'LÍQUIDO A RECIBIR': totals.totalNetPay || 0
     });
     
     // Crear libro y hoja
