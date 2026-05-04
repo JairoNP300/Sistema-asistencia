@@ -71,20 +71,7 @@ function togglePasswordVisibility() {
     }
 }
 
-function loginV2() {
-    // Elimina el gating de login: siempre otorga acceso como admin
-    currentUser = { role: 'admin', username: 'Admin' };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-    // Ocultar pantalla de login si existe y mostrar main
-    const loginScreen = document.getElementById('loginScreen');
-    if (loginScreen) loginScreen.style.display = 'none';
-    const mainApp = document.getElementById('mainApp');
-    if (mainApp) mainApp.classList.remove('hidden');
-    // Ir al dashboard
-    showPage('dashboard');
-    // Notificar
-    showToast('✅ Acceso como Admin concedido', 'success');
-}
+// loginV2 eliminado
 
 // Función legacy para compatibilidad
 function login(role) {
