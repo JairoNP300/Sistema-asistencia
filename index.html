@@ -32,19 +32,85 @@
 
 <body>
 
-    <!-- ========== LOGIN SCREEN (deshabilitado — acceso directo a admin) ========== -->
-    <div id="loginScreen" class="login-screen-v2" style="display:none !important">
-        <div class="login-card-v2">
-            <!-- Logo y Header -->
-            <div class="login-header-v2">
-                <div class="login-shield-icon">
+    <!-- ========== PANTALLA DE SELECCIÓN DE MODO ========== -->
+    <div id="loginScreen" class="mode-select-screen">
+        <div class="mode-select-card">
+            <div class="mode-select-header">
+                <div class="mode-select-logo">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                 </div>
-                <div class="login-company-name">CARNES DEL PARAGUAY</div>
-                <h1 class="login-title">Acceso al Sistema</h1>
+                <div class="mode-select-company">CARNES DEL PARAGUAY</div>
+                <h1 class="mode-select-title">Sistema de Asistencia</h1>
+                <p class="mode-select-subtitle">¿Cómo deseas usar el sistema?</p>
             </div>
+
+            <!-- Opciones de modo -->
+            <div class="mode-options" id="modeOptions">
+                <button class="mode-option-btn" onclick="selectMode('qr')">
+                    <div class="mode-option-icon qr-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 18h.01M18 15h.01M21 15h.01M21 18h.01M21 21h.01M18 21h.01M15 21h.01M18 18h.01"/>
+                        </svg>
+                    </div>
+                    <div class="mode-option-text">
+                        <span class="mode-option-title">Pantalla QR</span>
+                        <span class="mode-option-desc">Para empleados — muestra el código QR de asistencia</span>
+                    </div>
+                    <svg class="mode-option-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9,18 15,12 9,6"/>
+                    </svg>
+                </button>
+
+                <button class="mode-option-btn" onclick="selectMode('admin')">
+                    <div class="mode-option-icon admin-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M20 21a8 8 0 1 0-16 0"/>
+                        </svg>
+                    </div>
+                    <div class="mode-option-text">
+                        <span class="mode-option-title">Administrador</span>
+                        <span class="mode-option-desc">Acceso completo — gestión de empleados, reportes y configuración</span>
+                    </div>
+                    <svg class="mode-option-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9,18 15,12 9,6"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Formulario de contraseña (solo admin) -->
+            <div class="mode-admin-form hidden" id="modeAdminForm">
+                <button class="mode-back-btn" onclick="backToModeSelect()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polyline points="15,18 9,12 15,6"/>
+                    </svg>
+                    Volver
+                </button>
+                <div class="mode-admin-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </div>
+                <h2 class="mode-admin-title">Acceso Administrador</h2>
+                <p class="mode-admin-desc">Ingresa tu contraseña para continuar</p>
+                <div class="password-input-wrap" style="width:100%;margin-top:8px">
+                    <input type="password" id="adminPass" placeholder="Contraseña" autocomplete="off"
+                        onkeydown="if(event.key==='Enter')loginAdmin()"
+                        oninput="document.getElementById('loginError').textContent=''" />
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                        <span id="passToggleText">VER</span>
+                    </button>
+                </div>
+                <p id="loginError" class="login-error-v2"></p>
+                <button class="btn-login-v2" onclick="loginAdmin()" style="margin-top:4px">
+                    INGRESAR AL SISTEMA
+                </button>
+            </div>
+        </div>
+    </div>
 
             <!-- Selección de Ubicación -->
             <div class="login-section">
