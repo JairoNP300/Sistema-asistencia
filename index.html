@@ -31,48 +31,56 @@
 
     <!-- ========== LOGIN SCREEN ========== -->
     <div id="loginScreen" class="login-screen">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-icon">🔐</div>
-                <h1>Sistema de <strong>asistencia</strong></h1>
+        <div class="login-container">
+            <!-- Logo y Header -->
+            <div class="login-brand">
+                <div class="login-brand-icon">🔐</div>
+                <h1>Sistema de <span>asistencia</span></h1>
                 <p>Control de Personal v2.6</p>
             </div>
 
-            <div class="login-tabs">
-                <button class="login-tab active" onclick="switchLoginTab('admin')" id="tabAdmin">
-                    👤 Administrador
-                </button>
-                <button class="login-tab" onclick="switchLoginTab('qr')" id="tabQr">
-                    📱 Modo QR
-                </button>
+            <!-- Selección de Perfil -->
+            <div class="login-profiles">
+                <div class="profile-card" onclick="selectProfile('admin')" id="profileAdmin">
+                    <div class="profile-icon">👤</div>
+                    <h3>Administrador</h3>
+                    <p>Gestión completa del sistema</p>
+                </div>
+                <div class="profile-card" onclick="selectProfile('qr')" id="profileQr">
+                    <div class="profile-icon">📱</div>
+                    <h3>Modo QR</h3>
+                    <p>Pantalla de escaneo para empleados</p>
+                </div>
             </div>
 
-            <!-- Admin Login Form -->
-            <div id="adminLoginForm" class="login-form">
+            <!-- Formulario Admin -->
+            <div id="adminLoginForm" class="login-form-section hidden">
+                <button class="btn-back" onclick="showProfileSelection()">← Volver</button>
+                <h2>Ingreso de Administrador</h2>
                 <div class="form-group">
                     <label>Usuario</label>
-                    <input type="text" id="adminUser" class="form-input" placeholder="admin" value="admin">
+                    <input type="text" id="adminUser" placeholder="admin" value="admin">
                 </div>
                 <div class="form-group">
                     <label>Contraseña</label>
-                    <input type="password" id="adminPass" class="form-input" placeholder="••••••" value="admin123">
+                    <input type="password" id="adminPass" placeholder="••••••" value="admin123">
                 </div>
-                <button class="btn-primary full" onclick="login('admin')">Ingresar como Administrador</button>
+                <button class="btn-login" onclick="login('admin')">Ingresar</button>
             </div>
 
-            <!-- QR Mode Login Form -->
-            <div id="qrLoginForm" class="login-form hidden">
+            <!-- Formulario QR -->
+            <div id="qrLoginForm" class="login-form-section hidden">
+                <button class="btn-back" onclick="showProfileSelection()">← Volver</button>
+                <h2>Acceso Modo QR</h2>
                 <div class="form-group">
-                    <label>Código de Acceso QR</label>
-                    <input type="password" id="qrCode" class="form-input" placeholder="Ingresa el código QR">
+                    <label>Código de Acceso</label>
+                    <input type="password" id="qrCode" placeholder="Ingresa el código">
                 </div>
-                <p class="login-hint">Este modo solo muestra el código QR para que los empleados puedan escanearlo.</p>
-                <button class="btn-primary full" onclick="login('qr')">Ingresar en Modo QR</button>
+                <p class="login-hint">Solo muestra el código QR para escaneo</p>
+                <button class="btn-login" onclick="login('qr')">Ingresar</button>
             </div>
 
-            <div class="login-footer">
-                <p id="loginError" class="login-error"></p>
-            </div>
+            <p id="loginError" class="login-error"></p>
         </div>
     </div>
 
