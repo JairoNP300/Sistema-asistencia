@@ -101,10 +101,6 @@ body {
     margin-left: 0;
 }
 
-.main-wrap.no-sidebar {
-    margin-left: 0;
-}
-
 /* ---------- SIDEBAR ---------- */
 .sidebar-header {
     padding: 20px 20px 16px;
@@ -303,6 +299,31 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
+}
+
+.hamburger-main {
+    width: 36px;
+    height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.hamburger-main:hover {
+    color: var(--text);
+    border-color: var(--primary);
+}
+
+.hamburger-main svg {
+    width: 18px;
+    height: 18px;
 }
 
 .page-title {
@@ -2251,9 +2272,17 @@ body {
 
 /* APP NAVIGATION */
 @media (max-width: 768px) {
-    .main-wrap { margin-left: 0 !important; }
-    .main-wrap.no-sidebar { margin-left: 0 !important; }
+    .sidebar { display: none !important; }
+    .main-wrap { margin-left: 0 !important; padding-bottom: 80px; }
+    .mobile-nav { 
+        display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; 
+        height: 70px; background: #0f172a; border-top: 1px solid #ffffff14; 
+        justify-content: space-around; align-items: center; z-index: 9999;
+    }
+    .m-nav-item { color: #94a3b8; font-size: 11px; display: flex; flex-direction: column; align-items: center; background: none; border: none; }
+    .m-nav-item.active { color: #818cf8; }
 }
+@media (min-width: 769px) { .mobile-nav { display: none !important; } }
 
 /* ============================================================
    LOCATION MODULE — Ubicación en Tiempo Real
@@ -2994,7 +3023,7 @@ textarea.form-input {
     font-weight: 500;
 }
 
-/* QR Mode - ocultar sidebar completamente, mantener topbar */
+/* QR Mode - ocultar sidebar completamente */
 body.qr-mode .sidebar {
     display: none !important;
 }
@@ -3083,10 +3112,10 @@ body.qr-mode #page-qr {
 }
 
 /* ============================================================
-   QR DISPLAY MODE — DISEÑO LIMPIO
+   QR DISPLAY MODE — NUEVO DISEÑO LIMPIO (sin panel técnico)
    ============================================================ */
 
-/* QR Mode - ocultar sidebar, mantener topbar visible */
+/* QR Mode - ocultar sidebar y topbar completamente */
 body.qr-mode .sidebar {
     display: none !important;
 }
@@ -3095,6 +3124,13 @@ body.qr-mode .main-wrap {
     margin-left: 0 !important;
 }
 
+body.qr-mode .topbar {
+    display: none !important;
+}
+
+body.qr-mode .mobile-nav {
+    display: none !important;
+}
 
 body.qr-mode #page-qr {
     padding: 0 !important;
@@ -3102,7 +3138,7 @@ body.qr-mode #page-qr {
 
 /* Contenedor principal del modo QR */
 .qr-display-fullscreen {
-    min-height: calc(100vh - var(--topbar-h, 64px));
+    min-height: 100vh;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -3147,23 +3183,15 @@ body.qr-mode #page-qr {
 
 /* QR Code wrap */
 .qr-display-code-wrap {
-    background: var(--surface2, #161628);
-    border: 1px solid rgba(99, 102, 241, 0.25);
+    background: #fff;
     border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 8px 40px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 8px 40px rgba(99, 102, 241, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     min-width: 280px;
     min-height: 280px;
-}
-
-/* QR code image/canvas — fondo blanco solo en el QR en sí */
-.qr-display-code-wrap #qrDisplayCode canvas,
-.qr-display-code-wrap #qrDisplayCode img {
-    border-radius: 12px;
-    display: block;
 }
 
 /* Countdown */
@@ -3370,291 +3398,4 @@ body.qr-mode #page-qr {
     background: rgba(99, 102, 241, 0.22);
     border-color: rgba(99, 102, 241, 0.5);
     color: #a5b4fc;
-}
-
-/* QR Mode — ocultar completamente sidebar y menú */
-body.qr-mode .sidebar,
-body.qr-mode .sidebar-header,
-body.qr-mode .sidebar-nav,
-body.qr-mode .sidebar-footer {
-    display: none !important;
-}
-
-body.qr-mode .topbar {
-    display: none !important;
-}
-
-body.qr-mode .main-wrap {
-    margin-left: 0 !important;
-    padding: 0 !important;
-}
-
-body.qr-mode .content {
-    padding: 0 !important;
-}
-
-body.qr-mode #page-qr {
-    padding: 0 !important;
-    height: 100vh;
-    overflow: auto;
-}
-
-/* Menú usuario — item cambiar a admin */
-.admin-switch-item {
-    color: #818cf8 !important;
-}
-
-.admin-switch-item:hover {
-    background: rgba(99, 102, 241, 0.12) !important;
-}
-
-/* ============================================================
-   QR STATION — DISEÑO DOS COLUMNAS PARA EMPLEADOS
-   ============================================================ */
-
-body.qr-mode .content {
-    padding: 0 !important;
-}
-
-.qr-station-wrap {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: calc(100vh - var(--topbar-h, 64px));
-    gap: 0;
-}
-
-/* ---- Columna izquierda: QR ---- */
-.qr-station-left {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    padding: 32px 28px;
-    background: var(--surface, #0f0f1e);
-    border-right: 1px solid var(--border, rgba(255,255,255,0.07));
-}
-
-.qr-station-brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    align-self: flex-start;
-    width: 100%;
-}
-
-.qr-station-logo {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(59,130,246,0.3);
-}
-
-.qr-station-logo svg {
-    width: 22px;
-    height: 22px;
-    color: #fff;
-}
-
-.qr-station-company {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.2;
-}
-
-.qr-station-tagline {
-    font-size: 0.75rem;
-    color: var(--text-muted, #94a3b8);
-}
-
-.qr-station-time {
-    font-size: 0.82rem;
-    color: var(--text-dim, #64748b);
-    align-self: flex-start;
-    width: 100%;
-}
-
-/* QR code box */
-.qr-station-code-box {
-    background: var(--surface2, #161628);
-    border: 1px solid rgba(99,102,241,0.2);
-    border-radius: 20px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 280px;
-    min-height: 280px;
-    box-shadow: 0 0 40px rgba(99,102,241,0.1);
-}
-
-.qr-station-code-box #qrDisplayCode canvas,
-.qr-station-code-box #qrDisplayCode img {
-    border-radius: 10px;
-    display: block;
-}
-
-/* Countdown */
-.qr-station-countdown {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--surface2, #161628);
-    border: 1px solid var(--border, rgba(255,255,255,0.07));
-    border-radius: 14px;
-    padding: 14px 20px;
-    width: 100%;
-}
-
-.qr-cd-label {
-    font-size: 0.8rem;
-    color: var(--text-muted, #94a3b8);
-    display: block;
-}
-
-/* URL box */
-.qr-station-url-box {
-    width: 100%;
-    background: rgba(15,23,42,0.5);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
-    padding: 14px 16px;
-}
-
-.qr-station-url-label {
-    font-size: 0.75rem;
-    color: var(--text-dim, #64748b);
-    margin-bottom: 8px;
-}
-
-/* ---- Columna derecha: instrucciones ---- */
-.qr-station-right {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 32px 36px;
-    background: var(--bg, #080812);
-}
-
-.qr-station-instructions {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.qr-instr-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 24px;
-}
-
-.qr-instr-icon {
-    font-size: 1.4rem;
-}
-
-.qr-instr-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border, rgba(255,255,255,0.07));
-}
-
-.qr-instr-step:last-of-type {
-    border-bottom: none;
-}
-
-.qr-instr-num {
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    background: rgba(99,102,241,0.15);
-    border: 1px solid rgba(99,102,241,0.3);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 800;
-    color: #818cf8;
-    margin-top: 2px;
-}
-
-.qr-instr-num.green {
-    background: rgba(16,185,129,0.15);
-    border-color: rgba(16,185,129,0.3);
-    color: #10b981;
-    font-size: 1rem;
-}
-
-.qr-instr-body {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.qr-instr-body strong {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #e2e8f0;
-}
-
-.qr-instr-body span {
-    font-size: 0.82rem;
-    color: var(--text-muted, #94a3b8);
-    line-height: 1.5;
-}
-
-.qr-instr-body em {
-    font-style: normal;
-    color: #38bdf8;
-    font-weight: 600;
-}
-
-.success-step .qr-instr-body strong {
-    color: #10b981;
-}
-
-.qr-instr-warning {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-top: 20px;
-    padding: 14px 16px;
-    background: rgba(251,191,36,0.07);
-    border: 1px solid rgba(251,191,36,0.2);
-    border-radius: 12px;
-    font-size: 0.82rem;
-    color: #94a3b8;
-    line-height: 1.6;
-}
-
-.qr-instr-warning span:first-child {
-    flex-shrink: 0;
-    font-size: 1rem;
-}
-
-/* Responsive: una columna en pantallas pequeñas */
-@media (max-width: 768px) {
-    .qr-station-wrap {
-        grid-template-columns: 1fr;
-    }
-    .qr-station-left {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 24px 20px;
-    }
-    .qr-station-right {
-        padding: 24px 20px;
-    }
 }

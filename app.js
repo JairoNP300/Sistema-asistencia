@@ -71,14 +71,87 @@ function togglePasswordVisibility() {
     }
 }
 
-// loginV2 eliminado
+function loginV2() {
+    const errorEl = document.getElementById('loginError');
+    errorEl.textContent = '';
+    
+    if (!selectedLocation) {
+        errorEl.textContent = '⚠️ Selecciona una ubicación';
+        return;
+    }
+    
+    // Ubicaciones QR (sin contraseña)
+    if (selectedLocation !== 'admin') {
+        currentUser = { 
+            role: 'qr', 
+            username: 'QR Display',
+            location: selectedLocation 
+        };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+        showMainApp();
+        return;
+    }
+    
+    // Administrador (con contraseña)
+    const pass = document.getElementById('adminPass').value;
+    if (pass === CREDENTIALS.admin.password) {
+        currentUser = { role: 'admin', username: 'Admin' };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+        document.getElementById('adminPass').value = '';
+        showMainApp();
+    } else {
+        errorEl.textContent = '❌ Contraseña incorrecta';
+        // Animación shake
+        const card = document.querySelector('.login-card-v2');
+        card.style.animation = 'none';
+        setTimeout(() => card.style.animation = 'shake 0.5s ease', 10);
+    }
+}
 
-// login() eliminado
+// Función legacy para compatibilidad
+function login(role) {
+    // Redirigir al nuevo sistema
+    if (role === 'qr') {
+        selectedLocation = 'soyapango-puesto'; // Default
+        locationRequiresPassword = false;
+        loginV2();
+    }
+}
 
-// logout() eliminado
+function logout() {
+    currentUser = null;
+    localStorage.removeItem(AUTH_KEY);
+    // Limpiar también timers de QR
+    if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
+    if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
+    // Limpiar campos de login
+    const adminPass = document.getElementById('adminPass');
+    if (adminPass) adminPass.value = '';
+    // Resetear selección de ubicación
+    selectedLocation = null;
+    locationRequiresPassword = false;
+    const radios = document.getElementsByName('location');
+    for (const radio of radios) radio.checked = false;
+    const passwordSection = document.getElementById('passwordSection');
+    if (passwordSection) {
+        passwordSection.style.opacity = '0.5';
+        passwordSection.style.pointerEvents = 'none';
+    }
+    const btnLogin = document.getElementById('btnLogin');
+    if (btnLogin) btnLogin.disabled = true;
+    // Mostrar login
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.body.classList.remove('qr-mode');
+    // Limpiar error
+    const errorEl = document.getElementById('loginError');
+    if (errorEl) errorEl.textContent = '';
+}
 
-// Función para cambiar de perfil (el login ha sido eliminado) - no-op
-function switchProfile() { /* no-op */ }
+// Función para cambiar de perfil sin salir completamente
+function switchProfile() {
+    logout();
+}
 
 // Cambiar de modo QR a Admin sin volver al login
 function switchToAdmin() {
@@ -108,30 +181,8 @@ function confirmSwitchAdmin() {
         currentUser = { role: 'admin', username: 'Admin' };
         localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
         document.body.classList.remove('qr-mode');
-        
-        // Restaurar topbar
         const topbar = document.querySelector('.topbar');
-        const mainWrap = document.querySelector('.main-wrap');
-        
         if (topbar) topbar.style.display = 'flex';
-        if (mainWrap) {
-            mainWrap.style.marginLeft = '';
-            mainWrap.style.padding = '';
-        }
-        
-        // Restaurar menú
-        const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
-        if (menuSwitchAdmin) menuSwitchAdmin.classList.add('hidden');
-        const menuModoQR = document.querySelector('#userMenuDropdown .user-menu-item:first-child');
-        if (menuModoQR) menuModoQR.style.display = '';
-        // Restaurar chip
-        const userAvatar = document.getElementById('userAvatar');
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        if (userAvatar) userAvatar.textContent = 'AD';
-        if (userNameDisplay) userNameDisplay.textContent = 'Admin';
-        // Restaurar timer
-        const tokenTimer = document.getElementById('tokenTimerWrap');
-        if (tokenTimer) tokenTimer.style.display = '';
         showPage('dashboard');
         showToast('✅ Modo Administrador activado', 'success');
     } else {
@@ -190,54 +241,19 @@ function showMainApp() {
     document.getElementById('mainApp').classList.remove('hidden');
 
     if (currentUser?.role === 'qr') {
-        // Modo QR: solo mostrar página QR, ocultar TODO excepto el QR
+        // Modo QR: solo mostrar página QR, ocultar sidebar completamente
         document.body.classList.add('qr-mode');
-        
-        // Ocultar topbar en modo QR
+        // Ocultar topbar también en modo QR
         const topbar = document.querySelector('.topbar');
-        const mainWrap = document.querySelector('.main-wrap');
-        
         if (topbar) topbar.style.display = 'none';
-        if (mainWrap) {
-            mainWrap.style.marginLeft = '0';
-            mainWrap.style.padding = '0';
-        }
-        
-        // Mostrar solo la página QR
-        // Actualizar chip de usuario
-        const userAvatar = document.getElementById('userAvatar');
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        if (userAvatar) userAvatar.textContent = 'QR';
-        if (userNameDisplay) userNameDisplay.textContent = 'Modo QR';
         showPage('qr');
+        // Iniciar QR display
         startQRDisplayMode();
     } else {
-        // Modo Admin: mostrar todo el layout
+        // Modo Admin: mostrar todo
         document.body.classList.remove('qr-mode');
-        
-        // Restaurar topbar y main wrap
         const topbar = document.querySelector('.topbar');
-        const mainWrap = document.querySelector('.main-wrap');
-        
         if (topbar) topbar.style.display = 'flex';
-        if (mainWrap) {
-            mainWrap.style.marginLeft = '';
-            mainWrap.style.padding = '';
-        }
-        
-        // Restaurar timer de token
-        const tokenTimer = document.getElementById('tokenTimerWrap');
-        if (tokenTimer) tokenTimer.style.display = '';
-        // Ocultar "Cambiar a Admin", mostrar "Modo QR"
-        const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
-        if (menuSwitchAdmin) menuSwitchAdmin.classList.add('hidden');
-        const menuModoQR = document.querySelector('#userMenuDropdown .user-menu-item:first-child');
-        if (menuModoQR) menuModoQR.style.display = '';
-        // Restaurar chip
-        const userAvatar = document.getElementById('userAvatar');
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        if (userAvatar) userAvatar.textContent = 'AD';
-        if (userNameDisplay) userNameDisplay.textContent = 'Admin';
         showPage('dashboard');
     }
 }
@@ -291,8 +307,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!state.employees.length) seedDemoEmployees();
     await saveToStorage();
 
-    // El login se ha eliminado; cargar directamente la aplicación
-    showMainApp();
+    // Verificar autenticación después de cargar datos
+    if (checkAuth()) {
+        showMainApp();
+    } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
 
     initClock();
     initTokenTimer();
@@ -468,6 +489,12 @@ function showPage(id) {
     if (id === 'admin') renderAdminPage();
     if (id === 'location') { initLocationMap(); startLocationAutoRefresh(); }
     else { stopLocationAutoRefresh(); }
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.querySelector('.main-wrap').classList.toggle('expanded');
 }
 
 /* ---- RENDER ALL ---- */
@@ -680,8 +707,8 @@ async function renderQRDisplay() {
         text: url,
         width: 260,
         height: 260,
-        colorDark: '#1e1b4b',
-        colorLight: '#f0f4ff',
+        colorDark: '#07071a',
+        colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
     });
 

@@ -95,33 +95,28 @@ async function migrateToCloud() {
 let useMongo = false;
 if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('USUARIO:PASSWORD')) {
     const mongoOpts = {
-        serverSelectionTimeoutMS: 8000,
-        connectTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 15000,
         socketTimeoutMS: 45000,
         retryWrites: true,
         retryReads: true,
     };
 
     async function connectMongo(attempt = 1) {
-        const maxAttempts = 3;
         try {
             await mongoose.connect(process.env.MONGODB_URI, mongoOpts);
             console.log('✅ Conectado a MongoDB Atlas (Cloud Mode)');
             useMongo = true;
             await migrateToCloud();
         } catch (err) {
-            // Simplificar el mensaje de error
-            const shortErr = err.message.includes('querySrv') || err.message.includes('ECONNREFUSED')
-                ? 'Sin acceso a MongoDB Atlas (red local sin DNS SRV)'
-                : err.message.split('\n')[0];
-
+            const maxAttempts = 5;
+            const delay = Math.min(attempt * 3000, 15000);
             if (attempt < maxAttempts) {
-                const delay = attempt * 4000;
-                console.warn(`⚠️ MongoDB intento ${attempt}/${maxAttempts}: ${shortErr}. Reintentando en ${delay/1000}s...`);
+                console.warn(`⚠️ MongoDB intento ${attempt}/${maxAttempts} fallido: ${err.message}`);
+                console.log(`   Reintentando en ${delay / 1000}s...`);
                 setTimeout(() => connectMongo(attempt + 1), delay);
             } else {
-                console.warn(`⚠️ MongoDB no disponible localmente. Usando data.json como respaldo.`);
-                console.warn(`   (En Render/producción MongoDB Atlas conecta correctamente)`);
+                console.warn(`⚠️ No se pudo conectar a MongoDB tras ${maxAttempts} intentos. Usando modo Local (data.json).`);
             }
         }
     }
@@ -475,35 +470,6 @@ app.get('/api/version', (req, res) => {
     const hashFile = path.join(__dirname, 'build.hash');
     const version = fs.existsSync(hashFile) ? fs.readFileSync(hashFile, 'utf8').trim() : 'init';
     res.json({ version, ts: Date.now() });
-});
-
-// -- QR View (solo código QR) --
-// Acceso público a un QR renderizado en una página mínima
-app.get('/qr-view', (req, res) => {
-    const t = req.query.t || '';
-    const html = `<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR - Ver código</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>body{font-family:Arial, sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#0b1020;margin:0} #qr{padding:20px;border-radius:12px;background:#111;box-shadow:0 0 0 1px #333 inset}</style>
-  </head>
-  <body>
-    <div id="qr" aria-label="Código QR"></div>
-    <script>
-      const payload = ${JSON.stringify(t)};
-      const div = document.getElementById('qr');
-      if (payload) {
-        new QRCode(div, { text: payload, width: 320, height: 320, colorDark: '#fff', colorLight: '#000', correctLevel: QRCode.CorrectLevel.H });
-      } else {
-        div.innerText = 'Sin payload';
-      }
-    </script>
-  </body>
-  </html>`;
-    res.send(html);
 });
 
 // --- LOCATION ENDPOINTS ---

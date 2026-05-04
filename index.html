@@ -32,14 +32,256 @@
 
 <body>
 
-    <!-- ========== MAIN APP (visible by default) ========== -->
+    <!-- ========== LOGIN SCREEN ========== -->
+    <div id="loginScreen" class="login-screen-v2">
+        <div class="login-card-v2">
+            <!-- Logo y Header -->
+            <div class="login-header-v2">
+                <div class="login-shield-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="login-company-name">CARNES DEL PARAGUAY</div>
+                <h1 class="login-title">Acceso al Sistema</h1>
+            </div>
+
+            <!-- Selección de Ubicación -->
+            <div class="login-section">
+                <div class="login-section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    LUGAR DE ACCESO
+                </div>
+                
+                <div class="location-groups">
+                    <!-- Administración -->
+                    <div class="location-group">
+                        <div class="location-group-title">ADMINISTRACIÓN</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="admin" id="locAdmin" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Administrador</span>
+                        </label>
+                    </div>
+
+                    <!-- Soyapango -->
+                    <div class="location-group">
+                        <div class="location-group-title">SOYAPANGO</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="soyapango-puesto" id="locSoyapangoPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Soyapango — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="soyapango-bodega" id="locSoyapangoBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Soyapango — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Usulután -->
+                    <div class="location-group">
+                        <div class="location-group-title">USULUTÁN</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="usulutan-puesto" id="locUsulutanPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Usulután — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="usulutan-bodega" id="locUsulutanBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Usulután — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Agromercados -->
+                    <div class="location-group">
+                        <div class="location-group-title">AGROMERCADOS</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="agromercados" id="locAgromercados" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Agromercados</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="login-section" id="passwordSection" style="opacity: 0.5; pointer-events: none;">
+                <div class="login-section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <circle cx="12" cy="16" r="1"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    CONTRASEÑA
+                </div>
+                <div class="password-input-wrap">
+                    <input type="password" id="adminPass" placeholder="Ingresa tu contraseña" autocomplete="off">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                        <span id="passToggleText">VER</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botón Ingresar -->
+            <button class="btn-login-v2" id="btnLogin" onclick="loginV2()" disabled>
+                INGRESAR AL SISTEMA
+            </button>
+
+            <p id="loginError" class="login-error-v2"></p>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APP (hidden until login) ========== -->
+    <div id="mainApp" class="main-app hidden">
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="brand-icon">🔐</div>
+                <div class="brand-text">
+                    <span class="brand-name">Sistema de <strong>asistencia</strong></span>
+                    <span class="brand-sub">Control de Personal v2.6</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-label">Principal</span>
+                <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    Dashboard
+                </button>
+                <button class="nav-item" id="nav-generate" onclick="showPage('generate')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 18h.01M18 15h.01M21 15h.01M21 18h.01M21 21h.01M18 21h.01M15 21h.01M18 18h.01" />
+                    </svg>
+                    Generar QR
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Gestión</span>
+                <button class="nav-item" id="nav-employees" onclick="showPage('employees')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    Empleados
+                </button>
+                <button class="nav-item" id="nav-hr" onclick="showPage('hr')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    RRHH
+                </button>
+                <button class="nav-item" id="nav-location" onclick="showPage('location')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    Ubicación
+                </button>
+                <button class="nav-item" id="nav-logs" onclick="showPage('logs')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    Registro de Accesos
+                </button>
+                <button class="nav-item" id="nav-reports" onclick="showPage('reports')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    Reportes
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Sistema</span>
+                <button class="nav-item" id="nav-security" onclick="showPage('security')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Seguridad
+                </button>
+                <button class="nav-item" id="nav-admin" onclick="showPage('admin')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                    </svg>
+                    Configuración
+                </button>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="security-status" id="securityStatus">
+                <span class="sec-dot"></span>
+                <div class="sec-info">
+                    <span class="sec-label">Sistema Seguro</span>
+                    <span class="sec-detail">HMAC-SHA256 Activo</span>
+                </div>
+            </div>
+            <div class="connection-status" id="connectionStatusBox" style="margin-top:10px; opacity:0.8;">
+                <span class="sec-dot" id="connDot" style="background:#10b981"></span>
+                <div class="sec-info">
+                    <span class="sec-label" id="connLabel">En línea</span>
+                    <span class="sec-detail">Sincronizado</span>
+                </div>
+            </div>
+        </div>
+    </aside>
     
+    <!-- BARRA DE NAVEGACIÓN MÓVIL (Solo visible en celulares) -->
+    <nav class="mobile-nav">
+        <button class="m-nav-item active" id="m-nav-dashboard" onclick="showPage('dashboard')">
+            <div class="m-nav-icon-wrap">🏠</div>
+            <span>Inicio</span>
+        </button>
+        <button class="m-nav-item" id="m-nav-generate" onclick="showPage('generate')">
+            <div class="m-nav-icon-wrap">🔑</div>
+            <span>QR</span>
+        </button>
+        <button class="m-nav-item" id="m-nav-logs" onclick="showPage('logs')">
+            <div class="m-nav-icon-wrap">📋</div>
+            <span>Logs</span>
+        </button>
+    </nav>
 
     <!-- ========== MAIN ========== -->
-    <div class="main-wrap no-sidebar">
+    <div class="main-wrap">
         <!-- TOP BAR -->
         <header class="topbar">
             <div class="topbar-left">
+                <button class="hamburger-main" id="hamburgerMain" onclick="toggleSidebar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
                 <div class="page-title-wrap">
                     <h1 class="page-title" id="pageTitle">Dashboard</h1>
                     <span class="page-sub" id="pageSub">Vista general del sistema</span>
@@ -147,17 +389,6 @@
                     </div>
                     <div class="chart-wrap" id="chartWrap">
                         <canvas id="timelineChart" height="120"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Quick QR Link (Gerente) -->
-            <section class="page" id="page-qrlink">
-                <div class="panel">
-                    <div class="panel-header"><h3>Acceso Rápido a QR</h3></div>
-                    <div class="panel-body">
-                        <p>Acceso directo para ver un código QR estático en una página dedicada.</p>
-                        <a href="/qr-view?t=TEST_PAYLOAD_ABC123" target="_blank" class="btn-primary">Ver QR (payload de ejemplo)</a>
                     </div>
                 </div>
             </section>
@@ -968,35 +1199,26 @@
 
             <!-- === QR DISPLAY MODE === -->
             <section class="page" id="page-qr">
-                <div class="qr-station-wrap">
-
-                    <!-- Columna izquierda: QR + countdown -->
-                    <div class="qr-station-left">
-                        <div class="qr-station-brand">
-                            <div class="qr-station-logo">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <div class="qr-station-company" id="qrDisplayCompany">Mi Empresa</div>
-                                <div class="qr-station-tagline">Sistema de Asistencia</div>
-                            </div>
+                <div class="qr-display-fullscreen">
+                    <div class="qr-display-card">
+                        <!-- Header con empresa -->
+                        <div class="qr-display-header">
+                            <div class="qr-display-company" id="qrDisplayCompany">Mi Empresa S.A.</div>
+                            <div class="qr-display-subtitle">Escanea para registrar tu asistencia</div>
+                            <div class="qr-display-time" id="qrDisplayDateTime"></div>
                         </div>
 
-                        <div class="qr-station-time" id="qrDisplayDateTime"></div>
-
                         <!-- QR Code -->
-                        <div class="qr-station-code-box" id="qrDisplayWrap">
+                        <div class="qr-display-code-wrap" id="qrDisplayWrap">
                             <div class="qr-loading" id="qrDisplayLoading">
                                 <div class="qr-spinner"></div>
-                                <span>Generando código…</span>
+                                <span>Generando QR seguro…</span>
                             </div>
                             <div id="qrDisplayCode" style="display:none"></div>
                         </div>
 
-                        <!-- Countdown -->
-                        <div class="qr-station-countdown">
+                        <!-- Countdown ring -->
+                        <div class="qr-display-countdown">
                             <div class="qr-ring-wrap">
                                 <svg viewBox="0 0 80 80" class="qr-ring-svg">
                                     <circle class="qr-ring-bg" cx="40" cy="40" r="34" />
@@ -1005,82 +1227,73 @@
                                 <span class="qr-ring-num" id="qrDisplayRingNum">60</span>
                             </div>
                             <div class="qr-cd-text">
-                                <span class="qr-cd-label">El código se renueva en</span>
+                                <span>El QR rota en</span>
                                 <span class="qr-cd-warn" id="qrDisplayWarn">Seguro</span>
                             </div>
                         </div>
 
-                        <!-- URL directa -->
-                        <div class="qr-station-url-box">
-                            <div class="qr-station-url-label">¿No puedes escanear? Usa este enlace:</div>
-                            <input type="text" id="qrDisplayUrl" readonly class="url-input" style="display:none" />
-                            <a id="qrDisplayUrlLink" href="#" target="_blank" class="qr-url-visible" onclick="return false;">Generando enlace...</a>
+                        <!-- Instrucciones detalladas para empleados -->
+                        <div class="qr-employee-instructions">
+                            <h3>📱 ¿Cómo registrar tu asistencia?</h3>
+                            <ol class="qr-steps">
+                                <li>
+                                    <div class="qr-step-num">1</div>
+                                    <div class="qr-step-text">
+                                        <strong>Abre la cámara de tu celular</strong>
+                                        <span>Usa la app de cámara nativa (no necesitas instalar nada)</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">2</div>
+                                    <div class="qr-step-text">
+                                        <strong>Apunta al código QR</strong>
+                                        <span>Centra el código en tu pantalla hasta que aparezca un enlace</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">3</div>
+                                    <div class="qr-step-text">
+                                        <strong>Toca el enlace que aparece</strong>
+                                        <span>Se abrirá el formulario de asistencia en tu navegador</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">4</div>
+                                    <div class="qr-step-text">
+                                        <strong>Busca tu nombre en la lista</strong>
+                                        <span>Puedes escribir tu nombre en el buscador para encontrarte más rápido</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">5</div>
+                                    <div class="qr-step-text">
+                                        <strong>Presiona ENTRADA o SALIDA</strong>
+                                        <span>Toca <em>Entrada</em> al llegar a trabajar y <em>Salida</em> al terminar tu turno</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">6</div>
+                                    <div class="qr-step-text">
+                                        <strong>¡Listo! Tu asistencia quedó registrada</strong>
+                                        <span>Verás una pantalla de confirmación con tu nombre y la hora exacta</span>
+                                    </div>
+                                </li>
+                            </ol>
+                            <div class="qr-instructions-note">
+                                ⚠️ <strong>Importante:</strong> Si el QR no funciona, espera unos segundos — se actualiza automáticamente cada 60 segundos por seguridad. Si tienes problemas, avisa al administrador.
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Columna derecha: instrucciones para empleados -->
-                    <div class="qr-station-right">
-                        <div class="qr-station-instructions">
-                            <div class="qr-instr-title">
-                                <span class="qr-instr-icon">📱</span>
-                                Cómo registrar tu asistencia
-                            </div>
-
-                            <div class="qr-instr-step">
-                                <div class="qr-instr-num">1</div>
-                                <div class="qr-instr-body">
-                                    <strong>Abre la cámara de tu celular</strong>
-                                    <span>No necesitas instalar ninguna app</span>
-                                </div>
-                            </div>
-
-                            <div class="qr-instr-step">
-                                <div class="qr-instr-num">2</div>
-                                <div class="qr-instr-body">
-                                    <strong>Apunta al código QR</strong>
-                                    <span>Centra el código hasta que aparezca un enlace en pantalla</span>
-                                </div>
-                            </div>
-
-                            <div class="qr-instr-step">
-                                <div class="qr-instr-num">3</div>
-                                <div class="qr-instr-body">
-                                    <strong>Toca el enlace</strong>
-                                    <span>Se abrirá el formulario de asistencia en tu navegador</span>
-                                </div>
-                            </div>
-
-                            <div class="qr-instr-step">
-                                <div class="qr-instr-num">4</div>
-                                <div class="qr-instr-body">
-                                    <strong>Busca tu nombre</strong>
-                                    <span>Escribe tu nombre en el buscador para encontrarte rápido</span>
-                                </div>
-                            </div>
-
-                            <div class="qr-instr-step">
-                                <div class="qr-instr-num">5</div>
-                                <div class="qr-instr-body">
-                                    <strong>Toca ENTRADA o SALIDA</strong>
-                                    <span><em>Entrada</em> al llegar · <em>Salida</em> al terminar tu turno</span>
-                                </div>
-                            </div>
-
-                            <div class="qr-instr-step success-step">
-                                <div class="qr-instr-num green">✓</div>
-                                <div class="qr-instr-body">
-                                    <strong>¡Listo! Asistencia registrada</strong>
-                                    <span>Verás una confirmación con tu nombre y la hora</span>
-                                </div>
-                            </div>
-
-                            <div class="qr-instr-warning">
-                                <span>⚠️</span>
-                                <span>El código se actualiza cada 60 segundos por seguridad. Si no funciona, espera el próximo código o avisa al administrador.</span>
+                        <!-- URL directa como respaldo -->
+                        <div class="qr-direct-url-box">
+                            <label>🔗 Enlace directo (si no puedes escanear)</label>
+                            <div class="url-row">
+                                <input type="text" id="qrDisplayUrl" readonly class="url-input" style="display:none" />
+                                <a id="qrDisplayUrlLink" href="#" target="_blank" class="qr-url-visible" onclick="return false;">Generando enlace...</a>
+                                <button class="btn-icon-sm" onclick="copyQrLink()" title="Copiar URL">📋</button>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </section>
 
