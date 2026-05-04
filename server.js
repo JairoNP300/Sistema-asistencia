@@ -839,6 +839,15 @@ app.post('/api/hr/payrolls/generate/biweekly', async (req, res) => {
             const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
             const workedDays = uniqueDates.size;
 
+            // Calcular entradas tardías
+            const lateEntries = empLogs.filter(l => l.isLate);
+            const lateDaysCount = lateEntries.length;
+            const totalMinutesLate = lateEntries.reduce((sum, l) => sum + (l.minutesLate || 0), 0);
+
+            // Calcular descuento por tardanzas
+            const hourlyRate = (emp.monthlySalary || 0) / 30 / 8;
+            const lateDeduction = (totalMinutesLate / 60) * hourlyRate;
+
             // Salario quincenal = mensual / 2
             const monthlySalary = emp.monthlySalary || 0;
             const biweeklySalaryBase = monthlySalary / 2;
@@ -846,13 +855,20 @@ app.post('/api/hr/payrolls/generate/biweekly', async (req, res) => {
             // Calcular proporcional según días trabajados (15 días = quincena completa)
             const proportionalSalary = deductions.calculateProportionalSalary(biweeklySalaryBase, workedDays, 15);
             
+            // Aplicar descuento por tardanzas
+            const salaryAfterLateDeduction = Math.max(0, proportionalSalary - lateDeduction);
+            
             // Usar tabla quincenal
-            const deductionResults = deductions.calculateAllDeductions(proportionalSalary, 'biweekly');
+            const deductionResults = deductions.calculateAllDeductions(salaryAfterLateDeduction, 'biweekly');
 
             payrollEmployees.push({
                 empId: emp.id,
                 empNum: emp.empNum,
                 fullName: `${emp.firstName} ${emp.lastName}`,
+                workedDays,
+                lateDaysCount,
+                totalMinutesLate,
+                lateDeduction: parseFloat(lateDeduction.toFixed(2)),
                 workedDays,
                 biweeklySalary: deductionResults.grossSalary,
                 isss: deductionResults.isss,
