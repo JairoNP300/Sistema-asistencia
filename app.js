@@ -183,6 +183,16 @@ function confirmSwitchAdmin() {
         document.body.classList.remove('qr-mode');
         const topbar = document.querySelector('.topbar');
         if (topbar) topbar.style.display = 'flex';
+        // Restaurar menú
+        const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
+        if (menuSwitchAdmin) menuSwitchAdmin.classList.add('hidden');
+        const menuModoQR = document.querySelector('.user-menu-item:first-child');
+        if (menuModoQR) menuModoQR.style.display = '';
+        // Restaurar chip
+        const userAvatar = document.getElementById('userAvatar');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        if (userAvatar) userAvatar.textContent = 'AD';
+        if (userNameDisplay) userNameDisplay.textContent = 'Admin';
         showPage('dashboard');
         showToast('✅ Modo Administrador activado', 'success');
     } else {
