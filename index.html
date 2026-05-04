@@ -32,82 +32,139 @@
 
 <body>
 
-    <!-- ========== PANTALLA DE SELECCIÓN DE MODO ========== -->
-    <div id="loginScreen" class="mode-select-screen">
-        <div class="mode-select-card">
-            <div class="mode-select-header">
-                <div class="mode-select-logo">
+    <!-- ========== LOGIN V2 CON UBICACIONES ========== -->
+    <div id="loginScreen" class="login-screen-v2">
+        <div class="login-bg-pattern"></div>
+        <div class="login-card-v2">
+            <div class="login-header-v2">
+                <div class="login-logo-v2">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                 </div>
-                <div class="mode-select-company">CARNES DEL PARAGUAY</div>
-                <h1 class="mode-select-title">Sistema de Asistencia</h1>
-                <p class="mode-select-subtitle">¿Cómo deseas usar el sistema?</p>
+                <h1 class="login-title-v2">CNAD</h1>
+                <p class="login-subtitle-v2">Sistema de Asistencia</p>
             </div>
 
-            <!-- Opciones de modo -->
-            <div class="mode-options" id="modeOptions">
-                <button class="mode-option-btn" onclick="selectMode('qr')">
-                    <div class="mode-option-icon qr-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 18h.01M18 15h.01M21 15h.01M21 18h.01M21 21h.01M18 21h.01M15 21h.01M18 18h.01"/>
-                        </svg>
-                    </div>
-                    <div class="mode-option-text">
-                        <span class="mode-option-title">Pantalla QR</span>
-                        <span class="mode-option-desc">Para empleados — muestra el código QR de asistencia</span>
-                    </div>
-                    <svg class="mode-option-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9,18 15,12 9,6"/>
-                    </svg>
-                </button>
+            <p id="loginError" class="login-error-v2"></p>
 
-                <button class="mode-option-btn" onclick="selectMode('admin')">
-                    <div class="mode-option-icon admin-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="8" r="4"/>
-                            <path d="M20 21a8 8 0 1 0-16 0"/>
-                        </svg>
-                    </div>
-                    <div class="mode-option-text">
-                        <span class="mode-option-title">Administrador</span>
-                        <span class="mode-option-desc">Acceso completo — gestión de empleados, reportes y configuración</span>
-                    </div>
-                    <svg class="mode-option-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9,18 15,12 9,6"/>
+            <!-- Selección de Ubicación -->
+            <div class="login-section">
+                <div class="login-section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
                     </svg>
-                </button>
+                    UBICACIÓN
+                </div>
+                <div class="locations-grid">
+                    <!-- Soyapango -->
+                    <div class="location-group">
+                        <div class="location-group-title">SOYAPANGO</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="soyapango-puesto" id="locSoyaPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Soyapango — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="soyapango-bodega" id="locSoyaBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Soyapango — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- San Miguel -->
+                    <div class="location-group">
+                        <div class="location-group-title">SAN MIGUEL</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="sanmiguel-puesto" id="locSMiguelPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">San Miguel — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="sanmiguel-bodega" id="locSMiguelBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">San Miguel — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Santa Ana -->
+                    <div class="location-group">
+                        <div class="location-group-title">SANTA ANA</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="santaana-puesto" id="locSantaPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Santa Ana — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="santaana-bodega" id="locSantaBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Santa Ana — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Usulután -->
+                    <div class="location-group">
+                        <div class="location-group-title">USULUTÁN</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="usulutan-puesto" id="locUsuluPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Usulután — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="usulutan-bodega" id="locUsuluBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Usulután — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Agromercados -->
+                    <div class="location-group">
+                        <div class="location-group-title">AGROMERCADOS</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="agromercados" id="locAgromercados" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Agromercados</span>
+                        </label>
+                    </div>
+
+                    <!-- Administración -->
+                    <div class="location-group">
+                        <div class="location-group-title">ADMINISTRACIÓN</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="admin" id="locAdmin" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Administrador del Sistema</span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
-            <!-- Formulario de contraseña (solo admin) -->
-            <div class="mode-admin-form hidden" id="modeAdminForm">
-                <button class="mode-back-btn" onclick="backToModeSelect()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                        <polyline points="15,18 9,12 15,6"/>
-                    </svg>
-                    Volver
-                </button>
-                <div class="mode-admin-icon">
+            <!-- Contraseña -->
+            <div class="login-section" id="passwordSection" style="opacity: 0.5; pointer-events: none;">
+                <div class="login-section-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <circle cx="12" cy="16" r="1"/>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
+                    CONTRASEÑA
                 </div>
-                <h2 class="mode-admin-title">Acceso Administrador</h2>
-                <p class="mode-admin-desc">Ingresa tu contraseña para continuar</p>
-                <div class="password-input-wrap" style="width:100%;margin-top:8px">
-                    <input type="password" id="adminPass" placeholder="Contraseña" autocomplete="off"
-                        onkeydown="if(event.key==='Enter')loginAdmin()"
-                        oninput="document.getElementById('loginError').textContent=''" />
+                <div class="password-input-wrap">
+                    <input type="password" id="adminPass" placeholder="Ingresa tu contraseña" autocomplete="off">
                     <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
                         <span id="passToggleText">VER</span>
                     </button>
                 </div>
-                <p id="loginError" class="login-error-v2"></p>
-                <button class="btn-login-v2" onclick="loginAdmin()" style="margin-top:4px">
-                    INGRESAR AL SISTEMA
-                </button>
+            </div>
+
+            <!-- Botón Ingresar -->
+            <button class="btn-login-v2" id="btnLogin" onclick="loginV2()" disabled>
+                INGRESAR AL SISTEMA
+            </button>
+
+            <div class="login-footer-v2">
+                v2.6 — Sistema de Control de Personal
             </div>
         </div>
     </div>
