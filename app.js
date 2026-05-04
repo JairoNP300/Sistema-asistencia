@@ -274,6 +274,11 @@ const pageTitles = {
     location: ['Ubicación en Tiempo Real', 'Mapa de empleados activos'],
 };
 function showPage(id) {
+    // En modo QR, solo permitir ver la página QR
+    if (currentUser?.role === 'qr' && id !== 'qr') {
+        id = 'qr';
+    }
+
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById(`page-${id}`)?.classList.add('active');
