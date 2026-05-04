@@ -289,9 +289,21 @@ function showMainApp() {
         showPage('qr');
         startQRDisplayMode();
     } else {
+        // Modo Admin: mostrar todo el layout
         document.body.classList.remove('qr-mode');
+        
+        // Restaurar sidebar, topbar y main wrap
+        const sidebar = document.getElementById('sidebar');
         const topbar = document.querySelector('.topbar');
+        const mainWrap = document.querySelector('.main-wrap');
+        
+        if (sidebar) sidebar.style.display = '';
         if (topbar) topbar.style.display = 'flex';
+        if (mainWrap) {
+            mainWrap.style.marginLeft = '';
+            mainWrap.style.padding = '';
+        }
+        
         // Restaurar timer de token
         const tokenTimer = document.getElementById('tokenTimerWrap');
         if (tokenTimer) tokenTimer.style.display = '';
