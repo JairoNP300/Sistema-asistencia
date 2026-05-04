@@ -181,8 +181,19 @@ function confirmSwitchAdmin() {
         currentUser = { role: 'admin', username: 'Admin' };
         localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
         document.body.classList.remove('qr-mode');
+        
+        // Restaurar sidebar y topbar
+        const sidebar = document.getElementById('sidebar');
         const topbar = document.querySelector('.topbar');
+        const mainWrap = document.querySelector('.main-wrap');
+        
+        if (sidebar) sidebar.style.display = '';
         if (topbar) topbar.style.display = 'flex';
+        if (mainWrap) {
+            mainWrap.style.marginLeft = '';
+            mainWrap.style.padding = '';
+        }
+        
         // Restaurar menú
         const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
         if (menuSwitchAdmin) menuSwitchAdmin.classList.add('hidden');
