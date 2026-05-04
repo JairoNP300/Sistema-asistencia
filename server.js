@@ -701,7 +701,10 @@ app.post('/api/hr/payrolls/generate', async (req, res) => {
             totalAFP: 0,
             totalRenta: 0,
             totalDeductions: 0,
-            totalNetPay: 0
+            totalNetPay: 0,
+            totalLateDays: 0,
+            totalLateMinutes: 0,
+            totalLateDeduction: 0
         };
 
         for (const emp of employees) {
@@ -831,7 +834,10 @@ app.post('/api/hr/payrolls/generate/biweekly', async (req, res) => {
             totalAFP: 0,
             totalRenta: 0,
             totalDeductions: 0,
-            totalNetPay: 0
+            totalNetPay: 0,
+            totalLateDays: 0,
+            totalLateMinutes: 0,
+            totalLateDeduction: 0
         };
 
         for (const emp of employees) {
@@ -967,7 +973,10 @@ app.post('/api/hr/payrolls/generate/weekly', async (req, res) => {
             totalAFP: 0,
             totalRenta: 0,
             totalDeductions: 0,
-            totalNetPay: 0
+            totalNetPay: 0,
+            totalLateDays: 0,
+            totalLateMinutes: 0,
+            totalLateDeduction: 0
         };
 
         for (const emp of employees) {
