@@ -1484,31 +1484,42 @@ app.delete('/api/hr/contracts/:id', async (req, res) => {
 
 // ========== ENDPOINTS DE CARTAS DE CONFIDENCIALIDAD ==========
 
-// POST /api/hr/confidentiality — Crear carta de confidencialidad
-app.post('/api/hr/confidentiality', async (req, res) => {
+// POST /api/hr/confidentiality — Crear carta de confidencialidad (con archivo)
+app.post('/api/hr/confidentiality', upload.single('confFile'), async (req, res) => {
     try {
-        const letter = {
-            ...req.body,
+        const letterData = {
+            empId: req.body.empId,
+            empName: req.body.empName,
+            docType: req.body.docType,
+            description: req.body.description,
             id: `conf_${Date.now()}`,
-            status: 'pending',
+            status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
+        
+        // Si se adjuntó archivo, agregar información del archivo
+        if (req.file) {
+            letterData.fileName = req.file.originalname;
+            letterData.filePath = `/uploads/${req.file.filename}`;
+            letterData.fileSize = req.file.size;
+            letterData.mimeType = req.file.mimetype;
+        }
 
         if (useMongo) {
             const state = await State.findOne();
             if (!state.confidentialityLetters) state.confidentialityLetters = [];
-            state.confidentialityLetters.push(letter);
+            state.confidentialityLetters.push(letterData);
             state.markModified('confidentialityLetters');
             await state.save();
         } else {
             const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
             if (!data.confidentialityLetters) data.confidentialityLetters = [];
-            data.confidentialityLetters.push(letter);
+            data.confidentialityLetters.push(letterData);
             fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
         }
 
-        res.json({ success: true, letter });
+        res.json({ success: true, letter: letterData });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
