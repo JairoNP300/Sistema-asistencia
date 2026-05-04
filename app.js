@@ -75,35 +75,7 @@ function togglePasswordVisibility() {
 
 // login() eliminado
 
-function logout() {
-    currentUser = null;
-    localStorage.removeItem(AUTH_KEY);
-    // Limpiar también timers de QR
-    if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
-    if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
-    // Limpiar campos de login
-    const adminPass = document.getElementById('adminPass');
-    if (adminPass) adminPass.value = '';
-    // Resetear selección de ubicación
-    selectedLocation = null;
-    locationRequiresPassword = false;
-    const radios = document.getElementsByName('location');
-    for (const radio of radios) radio.checked = false;
-    const passwordSection = document.getElementById('passwordSection');
-    if (passwordSection) {
-        passwordSection.style.opacity = '0.5';
-        passwordSection.style.pointerEvents = 'none';
-    }
-    const btnLogin = document.getElementById('btnLogin');
-    if (btnLogin) btnLogin.disabled = true;
-    // Mostrar login
-    document.getElementById('mainApp').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.body.classList.remove('qr-mode');
-    // Limpiar error
-    const errorEl = document.getElementById('loginError');
-    if (errorEl) errorEl.textContent = '';
-}
+// logout() eliminado
 
 // Función para cambiar de perfil sin salir completamente
 function switchProfile() {
