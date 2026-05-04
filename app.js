@@ -492,6 +492,8 @@ async function startStationQR() {
         const remaining = life - (Math.floor(Date.now() / 1000) % life);
         updateStationRing(remaining, life);
     }, 1000);
+}
+
 async function startQRDisplayMode() {
     // Mostrar loading inicial
     const loading = document.getElementById('qrDisplayLoading');
