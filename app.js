@@ -23,31 +23,98 @@ function checkAuth() {
     return false;
 }
 
-function login(role) {
+/* ---- NUEVO LOGIN V2 ---- */
+let selectedLocation = null;
+let locationRequiresPassword = false;
+
+function onLocationChange() {
+    const radios = document.getElementsByName('location');
+    const passwordSection = document.getElementById('passwordSection');
+    const btnLogin = document.getElementById('btnLogin');
+    
+    for (const radio of radios) {
+        if (radio.checked) {
+            selectedLocation = radio.value;
+            // Solo administración requiere contraseña
+            locationRequiresPassword = (selectedLocation === 'admin');
+            break;
+        }
+    }
+    
+    // Habilitar/deshabilitar sección de contraseña
+    if (locationRequiresPassword) {
+        passwordSection.style.opacity = '1';
+        passwordSection.style.pointerEvents = 'auto';
+        // Habilitar botón solo si hay contraseña
+        const hasPassword = document.getElementById('adminPass').value.length > 0;
+        btnLogin.disabled = !hasPassword;
+    } else {
+        // Para ubicaciones de QR, no necesita contraseña
+        passwordSection.style.opacity = '0.5';
+        passwordSection.style.pointerEvents = 'none';
+        document.getElementById('adminPass').value = '';
+        // Habilitar botón inmediatamente
+        btnLogin.disabled = false;
+    }
+}
+
+function togglePasswordVisibility() {
+    const input = document.getElementById('adminPass');
+    const toggleText = document.getElementById('passToggleText');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        toggleText.textContent = 'OCULTAR';
+    } else {
+        input.type = 'password';
+        toggleText.textContent = 'VER';
+    }
+}
+
+function loginV2() {
     const errorEl = document.getElementById('loginError');
     errorEl.textContent = '';
-
-    if (role === 'admin') {
-        const pass = document.getElementById('adminPass').value;
-
-        if (pass === CREDENTIALS.admin.password) {
-            currentUser = { role: 'admin', username: 'Admin' };
-            localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-            // Limpiar contraseña
-            document.getElementById('adminPass').value = '';
-            showMainApp();
-        } else {
-            errorEl.textContent = '❌ Contraseña incorrecta';
-            // Animación de shake
-            const form = document.getElementById('adminLoginForm');
-            form.style.animation = 'none';
-            setTimeout(() => form.style.animation = 'shake 0.5s ease', 10);
-        }
-    } else if (role === 'qr') {
-        // Acceso directo sin contraseña
-        currentUser = { role: 'qr', username: 'QR Display' };
+    
+    if (!selectedLocation) {
+        errorEl.textContent = '⚠️ Selecciona una ubicación';
+        return;
+    }
+    
+    // Ubicaciones QR (sin contraseña)
+    if (selectedLocation !== 'admin') {
+        currentUser = { 
+            role: 'qr', 
+            username: 'QR Display',
+            location: selectedLocation 
+        };
         localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
         showMainApp();
+        return;
+    }
+    
+    // Administrador (con contraseña)
+    const pass = document.getElementById('adminPass').value;
+    if (pass === CREDENTIALS.admin.password) {
+        currentUser = { role: 'admin', username: 'Admin' };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+        document.getElementById('adminPass').value = '';
+        showMainApp();
+    } else {
+        errorEl.textContent = '❌ Contraseña incorrecta';
+        // Animación shake
+        const card = document.querySelector('.login-card-v2');
+        card.style.animation = 'none';
+        setTimeout(() => card.style.animation = 'shake 0.5s ease', 10);
+    }
+}
+
+// Función legacy para compatibilidad
+function login(role) {
+    // Redirigir al nuevo sistema
+    if (role === 'qr') {
+        selectedLocation = 'soyapango-puesto'; // Default
+        locationRequiresPassword = false;
+        loginV2();
     }
 }
 
@@ -60,15 +127,25 @@ function logout() {
     // Limpiar campos de login
     const adminPass = document.getElementById('adminPass');
     if (adminPass) adminPass.value = '';
-    // Mostrar login y resetear a selección de perfiles
+    // Resetear selección de ubicación
+    selectedLocation = null;
+    locationRequiresPassword = false;
+    const radios = document.getElementsByName('location');
+    for (const radio of radios) radio.checked = false;
+    const passwordSection = document.getElementById('passwordSection');
+    if (passwordSection) {
+        passwordSection.style.opacity = '0.5';
+        passwordSection.style.pointerEvents = 'none';
+    }
+    const btnLogin = document.getElementById('btnLogin');
+    if (btnLogin) btnLogin.disabled = true;
+    // Mostrar login
     document.getElementById('mainApp').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     document.body.classList.remove('qr-mode');
-    // Resetear vista de login
-    showProfileSelection();
-    // Quitar botón de logout flotante si existe
-    const qrLogoutBtn = document.getElementById('qrLogoutBtn');
-    if (qrLogoutBtn) qrLogoutBtn.remove();
+    // Limpiar error
+    const errorEl = document.getElementById('loginError');
+    if (errorEl) errorEl.textContent = '';
 }
 
 // Función para cambiar de perfil sin salir completamente
@@ -93,7 +170,7 @@ document.addEventListener('click', (e) => {
 });
 
 function copyQrLink() {
-    const input = document.getElementById('qrManualUrl');
+    const input = document.getElementById('qrDisplayUrl');
     if (input) {
         input.select();
         navigator.clipboard.writeText(input.value).then(() => {
@@ -106,34 +183,40 @@ function copyQrLink() {
     }
 }
 
+function copyDirectLink() {
+    const input = document.getElementById('qrDirectUrl');
+    if (input) {
+        input.select();
+        navigator.clipboard.writeText(input.value).then(() => {
+            showToast('✅ Enlace copiado al portapapeles', 'success');
+        }).catch(() => {
+            // Fallback
+            document.execCommand('copy');
+            showToast('✅ Enlace copiado', 'success');
+        });
+    }
+}
+
 function showMainApp() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
 
     if (currentUser?.role === 'qr') {
-        // Modo QR: solo mostrar página QR, ocultar sidebar
+        // Modo QR: solo mostrar página QR, ocultar sidebar completamente
         document.body.classList.add('qr-mode');
+        // Ocultar topbar también en modo QR
+        const topbar = document.querySelector('.topbar');
+        if (topbar) topbar.style.display = 'none';
         showPage('qr');
-        // Agregar botón de logout flotante
-        addLogoutButton();
+        // Iniciar QR display
+        startQRDisplayMode();
     } else {
         // Modo Admin: mostrar todo
         document.body.classList.remove('qr-mode');
+        const topbar = document.querySelector('.topbar');
+        if (topbar) topbar.style.display = 'flex';
         showPage('dashboard');
     }
-}
-
-function addLogoutButton() {
-    // Solo agregar si no existe
-    const existing = document.getElementById('qrLogoutBtn');
-    if (existing) return;
-
-    const btn = document.createElement('button');
-    btn.id = 'qrLogoutBtn';
-    btn.className = 'logout-btn-float';
-    btn.innerHTML = '🚪 Salir';
-    btn.onclick = logout;
-    document.body.appendChild(btn);
 }
 
 function selectProfile(profile) {
@@ -340,6 +423,7 @@ const pageTitles = {
     security: ['Seguridad', 'Criptografía y configuración de tokens'],
     admin: ['Configuración', 'Ajustes del sistema'],
     location: ['Ubicación en Tiempo Real', 'Mapa de empleados activos'],
+    qr: ['Modo QR', 'Pantalla de registro de asistencia'],
 };
 function showPage(id) {
     // En modo QR, solo permitir ver la página QR
@@ -352,8 +436,10 @@ function showPage(id) {
     document.getElementById(`page-${id}`)?.classList.add('active');
     document.getElementById(`nav-${id}`)?.classList.add('active');
     const [title, sub] = pageTitles[id] || [id, ''];
-    document.getElementById('pageTitle').textContent = title;
-    document.getElementById('pageSub').textContent = sub;
+    const pageTitle = document.getElementById('pageTitle');
+    const pageSub = document.getElementById('pageSub');
+    if (pageTitle) pageTitle.textContent = title;
+    if (pageSub) pageSub.textContent = sub;
     if (id !== 'scanner') stopScanner();
     if (id === 'generate') startStationQR();
     if (id === 'qr') { startQRDisplayMode(); }
@@ -582,27 +668,16 @@ async function renderQRDisplay() {
         correctLevel: QRCode.CorrectLevel.M
     });
 
-    // Actualizar detalles del token
-    const now = new Date();
-    const expTime = new Date(now.getTime() + 60000); // 60 segundos
-    
-    const tokenIdEl = document.getElementById('qrDisplayTokenId');
-    const genTimeEl = document.getElementById('qrDisplayGenTime');
-    const expTimeEl = document.getElementById('qrDisplayExpTime');
-    const sigEl = document.getElementById('qrDisplaySig');
+    // Actualizar URL y empresa
     const urlInput = document.getElementById('qrDisplayUrl');
     const companyEl = document.getElementById('qrDisplayCompany');
 
-    if (tokenIdEl) tokenIdEl.textContent = result.payload?.nonce?.slice(0, 16) + '…' || '—';
-    if (genTimeEl) genTimeEl.textContent = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    if (expTimeEl) expTimeEl.textContent = expTime.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    if (sigEl) sigEl.textContent = result.encoded?.slice(-16) || '—';
     if (urlInput) urlInput.value = url;
     if (companyEl) companyEl.textContent = state.adminConfig.company || 'Mi Empresa S.A.';
 }
 
 function updateQRDisplayTime() {
-    const timeEl = document.getElementById('qrCurrentTime');
+    const timeEl = document.getElementById('qrDisplayDateTime');
     if (timeEl) {
         timeEl.textContent = new Date().toLocaleString('es-MX', {
             weekday: 'long',

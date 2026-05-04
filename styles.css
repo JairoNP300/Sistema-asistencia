@@ -2774,3 +2774,531 @@ textarea.form-input {
         white-space: nowrap;
     }
 }
+
+/* ============================================================
+   LOGIN V2 — DISEÑO PROFESIONAL
+   ============================================================ */
+
+.login-screen-v2 {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+    z-index: 1000;
+    padding: 20px;
+}
+
+.login-card-v2 {
+    background: rgba(30, 35, 60, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.login-header-v2 {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-shield-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+}
+
+.login-shield-icon svg {
+    width: 28px;
+    height: 28px;
+    color: white;
+    stroke-width: 2;
+}
+
+.login-company-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: #38bdf8;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.login-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+.login-section {
+    margin-bottom: 24px;
+}
+
+.login-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+}
+
+.login-section-label svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+}
+
+.location-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.location-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.location-group-title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.location-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.location-option:hover {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.location-option input[type="radio"] {
+    display: none;
+}
+
+.location-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.location-option input[type="radio"]:checked + .location-radio {
+    border-color: #3b82f6;
+    background: #3b82f6;
+}
+
+.location-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.2s ease;
+}
+
+.location-option input[type="radio"]:checked + .location-radio::after {
+    transform: scale(1);
+}
+
+.location-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+.password-input-wrap {
+    position: relative;
+}
+
+.password-input-wrap input {
+    width: 100%;
+    padding: 14px 16px;
+    padding-right: 70px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.password-input-wrap input::placeholder {
+    color: #64748b;
+}
+
+.password-input-wrap input:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.password-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    padding: 8px 12px;
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #94a3b8;
+}
+
+.btn-login-v2 {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.btn-login-v2:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+}
+
+.btn-login-v2:disabled {
+    background: linear-gradient(135deg, #334155, #475569);
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+.login-error-v2 {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #f43f5e;
+    font-weight: 500;
+}
+
+/* QR Mode - ocultar sidebar completamente */
+body.qr-mode .sidebar {
+    display: none !important;
+}
+
+body.qr-mode .main-wrap {
+    margin-left: 0 !important;
+}
+
+body.qr-mode #page-qr {
+    padding: 20px;
+}
+
+/* QR Instructions Panel */
+.qr-instructions {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.qr-instructions h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qr-instructions ol {
+    list-style: none;
+    counter-reset: steps;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.qr-instructions li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.qr-instructions li::before {
+    counter-increment: steps;
+    content: counter(steps);
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.qr-instructions li strong {
+    color: #e2e8f0;
+}
+
+/* Mobile responsive for login v2 */
+@media (max-width: 480px) {
+    .login-card-v2 {
+        padding: 32px 24px;
+    }
+    
+    .location-groups {
+        gap: 12px;
+    }
+    
+    .location-option {
+        padding: 10px 12px;
+    }
+    
+    .location-text {
+        font-size: 0.85rem;
+    }
+}
+
+/* ============================================================
+   QR DISPLAY MODE — NUEVO DISEÑO LIMPIO (sin panel técnico)
+   ============================================================ */
+
+/* QR Mode - ocultar sidebar y topbar completamente */
+body.qr-mode .sidebar {
+    display: none !important;
+}
+
+body.qr-mode .main-wrap {
+    margin-left: 0 !important;
+}
+
+body.qr-mode .topbar {
+    display: none !important;
+}
+
+body.qr-mode .mobile-nav {
+    display: none !important;
+}
+
+body.qr-mode #page-qr {
+    padding: 0 !important;
+}
+
+/* Contenedor principal del modo QR */
+.qr-display-fullscreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: var(--bg, #07071a);
+    padding: 24px 16px 40px;
+    overflow-y: auto;
+}
+
+.qr-display-card {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+/* Header */
+.qr-display-header {
+    text-align: center;
+    padding-top: 8px;
+}
+
+.qr-display-company {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+}
+
+.qr-display-subtitle {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+.qr-display-time {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* QR Code wrap */
+.qr-display-code-wrap {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 40px rgba(99, 102, 241, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 280px;
+    min-height: 280px;
+}
+
+/* Countdown */
+.qr-display-countdown {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 16px 24px;
+    width: 100%;
+}
+
+/* Employee instructions */
+.qr-employee-instructions {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+}
+
+.qr-employee-instructions h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qr-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.qr-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.qr-step-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 2px;
+}
+
+.qr-step-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.qr-step-text strong {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.qr-step-text span {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.qr-instructions-note {
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.6;
+}
+
+.qr-instructions-note strong {
+    color: #fbbf24;
+}
+
+/* Direct URL box */
+.qr-direct-url-box {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 16px 20px;
+}
+
+.qr-direct-url-box label {
+    display: block;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 10px;
+    font-weight: 500;
+}

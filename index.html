@@ -33,44 +33,106 @@
 <body>
 
     <!-- ========== LOGIN SCREEN ========== -->
-    <div id="loginScreen" class="login-screen">
-        <div class="login-container">
+    <div id="loginScreen" class="login-screen-v2">
+        <div class="login-card-v2">
             <!-- Logo y Header -->
-            <div class="login-brand">
-                <div class="login-brand-icon">🔐</div>
-                <h1>Sistema de <span>asistencia</span></h1>
-                <p>Control de Personal v2.6</p>
+            <div class="login-header-v2">
+                <div class="login-shield-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="login-company-name">CARNES DEL PARAGUAY</div>
+                <h1 class="login-title">Acceso al Sistema</h1>
             </div>
 
-            <!-- Selección de Perfil -->
-            <div class="login-profiles">
-                <div class="profile-card" onclick="selectProfile('admin')" id="profileAdmin">
-                    <div class="profile-icon">👤</div>
-                    <h3>Administrador</h3>
-                    <p>Gestión completa del sistema</p>
+            <!-- Selección de Ubicación -->
+            <div class="login-section">
+                <div class="login-section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    LUGAR DE ACCESO
                 </div>
-                <div class="profile-card" onclick="login('qr')" id="profileQr">
-                    <div class="profile-icon">📱</div>
-                    <h3>Modo QR</h3>
-                    <p>Pantalla de escaneo para empleados</p>
+                
+                <div class="location-groups">
+                    <!-- Administración -->
+                    <div class="location-group">
+                        <div class="location-group-title">ADMINISTRACIÓN</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="admin" id="locAdmin" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Administrador</span>
+                        </label>
+                    </div>
+
+                    <!-- Soyapango -->
+                    <div class="location-group">
+                        <div class="location-group-title">SOYAPANGO</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="soyapango-puesto" id="locSoyapangoPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Soyapango — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="soyapango-bodega" id="locSoyapangoBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Soyapango — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Usulután -->
+                    <div class="location-group">
+                        <div class="location-group-title">USULUTÁN</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="usulutan-puesto" id="locUsulutanPuesto" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Usulután — Puesto</span>
+                        </label>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="usulutan-bodega" id="locUsulutanBodega" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Usulután — Bodega</span>
+                        </label>
+                    </div>
+
+                    <!-- Agromercados -->
+                    <div class="location-group">
+                        <div class="location-group-title">AGROMERCADOS</div>
+                        <label class="location-option">
+                            <input type="radio" name="location" value="agromercados" id="locAgromercados" onchange="onLocationChange()">
+                            <span class="location-radio"></span>
+                            <span class="location-text">Agromercados</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Formulario Admin (solo contraseña) -->
-            <div id="adminLoginForm" class="login-form-section hidden">
-                <button class="btn-back" onclick="showProfileSelection()">← Volver</button>
-                <div class="login-form-header">
-                    <div class="login-avatar">👤</div>
-                    <h2>Administrador</h2>
-                    <p>Ingresa la contraseña para continuar</p>
+            <!-- Contraseña -->
+            <div class="login-section" id="passwordSection" style="opacity: 0.5; pointer-events: none;">
+                <div class="login-section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <circle cx="12" cy="16" r="1"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    CONTRASEÑA
                 </div>
-                <div class="form-group">
-                    <input type="password" id="adminPass" placeholder="Contraseña" autocomplete="off">
+                <div class="password-input-wrap">
+                    <input type="password" id="adminPass" placeholder="Ingresa tu contraseña" autocomplete="off">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                        <span id="passToggleText">VER</span>
+                    </button>
                 </div>
-                <button class="btn-login" onclick="login('admin')">Ingresar</button>
             </div>
 
-            <p id="loginError" class="login-error"></p>
+            <!-- Botón Ingresar -->
+            <button class="btn-login-v2" id="btnLogin" onclick="loginV2()" disabled>
+                INGRESAR AL SISTEMA
+            </button>
+
+            <p id="loginError" class="login-error-v2"></p>
         </div>
     </div>
 
@@ -100,17 +162,6 @@
                         <rect x="3" y="14" width="7" height="7" />
                     </svg>
                     Dashboard
-                </button>
-                <button class="nav-item" id="nav-scanner" onclick="showPage('scanner')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M3 9V6a3 3 0 0 1 3-3h3M15 3h3a3 3 0 0 1 3 3v3M21 15v3a3 3 0 0 1-3 3h-3M9 21H6a3 3 0 0 1-3-3v-3" />
-                        <line x1="9" y1="9" x2="15" y2="9" />
-                        <line x1="9" y1="12" x2="15" y2="12" />
-                        <line x1="9" y1="15" x2="12" y2="15" />
-                    </svg>
-                    Escáner QR
-                    <span class="nav-badge live">LIVE</span>
                 </button>
                 <button class="nav-item" id="nav-generate" onclick="showPage('generate')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -209,10 +260,6 @@
             <div class="m-nav-icon-wrap">🏠</div>
             <span>Inicio</span>
         </button>
-        <button class="m-nav-item" id="m-nav-scanner" onclick="showPage('scanner')">
-            <div class="m-nav-icon-wrap">📷</div>
-            <span>Escáner</span>
-        </button>
         <button class="m-nav-item" id="m-nav-generate" onclick="showPage('generate')">
             <div class="m-nav-icon-wrap">🔑</div>
             <span>QR</span>
@@ -263,11 +310,8 @@
                     </svg>
                     <!-- Dropdown menu -->
                     <div class="user-menu-dropdown hidden" id="userMenuDropdown">
-                        <button class="user-menu-item" onclick="switchProfile(); event.stopPropagation();">
-                            <span>🔄</span> Cambiar Perfil
-                        </button>
-                        <button class="user-menu-item logout" onclick="logout(); event.stopPropagation();">
-                            <span>🚪</span> Cerrar Sesión
+                        <button class="user-menu-item" onclick="showPage('qr'); event.stopPropagation();">
+                            <span>📱</span> Modo QR
                         </button>
                     </div>
                 </div>
@@ -342,84 +386,6 @@
                     </div>
                     <div class="chart-wrap" id="chartWrap">
                         <canvas id="timelineChart" height="120"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === SCANNER === -->
-            <section class="page" id="page-scanner">
-                <div class="scanner-layout">
-                    <div class="scanner-panel">
-                        <div class="scanner-header">
-                            <h2>📷 Escáner de Acceso</h2>
-                            <p>Apunta la cámara al código QR del empleado</p>
-                        </div>
-                        <div class="camera-container" id="cameraContainer">
-                            <video id="scannerVideo" autoplay playsinline muted></video>
-                            <canvas id="scannerCanvas" style="display:none"></canvas>
-                            <div class="scan-overlay">
-                                <div class="scan-frame">
-                                    <div class="corner tl"></div>
-                                    <div class="corner tr"></div>
-                                    <div class="corner bl"></div>
-                                    <div class="corner br"></div>
-                                    <div class="scan-line" id="scanLine"></div>
-                                </div>
-                            </div>
-                            <div class="camera-off" id="cameraOff">
-                                <div class="camera-off-icon">📷</div>
-                                <p>Cámara inactiva</p>
-                                <button class="btn-primary" onclick="startScanner()">Activar Cámara</button>
-                            </div>
-                        </div>
-                        <div class="scanner-controls">
-                            <button class="btn-primary" id="btnStartScan" onclick="startScanner()">▶ Iniciar
-                                Escáner</button>
-                            <button class="btn-ghost" id="btnStopScan" onclick="stopScanner()" style="display:none">⏹
-                                Detener</button>
-                            <button class="btn-ghost" onclick="toggleTorch()" id="btnTorch" style="display:none">🔦
-                                Luz</button>
-                        </div>
-                        <div class="scan-result" id="scanResult" style="display:none"></div>
-                    </div>
-
-                    <div class="scanner-info-panel">
-                        <div class="panel" style="margin-bottom:20px">
-                            <div class="panel-header">
-                                <h3>🔒 Estado de Seguridad</h3>
-                            </div>
-                            <div class="security-info-list">
-                                <div class="si-item">
-                                    <span class="si-label">Ventana de tiempo</span>
-                                    <span class="si-val" id="siWindow">±30s</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Algoritmo</span>
-                                    <span class="si-val">HMAC-SHA256</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Anti-replay</span>
-                                    <span class="si-val success">✅ Activo</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Clave activa</span>
-                                    <span class="si-val mono" id="siKeyPreview">••••••••</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Tokens usados</span>
-                                    <span class="si-val" id="siUsedTokens">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h3>📋 Últimos Escaneos</h3>
-                            </div>
-                            <div class="scan-log" id="scanLog">
-                                <div class="empty-feed">Sin escaneos recientes</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1230,15 +1196,17 @@
 
             <!-- === QR DISPLAY MODE === -->
             <section class="page" id="page-qr">
-                <div class="station-layout qr-fullscreen">
-                    <div class="station-qr-panel qr-centered">
-                        <div class="station-qr-header">
-                            <div class="station-badge">📍 QR de Estación</div>
-                            <h2 id="qrDisplayTitle">Código de Acceso de Entrada</h2>
-                            <p>Coloca esta pantalla en la entrada. Los empleados escanean este único código con su teléfono.</p>
+                <div class="qr-display-fullscreen">
+                    <div class="qr-display-card">
+                        <!-- Header con empresa -->
+                        <div class="qr-display-header">
+                            <div class="qr-display-company" id="qrDisplayCompany">Mi Empresa S.A.</div>
+                            <div class="qr-display-subtitle">Escanea para registrar tu asistencia</div>
+                            <div class="qr-display-time" id="qrDisplayDateTime"></div>
                         </div>
 
-                        <div class="station-qr-wrap" id="qrDisplayWrap">
+                        <!-- QR Code -->
+                        <div class="qr-display-code-wrap" id="qrDisplayWrap">
                             <div class="qr-loading" id="qrDisplayLoading">
                                 <div class="qr-spinner"></div>
                                 <span>Generando QR seguro…</span>
@@ -1247,7 +1215,7 @@
                         </div>
 
                         <!-- Countdown ring -->
-                        <div class="station-countdown">
+                        <div class="qr-display-countdown">
                             <div class="qr-ring-wrap">
                                 <svg viewBox="0 0 80 80" class="qr-ring-svg">
                                     <circle class="qr-ring-bg" cx="40" cy="40" r="34" />
@@ -1259,39 +1227,67 @@
                                 <span>El QR rota en</span>
                                 <span class="qr-cd-warn" id="qrDisplayWarn">Seguro</span>
                             </div>
-                            <div class="token-details" style="flex:1">
-                                <div class="td-row">
-                                    <span class="td-key">Token ID</span>
-                                    <span class="td-val mono" id="qrDisplayTokenId">—</span>
-                                </div>
-                                <div class="td-row">
-                                    <span class="td-key">Generado</span>
-                                    <span class="td-val" id="qrDisplayGenTime">—</span>
-                                </div>
-                                <div class="td-row">
-                                    <span class="td-key">Expira</span>
-                                    <span class="td-val warning" id="qrDisplayExpTime">—</span>
-                                </div>
-                                <div class="td-row">
-                                    <span class="td-key">Firma HMAC</span>
-                                    <span class="td-val mono success" id="qrDisplaySig">—</span>
-                                </div>
+                        </div>
+
+                        <!-- Instrucciones detalladas para empleados -->
+                        <div class="qr-employee-instructions">
+                            <h3>📱 ¿Cómo registrar tu asistencia?</h3>
+                            <ol class="qr-steps">
+                                <li>
+                                    <div class="qr-step-num">1</div>
+                                    <div class="qr-step-text">
+                                        <strong>Abre la cámara de tu celular</strong>
+                                        <span>Usa la app de cámara nativa (no necesitas instalar nada)</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">2</div>
+                                    <div class="qr-step-text">
+                                        <strong>Apunta al código QR</strong>
+                                        <span>Centra el código en tu pantalla hasta que aparezca un enlace</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">3</div>
+                                    <div class="qr-step-text">
+                                        <strong>Toca el enlace que aparece</strong>
+                                        <span>Se abrirá el formulario de asistencia en tu navegador</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">4</div>
+                                    <div class="qr-step-text">
+                                        <strong>Busca tu nombre en la lista</strong>
+                                        <span>Puedes escribir tu nombre en el buscador para encontrarte más rápido</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">5</div>
+                                    <div class="qr-step-text">
+                                        <strong>Presiona ENTRADA o SALIDA</strong>
+                                        <span>Toca <em>Entrada</em> al llegar a trabajar y <em>Salida</em> al terminar tu turno</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="qr-step-num">6</div>
+                                    <div class="qr-step-text">
+                                        <strong>¡Listo! Tu asistencia quedó registrada</strong>
+                                        <span>Verás una pantalla de confirmación con tu nombre y la hora exacta</span>
+                                    </div>
+                                </li>
+                            </ol>
+                            <div class="qr-instructions-note">
+                                ⚠️ <strong>Importante:</strong> Si el QR no funciona, espera unos segundos — se actualiza automáticamente cada 60 segundos por seguridad. Si tienes problemas, avisa al administrador.
                             </div>
                         </div>
 
-                        <!-- URL sharing -->
-                        <div class="url-share-box">
-                            <label>🔗 URL del Check-in (para compartir)</label>
+                        <!-- URL directa como respaldo -->
+                        <div class="qr-direct-url-box">
+                            <label>🔗 Enlace directo (si no puedes escanear)</label>
                             <div class="url-row">
                                 <input type="text" id="qrDisplayUrl" readonly class="url-input" />
                                 <button class="btn-icon-sm" onclick="copyQrLink()" title="Copiar URL">📋</button>
                             </div>
-                        </div>
-
-                        <!-- Company info -->
-                        <div class="qr-company-info">
-                            <div id="qrDisplayCompany">Mi Empresa S.A.</div>
-                            <div id="qrDisplayDateTime"></div>
                         </div>
                     </div>
                 </div>

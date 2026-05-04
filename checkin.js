@@ -213,9 +213,7 @@ function goBack() {
 
 /* ---- SUBMIT CHECK-IN ---- */
 async function submitCheckin(type) {
-    // Esta función ahora requiere que la ubicación se obtenga primero
-    // Redirigir al flujo de ubicación obligatoria
-    getLocationAndSubmit(type);
+    await submitCheckinDirect(type);
 }
 
 /* ---- SUCCESS SCREEN ---- */
@@ -394,155 +392,9 @@ function showToastLocal(msg, type = 'info') {
     setTimeout(() => d.remove(), 3500);
 }
 
-// ---- LOCATION CAPTURE WITH CONSENT ----
+// ---- DIRECT CHECK-IN (sin ubicación) ----
 
-function buildLocationRecord(coords, emp, type) {
-    return {
-        empId: emp.id,
-        empName: emp.firstName + ' ' + emp.lastName,
-        dept: emp.dept || '',
-        lat: coords.latitude,
-        lng: coords.longitude,
-        accuracy: coords.accuracy,
-        timestamp: new Date().toISOString(),
-        type: type,
-        consentGiven: true
-    };
-}
-
-async function sendWithRetry(url, body, maxRetries = 3, delayMs = 2000) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            if (res.ok) return await res.json();
-        } catch (e) {
-            if (attempt === maxRetries) return null;
-            await new Promise(r => setTimeout(r, delayMs));
-        }
-    }
-    return null;
-}
-
-function showConsentDialog(type) {
-    // Re-habilitar botones por si quedaron deshabilitados de un intento anterior
-    const btnEntry = document.getElementById('btnEntry');
-    const btnExit = document.getElementById('btnExit');
-
-    const overlay = document.getElementById('consentOverlay');
-    if (!overlay) { 
-        // Si no hay overlay, obtener ubicación directamente
-        getLocationAndSubmit(type);
-        return;
-    }
-    overlay.classList.remove('hidden');
-
-    // Obtener botón de aceptar
-    const acceptBtn = document.getElementById('btnConsentAccept');
-    if (!acceptBtn) {
-        console.error(' Botón de consentimiento no encontrado');
-        getLocationAndSubmit(type);
-        return;
-    }
-    
-    // Asegurar que el botón esté habilitado y visible
-    acceptBtn.disabled = false;
-    acceptBtn.style.display = 'block';
-    acceptBtn.style.width = '100%';
-    acceptBtn.textContent = ' Compartir ubicación (obligatorio)';
-    
-    // Limpiar listeners anteriores clonando el botón
-    const newAccept = acceptBtn.cloneNode(true);
-    acceptBtn.parentNode.replaceChild(newAccept, acceptBtn);
-    
-    // Asignar nuevo listener
-    newAccept.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (!navigator.geolocation) {
-            showToastLocal(' Tu dispositivo no soporta geolocalización. Contacta al administrador.', 'error');
-            return;
-        }
-        
-        // Mostrar feedback visual mientras se obtiene GPS
-        newAccept.textContent = ' Obteniendo ubicación...';
-        newAccept.disabled = true;
-        
-        getLocationAndSubmit(type);
-    };
-}
-
-// Optimizar función para obtener ubicación y enviar check-in
-async function getLocationAndSubmit(type) {
-    const overlay = document.getElementById('consentOverlay');
-    
-    try {
-        // Optimizado: usar alta precisión pero con timeout razonable
-        const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-                resolve,
-                reject,
-                { 
-                    timeout: 10000, 
-                    maximumAge: 60000, 
-                    enableHighAccuracy: true 
-                }
-            );
-        });
-
-        const emp = window._selectedEmployee;
-        if (emp) {
-            const record = buildLocationRecord(position.coords, emp, type);
-            
-            // Enviar ubicación primero (crítico para el proceso)
-            const locationResult = await sendWithRetry('/api/location/checkin', record);
-            
-            if (!locationResult) {
-                throw new Error('No se pudo registrar la ubicación');
-            }
-            
-            // Agregar información de ubicación al logEntry
-            window._locationData = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-                accuracy: position.coords.accuracy
-            };
-            
-            // Ocultar overlay antes de continuar
-            if (overlay) overlay.classList.add('hidden');
-            
-            // Enviar check-in con ubicación validada
-            await submitCheckinWithLocation(type);
-        }
-    } catch (error) {
-        console.error('Error obteniendo ubicación:', error);
-        
-        let errorMsg = 'No se pudo obtener tu ubicación. ';
-        if (error.code === 1) {
-            errorMsg += 'Debes permitir el acceso a la ubicación en tu navegador.';
-        } else if (error.code === 3) {
-            errorMsg += 'Tiempo de espera agotado. Intenta de nuevo.';
-        } else {
-            errorMsg += 'Verifica que tu GPS esté activado.';
-        }
-        
-        showToastLocal(errorMsg, 'error');
-        
-        // Rehabilitar botón para reintentar
-        const acceptBtn = document.getElementById('btnConsentAccept');
-        if (acceptBtn) {
-            acceptBtn.textContent = ' Reintentar';
-            acceptBtn.disabled = false;
-        }
-    }
-}
-
-// Nueva función para enviar check-in con ubicación
-async function submitCheckinWithLocation(type) {
+async function submitCheckinDirect(type) {
     const emp = cState.selectedEmployee;
     if (!emp) return;
 
@@ -551,13 +403,11 @@ async function submitCheckinWithLocation(type) {
     if (btnEntry) btnEntry.disabled = true;
     if (btnExit) btnExit.disabled = true;
 
-    // Primero verificar si ya existe un registro de este tipo hoy
+    // Verificar si ya existe un registro de este tipo hoy
     try {
         const statusRes = await fetch(`/api/checkin/status/${emp.id}`);
         if (statusRes.ok) {
             const status = await statusRes.json();
-            
-            // Si ya existe un registro del mismo tipo hoy, mostrar formulario de justificación
             if ((type === 'entry' && status.hasEntryToday) || (type === 'exit' && status.hasExitToday)) {
                 showAlreadyRegistered(type);
                 if (btnEntry) btnEntry.disabled = false;
@@ -567,7 +417,6 @@ async function submitCheckinWithLocation(type) {
         }
     } catch (e) {
         console.warn('No se pudo verificar estado previo:', e);
-        // Continuar con el registro normalmente
     }
 
     const now = new Date();
@@ -582,8 +431,7 @@ async function submitCheckinWithLocation(type) {
         tokenNonce: nonce,
         status: 'valid',
         reason: type === 'entry' ? 'Entrada registrada desde QR móvil' : 'Salida registrada desde QR móvil',
-        source: 'checkin',
-        location: window._locationData
+        source: 'checkin'
     };
 
     // Retry logic: 3 intentos con 2s de espera
@@ -602,10 +450,8 @@ async function submitCheckinWithLocation(type) {
                 throw new Error(json.error || 'Error del servidor');
             }
 
-            // Verificar si fue entrada tardía
             const isLate = json.isLate || false;
             const minutesLate = json.minutesLate || 0;
-            
             showSuccess(emp, type, now, false, isLate, minutesLate);
             return;
         } catch (e) {
@@ -614,7 +460,6 @@ async function submitCheckinWithLocation(type) {
         }
     }
 
-    // Todos los intentos fallaron
     showToastLocal('❌ No se pudo conectar. Intenta de nuevo.', 'error');
     if (btnEntry) btnEntry.disabled = false;
     if (btnExit) btnExit.disabled = false;

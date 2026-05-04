@@ -11,49 +11,36 @@ echo  Iniciando optimizacion del sistema...
 echo =====================================================
 echo.
 
+REM === VERIFICAR NODE.JS ===
+node --version >nul 2>&1
+if errorlevel 1 (
+    color 0C
+    echo  ERROR: Node.js no esta instalado.
+    echo  Descargalo en: https://nodejs.org
+    echo.
+    pause
+    exit /b 1
+)
+
 REM === LIMPIEZA Y OPTIMIZACION DEL SISTEMA ===
 echo [1/5] Limpiando cache de npm...
 if exist "node_modules\.cache" rmdir /s /q "node_modules\.cache" 2>nul
+echo  - Cache limpiado
 
 echo [2/5] Verificando integridad de datos...
-node -e "
-const fs = require('fs');
-const DATA_FILE = 'data.json';
-if (fs.existsSync(DATA_FILE)) {
-    try {
-        const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-        // Limpiar logs antiguos (mantener ultimos 1000)
-        if (data.logs && data.logs.length > 1000) {
-            data.logs = data.logs.slice(-1000);
-            console.log('  - Logs optimizados:', data.logs.length, 'registros');
-        }
-        // Limpiar tokens usados antiguos (mantener ultimos 500)
-        if (data.usedTokens && data.usedTokens.length > 500) {
-            data.usedTokens = data.usedTokens.slice(-500);
-            console.log('  - Tokens optimizados:', data.usedTokens.length, 'tokens');
-        }
-        // Limpiar security log (mantener ultimos 200)
-        if (data.securityLog && data.securityLog.length > 200) {
-            data.securityLog = data.securityLog.slice(-200);
-            console.log('  - Security log optimizado:', data.securityLog.length, 'registros');
-        }
-        // Asegurar estructura de stats
-        if (!data.stats) data.stats = { present: 0, entries: 0, exits: 0, blocked: 0, lateEntries: 0 };
-        if (data.stats.lateEntries === undefined) data.stats.lateEntries = 0;
-        // Guardar datos optimizados
-        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-        console.log('  - Datos verificados y optimizados OK');
-    } catch (e) {
-        console.log('  - Error al verificar datos:', e.message);
-    }
-} else {
-    console.log('  - Archivo de datos no existe, se creara nuevo');
-}
-"
+node optimize-data.js
+echo  - Datos verificados
 
 echo [3/5] Instalando dependencias...
-if not exist "node_modules\" (
+if not exist "node_modules\express" (
     call npm install
+    if errorlevel 1 (
+        color 0C
+        echo  ERROR: Fallo npm install.
+        pause
+        exit /b 1
+    )
+    echo  - Dependencias instaladas
 ) else (
     echo  - Dependencias ya instaladas
 )
@@ -76,6 +63,11 @@ if errorlevel 1 (
         echo  - Error al subir cambios, reintentando...
         timeout /t 2 >nul
         git push origin main >nul 2>&1
+        if errorlevel 1 (
+            echo  - Advertencia: No se pudo subir a GitHub
+        ) else (
+            echo  - Cambios subidos correctamente (2do intento)
+        )
     ) else (
         echo  - Cambios subidos correctamente
     )
@@ -90,7 +82,7 @@ echo =====================================================
 echo  URL: https://sistema-asistencia-s0m2.onrender.com
 echo  Admin: Solo contrasena requerida
 echo  QR: Acceso directo sin contrasena
-echo  
+echo.
 echo  Caracteristicas:
 echo  - Deteccion automatica de entradas tardias
 echo  - Limpieza automatica de cache
