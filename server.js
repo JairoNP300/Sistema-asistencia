@@ -1315,31 +1315,47 @@ app.delete('/api/hr/permissions/:id', async (req, res) => {
 
 // ========== ENDPOINTS DE CONTRATOS ==========
 
-// POST /api/hr/contracts — Crear contrato
-app.post('/api/hr/contracts', async (req, res) => {
+// POST /api/hr/contracts — Crear contrato (con archivo opcional)
+app.post('/api/hr/contracts', upload.single('contractFile'), async (req, res) => {
     try {
-        const contract = {
-            ...req.body,
+        const contractData = {
+            empId: req.body.empId,
+            empName: req.body.empName,
+            position: req.body.position,
+            type: req.body.type,
+            startDate: req.body.startDate,
+            salary: parseFloat(req.body.salary) || 0,
+            schedule: req.body.schedule,
+            benefits: req.body.benefits,
+            terms: req.body.terms,
             id: `contract_${Date.now()}`,
-            status: 'pending',
+            status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
+        
+        // Si se adjuntó archivo, agregar información del archivo
+        if (req.file) {
+            contractData.fileName = req.file.originalname;
+            contractData.filePath = `/uploads/${req.file.filename}`;
+            contractData.fileSize = req.file.size;
+            contractData.mimeType = req.file.mimetype;
+        }
 
         if (useMongo) {
             const state = await State.findOne();
             if (!state.contracts) state.contracts = [];
-            state.contracts.push(contract);
+            state.contracts.push(contractData);
             state.markModified('contracts');
             await state.save();
         } else {
             const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
             if (!data.contracts) data.contracts = [];
-            data.contracts.push(contract);
+            data.contracts.push(contractData);
             fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
         }
 
-        res.json({ success: true, contract });
+        res.json({ success: true, contract: contractData });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
