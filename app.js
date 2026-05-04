@@ -620,59 +620,64 @@ async function startStationQR() {
 }
 
 async function startQRDisplayMode() {
+    // Limpiar timers anteriores
+    if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
+    if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
+
+    // Esperar a que secretKey esté disponible (máx 5s)
+    let waited = 0;
+    while (!state.secretKey && waited < 5000) {
+        await new Promise(r => setTimeout(r, 200));
+        waited += 200;
+    }
+
     // Mostrar loading inicial
     const loading = document.getElementById('qrDisplayLoading');
     const qrDiv = document.getElementById('qrDisplayCode');
     if (loading) loading.style.display = 'flex';
     if (qrDiv) qrDiv.style.display = 'none';
-    
+
     // Renderizar QR inmediatamente
     await renderQRDisplay();
-    
-    // Actualizar cada 60 segundos
+
+    const life = state.config.tokenLife || 60;
+
+    // Rotar QR en cada ventana de token
     state._qrDisplayTimer = setInterval(async () => {
         await renderQRDisplay();
-    }, 60000);
-    
-    // Actualizar countdown ring visual
-    const circumference = 2 * Math.PI * 34; // r=34
-    let secondsLeft = 60;
-    
+    }, life * 1000);
+
+    // Countdown ring sincronizado con el token real
+    const circumference = 2 * Math.PI * 34;
+
     state._qrDisplayCountdown = setInterval(() => {
-        secondsLeft--;
-        if (secondsLeft <= 0) {
-            secondsLeft = 60;
-        }
-        
-        // Actualizar número
+        const now = Math.floor(Date.now() / 1000);
+        const secondsLeft = life - (now % life);
+
         const numEl = document.getElementById('qrDisplayRingNum');
         if (numEl) numEl.textContent = secondsLeft;
-        
-        // Actualizar ring
+
         const ringEl = document.getElementById('qrDisplayRingFill');
         if (ringEl) {
-            const progress = secondsLeft / 60;
-            const offset = circumference * (1 - progress);
+            const offset = circumference * (1 - secondsLeft / life);
             ringEl.style.strokeDashoffset = offset;
-            
-            // Cambiar color según tiempo restante
             if (secondsLeft <= 10) {
-                ringEl.style.stroke = '#f43f5e'; // rojo
-                document.getElementById('qrDisplayWarn').textContent = 'Expirando...';
-                document.getElementById('qrDisplayWarn').style.color = '#f43f5e';
+                ringEl.style.stroke = '#f43f5e';
+                const w = document.getElementById('qrDisplayWarn');
+                if (w) { w.textContent = 'Expirando...'; w.style.color = '#f43f5e'; }
             } else if (secondsLeft <= 20) {
-                ringEl.style.stroke = '#fbbf24'; // amarillo
-                document.getElementById('qrDisplayWarn').textContent = 'Pronto';
-                document.getElementById('qrDisplayWarn').style.color = '#fbbf24';
+                ringEl.style.stroke = '#fbbf24';
+                const w = document.getElementById('qrDisplayWarn');
+                if (w) { w.textContent = 'Pronto'; w.style.color = '#fbbf24'; }
             } else {
-                ringEl.style.stroke = '#6366f1'; // primario
-                document.getElementById('qrDisplayWarn').textContent = 'Seguro';
-                document.getElementById('qrDisplayWarn').style.color = '#10b981';
+                ringEl.style.stroke = '#6366f1';
+                const w = document.getElementById('qrDisplayWarn');
+                if (w) { w.textContent = 'Seguro'; w.style.color = '#10b981'; }
             }
         }
     }, 1000);
-    
-    // Actualizar fecha/hora
+
+    // Fecha/hora en tiempo real
     updateQRDisplayTime();
     setInterval(updateQRDisplayTime, 1000);
 }
