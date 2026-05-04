@@ -219,13 +219,16 @@ async function submitCheckin(type) {
 }
 
 /* ---- SUCCESS SCREEN ---- */
-function showSuccess(emp, type, time, isOverride = false) {
+function showSuccess(emp, type, time, isOverride = false, isLate = false, minutesLate = 0) {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('scName', `${emp.firstName} ${emp.lastName}`);
     
     if (isOverride) {
         setEl('scType', type === 'entry' ? '🟢 Entrada (Justificada)' : '🔴 Salida (Justificada)');
         setEl('successTitle', type === 'entry' ? '✅ Entrada Registrada con Justificación' : '✅ Salida Registrada con Justificación');
+    } else if (isLate && type === 'entry') {
+        setEl('scType', `⚠️ Entrada Tardía (${minutesLate} min)`);
+        setEl('successTitle', '⚠️ Entrada Registrada con Retraso');
     } else {
         setEl('scType', type === 'entry' ? '🟢 Entrada' : '🔴 Salida');
         setEl('successTitle', type === 'entry' ? '¡Bienvenido! 👋' : '¡Hasta pronto! 👋');
@@ -234,6 +237,13 @@ function showSuccess(emp, type, time, isOverride = false) {
     setEl('scTime', time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     setEl('scDept', emp.dept);
     showScreen('screen-success');
+    
+    // Mostrar alerta adicional para entrada tardía
+    if (isLate && type === 'entry') {
+        setTimeout(() => {
+            showToastLocal(`⚠️ Registrado con ${minutesLate} minutos de retraso`, 'warning');
+        }, 500);
+    }
 
     let count = 6;
     const interval = setInterval(() => {
@@ -592,7 +602,11 @@ async function submitCheckinWithLocation(type) {
                 throw new Error(json.error || 'Error del servidor');
             }
 
-            showSuccess(emp, type, now);
+            // Verificar si fue entrada tardía
+            const isLate = json.isLate || false;
+            const minutesLate = json.minutesLate || 0;
+            
+            showSuccess(emp, type, now, false, isLate, minutesLate);
             return;
         } catch (e) {
             lastError = e;
