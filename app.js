@@ -492,29 +492,60 @@ async function startStationQR() {
         const remaining = life - (Math.floor(Date.now() / 1000) % life);
         updateStationRing(remaining, life);
     }, 1000);
-}
-
-// Función para modo QR display (pantalla de solo QR)
 async function startQRDisplayMode() {
-    if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
-    if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
-
+    // Mostrar loading inicial
+    const loading = document.getElementById('qrDisplayLoading');
+    const qrDiv = document.getElementById('qrDisplayCode');
+    if (loading) loading.style.display = 'flex';
+    if (qrDiv) qrDiv.style.display = 'none';
+    
+    // Renderizar QR inmediatamente
     await renderQRDisplay();
-
-    // Renovar QR cada 60 segundos
+    
+    // Actualizar cada 60 segundos
     state._qrDisplayTimer = setInterval(async () => {
         await renderQRDisplay();
-    }, state.config.tokenLife * 1000);
-
-    // Contador regresivo
+    }, 60000);
+    
+    // Actualizar countdown ring visual
+    const circumference = 2 * Math.PI * 34; // r=34
+    let secondsLeft = 60;
+    
     state._qrDisplayCountdown = setInterval(() => {
-        const life = state.config.tokenLife;
-        const remaining = life - (Math.floor(Date.now() / 1000) % life);
-        const timerEl = document.getElementById('qrTimer');
-        if (timerEl) timerEl.textContent = remaining;
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+            secondsLeft = 60;
+        }
+        
+        // Actualizar número
+        const numEl = document.getElementById('qrDisplayRingNum');
+        if (numEl) numEl.textContent = secondsLeft;
+        
+        // Actualizar ring
+        const ringEl = document.getElementById('qrDisplayRingFill');
+        if (ringEl) {
+            const progress = secondsLeft / 60;
+            const offset = circumference * (1 - progress);
+            ringEl.style.strokeDashoffset = offset;
+            
+            // Cambiar color según tiempo restante
+            if (secondsLeft <= 10) {
+                ringEl.style.stroke = '#f43f5e'; // rojo
+                document.getElementById('qrDisplayWarn').textContent = 'Expirando...';
+                document.getElementById('qrDisplayWarn').style.color = '#f43f5e';
+            } else if (secondsLeft <= 20) {
+                ringEl.style.stroke = '#fbbf24'; // amarillo
+                document.getElementById('qrDisplayWarn').textContent = 'Pronto';
+                document.getElementById('qrDisplayWarn').style.color = '#fbbf24';
+            } else {
+                ringEl.style.stroke = '#6366f1'; // primario
+                document.getElementById('qrDisplayWarn').textContent = 'Seguro';
+                document.getElementById('qrDisplayWarn').style.color = '#10b981';
+            }
+        }
     }, 1000);
-
-    // Actualizar hora
+    
+    // Actualizar fecha/hora
     updateQRDisplayTime();
     setInterval(updateQRDisplayTime, 1000);
 }
