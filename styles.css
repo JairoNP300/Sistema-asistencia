@@ -3023,7 +3023,7 @@ textarea.form-input {
     font-weight: 500;
 }
 
-/* QR Mode - ocultar sidebar completamente */
+/* QR Mode - ocultar sidebar completamente, mantener topbar */
 body.qr-mode .sidebar {
     display: none !important;
 }
@@ -3112,20 +3112,16 @@ body.qr-mode #page-qr {
 }
 
 /* ============================================================
-   QR DISPLAY MODE — NUEVO DISEÑO LIMPIO (sin panel técnico)
+   QR DISPLAY MODE — DISEÑO LIMPIO
    ============================================================ */
 
-/* QR Mode - ocultar sidebar y topbar completamente */
+/* QR Mode - ocultar sidebar, mantener topbar visible */
 body.qr-mode .sidebar {
     display: none !important;
 }
 
 body.qr-mode .main-wrap {
     margin-left: 0 !important;
-}
-
-body.qr-mode .topbar {
-    display: none !important;
 }
 
 body.qr-mode .mobile-nav {
@@ -3138,7 +3134,7 @@ body.qr-mode #page-qr {
 
 /* Contenedor principal del modo QR */
 .qr-display-fullscreen {
-    min-height: 100vh;
+    min-height: calc(100vh - var(--topbar-h, 64px));
     display: flex;
     align-items: flex-start;
     justify-content: center;
