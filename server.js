@@ -756,6 +756,9 @@ app.post('/api/hr/payrolls/generate', async (req, res) => {
             totals.totalRenta += deductionResults.renta;
             totals.totalDeductions += deductionResults.totalDeductions;
             totals.totalNetPay += deductionResults.netSalary;
+            totals.totalLateDays += lateDaysCount;
+            totals.totalLateMinutes += totalMinutesLate;
+            totals.totalLateDeduction += lateDeduction;
         }
 
         // Redondear totales
@@ -889,6 +892,9 @@ app.post('/api/hr/payrolls/generate/biweekly', async (req, res) => {
             totals.totalRenta += deductionResults.renta;
             totals.totalDeductions += deductionResults.totalDeductions;
             totals.totalNetPay += deductionResults.netSalary;
+            totals.totalLateDays += lateDaysCount;
+            totals.totalLateMinutes += totalMinutesLate;
+            totals.totalLateDeduction += lateDeduction;
         }
 
         Object.keys(totals).forEach(key => {
@@ -1028,6 +1034,9 @@ app.post('/api/hr/payrolls/generate/weekly', async (req, res) => {
             totals.totalRenta += deductionResults.renta;
             totals.totalDeductions += deductionResults.totalDeductions;
             totals.totalNetPay += deductionResults.netSalary;
+            totals.totalLateDays += lateDaysCount;
+            totals.totalLateMinutes += totalMinutesLate;
+            totals.totalLateDeduction += lateDeduction;
         }
 
         Object.keys(totals).forEach(key => {
