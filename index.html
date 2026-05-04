@@ -1199,26 +1199,35 @@
 
             <!-- === QR DISPLAY MODE === -->
             <section class="page" id="page-qr">
-                <div class="qr-display-fullscreen">
-                    <div class="qr-display-card">
-                        <!-- Header con empresa -->
-                        <div class="qr-display-header">
-                            <div class="qr-display-company" id="qrDisplayCompany">Mi Empresa S.A.</div>
-                            <div class="qr-display-subtitle">Escanea para registrar tu asistencia</div>
-                            <div class="qr-display-time" id="qrDisplayDateTime"></div>
+                <div class="qr-station-wrap">
+
+                    <!-- Columna izquierda: QR + countdown -->
+                    <div class="qr-station-left">
+                        <div class="qr-station-brand">
+                            <div class="qr-station-logo">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="qr-station-company" id="qrDisplayCompany">Mi Empresa</div>
+                                <div class="qr-station-tagline">Sistema de Asistencia</div>
+                            </div>
                         </div>
 
+                        <div class="qr-station-time" id="qrDisplayDateTime"></div>
+
                         <!-- QR Code -->
-                        <div class="qr-display-code-wrap" id="qrDisplayWrap">
+                        <div class="qr-station-code-box" id="qrDisplayWrap">
                             <div class="qr-loading" id="qrDisplayLoading">
                                 <div class="qr-spinner"></div>
-                                <span>Generando QR seguro…</span>
+                                <span>Generando código…</span>
                             </div>
                             <div id="qrDisplayCode" style="display:none"></div>
                         </div>
 
-                        <!-- Countdown ring -->
-                        <div class="qr-display-countdown">
+                        <!-- Countdown -->
+                        <div class="qr-station-countdown">
                             <div class="qr-ring-wrap">
                                 <svg viewBox="0 0 80 80" class="qr-ring-svg">
                                     <circle class="qr-ring-bg" cx="40" cy="40" r="34" />
@@ -1227,73 +1236,82 @@
                                 <span class="qr-ring-num" id="qrDisplayRingNum">60</span>
                             </div>
                             <div class="qr-cd-text">
-                                <span>El QR rota en</span>
+                                <span class="qr-cd-label">El código se renueva en</span>
                                 <span class="qr-cd-warn" id="qrDisplayWarn">Seguro</span>
                             </div>
                         </div>
 
-                        <!-- Instrucciones detalladas para empleados -->
-                        <div class="qr-employee-instructions">
-                            <h3>📱 ¿Cómo registrar tu asistencia?</h3>
-                            <ol class="qr-steps">
-                                <li>
-                                    <div class="qr-step-num">1</div>
-                                    <div class="qr-step-text">
-                                        <strong>Abre la cámara de tu celular</strong>
-                                        <span>Usa la app de cámara nativa (no necesitas instalar nada)</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="qr-step-num">2</div>
-                                    <div class="qr-step-text">
-                                        <strong>Apunta al código QR</strong>
-                                        <span>Centra el código en tu pantalla hasta que aparezca un enlace</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="qr-step-num">3</div>
-                                    <div class="qr-step-text">
-                                        <strong>Toca el enlace que aparece</strong>
-                                        <span>Se abrirá el formulario de asistencia en tu navegador</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="qr-step-num">4</div>
-                                    <div class="qr-step-text">
-                                        <strong>Busca tu nombre en la lista</strong>
-                                        <span>Puedes escribir tu nombre en el buscador para encontrarte más rápido</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="qr-step-num">5</div>
-                                    <div class="qr-step-text">
-                                        <strong>Presiona ENTRADA o SALIDA</strong>
-                                        <span>Toca <em>Entrada</em> al llegar a trabajar y <em>Salida</em> al terminar tu turno</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="qr-step-num">6</div>
-                                    <div class="qr-step-text">
-                                        <strong>¡Listo! Tu asistencia quedó registrada</strong>
-                                        <span>Verás una pantalla de confirmación con tu nombre y la hora exacta</span>
-                                    </div>
-                                </li>
-                            </ol>
-                            <div class="qr-instructions-note">
-                                ⚠️ <strong>Importante:</strong> Si el QR no funciona, espera unos segundos — se actualiza automáticamente cada 60 segundos por seguridad. Si tienes problemas, avisa al administrador.
-                            </div>
+                        <!-- URL directa -->
+                        <div class="qr-station-url-box">
+                            <div class="qr-station-url-label">¿No puedes escanear? Usa este enlace:</div>
+                            <input type="text" id="qrDisplayUrl" readonly class="url-input" style="display:none" />
+                            <a id="qrDisplayUrlLink" href="#" target="_blank" class="qr-url-visible" onclick="return false;">Generando enlace...</a>
                         </div>
+                    </div>
 
-                        <!-- URL directa como respaldo -->
-                        <div class="qr-direct-url-box">
-                            <label>🔗 Enlace directo (si no puedes escanear)</label>
-                            <div class="url-row">
-                                <input type="text" id="qrDisplayUrl" readonly class="url-input" style="display:none" />
-                                <a id="qrDisplayUrlLink" href="#" target="_blank" class="qr-url-visible" onclick="return false;">Generando enlace...</a>
-                                <button class="btn-icon-sm" onclick="copyQrLink()" title="Copiar URL">📋</button>
+                    <!-- Columna derecha: instrucciones para empleados -->
+                    <div class="qr-station-right">
+                        <div class="qr-station-instructions">
+                            <div class="qr-instr-title">
+                                <span class="qr-instr-icon">📱</span>
+                                Cómo registrar tu asistencia
+                            </div>
+
+                            <div class="qr-instr-step">
+                                <div class="qr-instr-num">1</div>
+                                <div class="qr-instr-body">
+                                    <strong>Abre la cámara de tu celular</strong>
+                                    <span>No necesitas instalar ninguna app</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-instr-step">
+                                <div class="qr-instr-num">2</div>
+                                <div class="qr-instr-body">
+                                    <strong>Apunta al código QR</strong>
+                                    <span>Centra el código hasta que aparezca un enlace en pantalla</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-instr-step">
+                                <div class="qr-instr-num">3</div>
+                                <div class="qr-instr-body">
+                                    <strong>Toca el enlace</strong>
+                                    <span>Se abrirá el formulario de asistencia en tu navegador</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-instr-step">
+                                <div class="qr-instr-num">4</div>
+                                <div class="qr-instr-body">
+                                    <strong>Busca tu nombre</strong>
+                                    <span>Escribe tu nombre en el buscador para encontrarte rápido</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-instr-step">
+                                <div class="qr-instr-num">5</div>
+                                <div class="qr-instr-body">
+                                    <strong>Toca ENTRADA o SALIDA</strong>
+                                    <span><em>Entrada</em> al llegar · <em>Salida</em> al terminar tu turno</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-instr-step success-step">
+                                <div class="qr-instr-num green">✓</div>
+                                <div class="qr-instr-body">
+                                    <strong>¡Listo! Asistencia registrada</strong>
+                                    <span>Verás una confirmación con tu nombre y la hora</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-instr-warning">
+                                <span>⚠️</span>
+                                <span>El código se actualiza cada 60 segundos por seguridad. Si no funciona, espera el próximo código o avisa al administrador.</span>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
 
