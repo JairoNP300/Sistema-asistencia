@@ -49,38 +49,25 @@
                     <h3>Administrador</h3>
                     <p>Gestión completa del sistema</p>
                 </div>
-                <div class="profile-card" onclick="selectProfile('qr')" id="profileQr">
+                <div class="profile-card" onclick="login('qr')" id="profileQr">
                     <div class="profile-icon">📱</div>
                     <h3>Modo QR</h3>
                     <p>Pantalla de escaneo para empleados</p>
                 </div>
             </div>
 
-            <!-- Formulario Admin -->
+            <!-- Formulario Admin (solo contraseña) -->
             <div id="adminLoginForm" class="login-form-section hidden">
                 <button class="btn-back" onclick="showProfileSelection()">← Volver</button>
-                <h2>Ingreso de Administrador</h2>
-                <div class="form-group">
-                    <label>Usuario</label>
-                    <input type="text" id="adminUser" placeholder="admin" value="admin">
+                <div class="login-form-header">
+                    <div class="login-avatar">👤</div>
+                    <h2>Administrador</h2>
+                    <p>Ingresa la contraseña para continuar</p>
                 </div>
                 <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" id="adminPass" placeholder="••••••" value="admin123">
+                    <input type="password" id="adminPass" placeholder="Contraseña" autocomplete="off">
                 </div>
                 <button class="btn-login" onclick="login('admin')">Ingresar</button>
-            </div>
-
-            <!-- Formulario QR -->
-            <div id="qrLoginForm" class="login-form-section hidden">
-                <button class="btn-back" onclick="showProfileSelection()">← Volver</button>
-                <h2>Acceso Modo QR</h2>
-                <div class="form-group">
-                    <label>Código de Acceso</label>
-                    <input type="password" id="qrCode" placeholder="Ingresa el código">
-                </div>
-                <p class="login-hint">Solo muestra el código QR para escaneo</p>
-                <button class="btn-login" onclick="login('qr')">Ingresar</button>
             </div>
 
             <p id="loginError" class="login-error"></p>
