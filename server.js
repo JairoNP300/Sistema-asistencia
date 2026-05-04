@@ -352,12 +352,40 @@ app.post('/api/checkin', async (req, res) => {
             }
         }
 
+        // Detectar entrada tardía
+        const adminConfig = data.adminConfig || { entryTime: '08:00', grace: 10 };
+        let isLateEntry = false;
+        let minutesLate = 0;
+
+        if (logEntry.type === 'entry') {
+            const now = new Date();
+            const [entryHour, entryMin] = (adminConfig.entryTime || '08:00').split(':').map(Number);
+            const graceMinutes = adminConfig.grace || 10;
+            
+            // Calcular hora límite (hora de entrada + gracia)
+            const limitTime = new Date(now);
+            limitTime.setHours(entryHour, entryMin + graceMinutes, 0, 0);
+            
+            // Si la hora actual es posterior a la límite, es entrada tardía
+            if (now > limitTime) {
+                isLateEntry = true;
+                const diffMs = now - limitTime;
+                minutesLate = Math.ceil(diffMs / (1000 * 60));
+                logEntry.isLate = true;
+                logEntry.minutesLate = minutesLate;
+                logEntry.lateReason = logEntry.lateReason || 'Sin justificación';
+            }
+        }
+
         // Registrar el log
         data.logs.push(logEntry);
 
         if (logEntry.type === 'entry') {
             if (!data.presentSet.includes(logEntry.empId)) data.presentSet.push(logEntry.empId);
             data.stats.entries = (data.stats.entries || 0) + 1;
+            if (isLateEntry) {
+                data.stats.lateEntries = (data.stats.lateEntries || 0) + 1;
+            }
         } else if (logEntry.type === 'exit') {
             data.presentSet = data.presentSet.filter(id => id !== logEntry.empId);
             data.stats.exits = (data.stats.exits || 0) + 1;
