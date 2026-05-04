@@ -418,7 +418,12 @@ app.post('/api/checkin', async (req, res) => {
             fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
         }
 
-        res.json({ success: true });
+        res.json({ 
+            success: true,
+            isLate: isLateEntry,
+            minutesLate: minutesLate,
+            message: isLateEntry ? `Entrada registrada con ${minutesLate} minutos de retraso` : 'Entrada registrada correctamente'
+        });
     } catch (e) {
         console.error('Error en /api/checkin:', e.message);
         res.status(500).json({ error: e.message });
