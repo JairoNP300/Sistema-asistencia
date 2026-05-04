@@ -1,0 +1,35 @@
+# Modo Alta Eficiencia - Reglas de Desarrollo
+
+## Principios Generales
+- Priorizar soluciones modernas, optimizadas y listas para producción
+- Rechazar código temporal o workarounds - buscar fixes raíz
+- Mantener cambios mínimos y enfocados
+- Seguir patrones existentes del codebase
+
+## Antes de Codificar
+1. Investigar la solución más moderna y eficiente para el problema
+2. Verificar compatibilidad con dependencias existentes (package.json)
+3. Revisar archivos relacionados para entender contexto completo
+
+## Durante el Desarrollo
+- Usar herramientas de búsqueda (code_search, grep_search) para entender el codebase
+- Preferir multi_edit para cambios relacionados en un archivo
+- Mantener imports organizados al inicio de archivos
+- No añadir comentarios innecesarios
+
+## Después de Cada Cambio
+1. Ejecutar pruebas unitarias: `npm test`
+2. Verificar que no se rompió funcionalidad existente
+3. Validar que el código sigue estilos existentes
+
+## Testing
+- Diseñar/actualizar tests antes de implementación mayor
+- Usar Node.js native test runner (`node --test`)
+- Nunca eliminar o debilitar tests sin dirección explícita
+- Proveer comandos de verificación copy-pasteables
+
+## Calidad de Código
+- Soluciones production-ready únicamente
+- Manejo apropiado de errores y edge cases
+- No hardcodear valores sensibles
+- Imports siempre al inicio del archivo
