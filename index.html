@@ -1228,24 +1228,29 @@
 
             <!-- === QR DISPLAY MODE === -->
             <section class="page" id="page-qr">
-                <div class="qr-display-layout" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:30px;padding:40px">
-                    <div style="text-align:center">
-                        <h1 style="font-size:2rem;margin-bottom:8px;color:#fff">📱 Sistema de Asistencia</h1>
-                        <p style="color:#94a3b8;font-size:1.1rem">Escanea el código QR para registrar tu entrada o salida</p>
+                <div class="qr-display-container">
+                    <div class="qr-display-header">
+                        <h2>� Sistema de Asistencia</h2>
+                        <p>Escanea el código QR para registrar tu entrada o salida</p>
                     </div>
 
-                    <div class="qr-display" style="background:#fff;padding:30px;border-radius:20px;box-shadow:0 20px 60px rgba(99,102,241,0.3)">
-                        <div id="qrDisplayCode" style="width:300px;height:300px"></div>
+                    <div class="qr-code-box">
+                        <div id="qrDisplayCode"></div>
                     </div>
 
-                    <div class="timer-display" style="text-align:center">
-                        <div id="qrTimer" style="font-size:3rem;font-weight:800;font-family:var(--mono);color:var(--primary)">60</div>
-                        <p style="color:#64748b;margin-top:8px">El código se renueva automáticamente cada 60 segundos</p>
-                    </div>
+                    <div class="qr-timer" id="qrTimer">60</div>
+                    <div class="qr-timer-label">El código se renueva automáticamente cada 60 segundos</div>
 
-                    <div class="company-info" style="text-align:center;margin-top:20px">
-                        <div id="qrCompanyName" style="font-size:1.3rem;font-weight:600;color:#fff">Mi Empresa S.A.</div>
-                        <div id="qrCurrentTime" style="font-size:1rem;color:#94a3b8;margin-top:4px"></div>
+                    <div class="qr-company" id="qrCompanyName">Mi Empresa S.A.</div>
+                    <div class="qr-datetime" id="qrCurrentTime"></div>
+
+                    <!-- Link manual para acceso sin escaneo -->
+                    <div class="qr-manual-link">
+                        <p>¿No puedes escanear? Accede manualmente:</p>
+                        <div class="qr-link-box">
+                            <input type="text" id="qrManualUrl" readonly>
+                            <button onclick="copyQrLink()">Copiar</button>
+                        </div>
                     </div>
                 </div>
             </section>
