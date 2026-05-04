@@ -1349,7 +1349,7 @@ function initLocationMap() {
         return;
     }
     if (!_locationMap) {
-        _locationMap = L.map('locationMap').setView([19.4326, -99.1332], 12);
+        _locationMap = L.map('locationMap').setView([13.6929, -89.2182], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors', maxZoom: 19
         }).addTo(_locationMap);
