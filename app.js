@@ -2065,6 +2065,220 @@ async function deleteDocument(docId) {
     }
 }
 
+// ========== CONTRATOS LABORALES ==========
+
+let currentContractFile = null;
+
+function openContractModal() {
+    // Limpiar formulario
+    document.getElementById('contractEmpId').value = '';
+    document.getElementById('contractPosition').value = '';
+    document.getElementById('contractType').value = 'indefinido';
+    document.getElementById('contractStartDate').value = '';
+    document.getElementById('contractSalary').value = '';
+    document.getElementById('contractSchedule').value = '';
+    document.getElementById('contractBenefits').value = '';
+    document.getElementById('contractTerms').value = '';
+    document.getElementById('contractFileName').textContent = '';
+    currentContractFile = null;
+    
+    // Poblar select de empleados
+    const select = document.getElementById('contractEmpId');
+    select.innerHTML = '<option value="">Seleccionar empleado...</option>' +
+        state.employees.filter(e => e.status === 'active').map(e => 
+            `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.empNum})</option>`
+        ).join('');
+    
+    // Mostrar modal
+    document.getElementById('contractModal').style.display = 'flex';
+}
+
+function closeContractModal() {
+    document.getElementById('contractModal').style.display = 'none';
+    currentContractFile = null;
+}
+
+// Manejar selección de archivo de contrato
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('contractFileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                currentContractFile = e.target.files[0];
+                document.getElementById('contractFileName').textContent = '📎 ' + e.target.files[0].name;
+            }
+        });
+    }
+});
+
+async function saveContract() {
+    const empId = document.getElementById('contractEmpId').value;
+    const position = document.getElementById('contractPosition').value.trim();
+    const type = document.getElementById('contractType').value;
+    const startDate = document.getElementById('contractStartDate').value;
+    const salary = parseFloat(document.getElementById('contractSalary').value) || 0;
+    const schedule = document.getElementById('contractSchedule').value.trim();
+    const benefits = document.getElementById('contractBenefits').value.trim();
+    const terms = document.getElementById('contractTerms').value.trim();
+    
+    // Validaciones
+    if (!empId) { showToast('❌ Selecciona un empleado', 'error'); return; }
+    if (!position) { showToast('❌ Ingresa el cargo/puesto', 'error'); return; }
+    if (!startDate) { showToast('❌ Ingresa la fecha de inicio', 'error'); return; }
+    if (salary <= 0) { showToast('❌ Ingresa un salario válido', 'error'); return; }
+    
+    const emp = state.employees.find(e => e.id === empId);
+    if (!emp) { showToast('❌ Empleado no encontrado', 'error'); return; }
+    
+    // Crear FormData para subir archivo
+    const formData = new FormData();
+    formData.append('empId', empId);
+    formData.append('empName', `${emp.firstName} ${emp.lastName}`);
+    formData.append('position', position);
+    formData.append('type', type);
+    formData.append('startDate', startDate);
+    formData.append('salary', salary);
+    formData.append('schedule', schedule);
+    formData.append('benefits', benefits);
+    formData.append('terms', terms);
+    if (currentContractFile) {
+        formData.append('contractFile', currentContractFile);
+    }
+    
+    try {
+        showToast('💾 Guardando contrato...', 'info');
+        const res = await fetch('/api/hr/contracts', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Error guardando contrato');
+        
+        showToast('✅ Contrato guardado exitosamente', 'success');
+        closeContractModal();
+        loadContracts();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function loadContracts() {
+    try {
+        const res = await fetch('/api/hr/contracts');
+        if (!res.ok) throw new Error('Error cargando contratos');
+        const contracts = await res.json();
+        renderContractsTable(contracts);
+    } catch (e) {
+        console.warn('Error cargando contratos:', e);
+        // Si hay error, mostrar tabla vacía
+        renderContractsTable([]);
+    }
+}
+
+function renderContractsTable(contracts) {
+    const tbody = document.getElementById('contractsTableBody');
+    if (!contracts || !contracts.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-feed">No hay contratos registrados. Haz clic en "+ Nuevo Contrato" para agregar uno.</td></tr>';
+        return;
+    }
+    
+    const typeLabels = {
+        'indefinido': 'Indefinido',
+        'temporal': 'Temporal',
+        'proyecto': 'Por Proyecto',
+        'medio_tiempo': 'Medio Tiempo',
+        'practicas': 'Prácticas'
+    };
+    
+    tbody.innerHTML = contracts.map(c => {
+        const emp = state.employees.find(e => e.id === c.empId);
+        const empName = emp ? `${emp.firstName} ${emp.lastName}` : (c.empName || '—');
+        const empDept = emp ? emp.dept : (c.dept || '—');
+        
+        return `<tr>
+            <td><strong>${empName}</strong><br><small style="color:#888">${empDept}</small></td>
+            <td>${c.position || '—'}</td>
+            <td><span class="status-chip">${typeLabels[c.type] || c.type}</span></td>
+            <td>${formatDate(c.startDate)}</td>
+            <td><strong>$${(c.salary || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</strong></td>
+            <td><span class="status-chip status-active">Activo</span></td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-table edit" onclick="viewContract('${c.id}')">👁 Ver</button>
+                    <button class="btn-table" onclick="downloadContract('${c.id}')" ${c.filePath ? '' : 'disabled style="opacity:0.4"'}>⬇️ Doc</button>
+                    <button class="btn-table del" onclick="deleteContract('${c.id}')">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function viewContract(contractId) {
+    try {
+        const res = await fetch(`/api/hr/contracts/${contractId}`);
+        if (!res.ok) throw new Error('Error cargando contrato');
+        const c = await res.json();
+        
+        const emp = state.employees.find(e => e.id === c.empId);
+        const empName = emp ? `${emp.firstName} ${emp.lastName}` : (c.empName || '—');
+        
+        const typeLabels = {
+            'indefinido': 'Tiempo Indefinido',
+            'temporal': 'Temporal',
+            'proyecto': 'Por Proyecto',
+            'medio_tiempo': 'Medio Tiempo',
+            'practicas': 'Prácticas Profesionales'
+        };
+        
+        let html = `
+            <div style="text-align:left;font-family:Outfit,sans-serif">
+                <h3 style="margin-bottom:16px;color:#6366f1">📄 Contrato Laboral</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+                    <div><strong>Empleado:</strong><br>${empName}</div>
+                    <div><strong>Cargo:</strong><br>${c.position || '—'}</div>
+                    <div><strong>Tipo:</strong><br>${typeLabels[c.type] || c.type}</div>
+                    <div><strong>Fecha Inicio:</strong><br>${formatDate(c.startDate)}</div>
+                    <div><strong>Salario:</strong><br>$${(c.salary || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                    <div><strong>Horario:</strong><br>${c.schedule || '—'}</div>
+                </div>
+                ${c.benefits ? `<div style="margin-bottom:12px"><strong>Beneficios:</strong><br>${c.benefits}</div>` : ''}
+                ${c.terms ? `<div style="margin-bottom:12px"><strong>Términos Especiales:</strong><br>${c.terms}</div>` : ''}
+                ${c.filePath ? `<div style="margin-top:16px"><a href="${c.filePath}" target="_blank" style="color:#6366f1">📎 Ver documento adjunto</a></div>` : ''}
+            </div>
+        `;
+        
+        showModal('Detalle del Contrato', html);
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function downloadContract(contractId) {
+    try {
+        const res = await fetch(`/api/hr/contracts/${contractId}`);
+        if (!res.ok) throw new Error('Error cargando contrato');
+        const c = await res.json();
+        
+        if (c.filePath) {
+            window.open(c.filePath, '_blank');
+        } else {
+            showToast('❌ No hay documento adjunto', 'error');
+        }
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteContract(contractId) {
+    if (!confirm('¿Estás seguro de eliminar este contrato? Esta acción no se puede deshacer.')) return;
+    
+    try {
+        const res = await fetch(`/api/hr/contracts/${contractId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error eliminando contrato');
+        
+        showToast('🗑 Contrato eliminado', 'warning');
+        loadContracts();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
 // ========== INICIALIZACIÓN ==========
 
 // Actualizar showPage para incluir RRHH
