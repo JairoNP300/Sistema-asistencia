@@ -2301,13 +2301,8 @@ let currentContractFile = null;
 function openContractModal() {
     // Limpiar formulario
     document.getElementById('contractEmpId').value = '';
-    document.getElementById('contractPosition').value = '';
-    document.getElementById('contractType').value = 'indefinido';
-    document.getElementById('contractStartDate').value = '';
-    document.getElementById('contractSalary').value = '';
-    document.getElementById('contractSchedule').value = '';
-    document.getElementById('contractBenefits').value = '';
-    document.getElementById('contractTerms').value = '';
+    document.getElementById('contractDocType').value = 'contrato_laboral';
+    document.getElementById('contractDescription').value = '';
     document.getElementById('contractFileName').textContent = '';
     currentContractFile = null;
     
@@ -2342,19 +2337,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function saveContract() {
     const empId = document.getElementById('contractEmpId').value;
-    const position = document.getElementById('contractPosition').value.trim();
-    const type = document.getElementById('contractType').value;
-    const startDate = document.getElementById('contractStartDate').value;
-    const salary = parseFloat(document.getElementById('contractSalary').value) || 0;
-    const schedule = document.getElementById('contractSchedule').value.trim();
-    const benefits = document.getElementById('contractBenefits').value.trim();
-    const terms = document.getElementById('contractTerms').value.trim();
+    const docType = document.getElementById('contractDocType').value;
+    const description = document.getElementById('contractDescription').value.trim();
     
     // Validaciones
     if (!empId) { showToast('❌ Selecciona un empleado', 'error'); return; }
-    if (!position) { showToast('❌ Ingresa el cargo/puesto', 'error'); return; }
-    if (!startDate) { showToast('❌ Ingresa la fecha de inicio', 'error'); return; }
-    if (salary <= 0) { showToast('❌ Ingresa un salario válido', 'error'); return; }
+    if (!currentContractFile) { showToast('❌ Selecciona un archivo para subir', 'error'); return; }
     
     const emp = state.employees.find(e => e.id === empId);
     if (!emp) { showToast('❌ Empleado no encontrado', 'error'); return; }
@@ -2363,23 +2351,16 @@ async function saveContract() {
     const formData = new FormData();
     formData.append('empId', empId);
     formData.append('empName', `${emp.firstName} ${emp.lastName}`);
-    formData.append('position', position);
-    formData.append('type', type);
-    formData.append('startDate', startDate);
-    formData.append('salary', salary);
-    formData.append('schedule', schedule);
-    formData.append('benefits', benefits);
-    formData.append('terms', terms);
-    if (currentContractFile) {
-        formData.append('contractFile', currentContractFile);
-    }
+    formData.append('docType', docType);
+    formData.append('description', description);
+    formData.append('contractFile', currentContractFile);
     
     try {
-        showToast('💾 Guardando contrato...', 'info');
+        showToast('⬆️ Subiendo documento...', 'info');
         const res = await fetch('/api/hr/contracts', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Error guardando contrato');
+        if (!res.ok) throw new Error('Error subiendo documento');
         
-        showToast('✅ Contrato guardado exitosamente', 'success');
+        showToast('✅ Documento subido exitosamente', 'success');
         closeContractModal();
         loadContracts();
     } catch (e) {
