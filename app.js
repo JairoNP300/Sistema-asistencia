@@ -57,15 +57,20 @@ function logout() {
     // Limpiar también timers de QR
     if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
     if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
-    location.reload();
+    // Mostrar login y resetear a selección de perfiles
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.body.classList.remove('qr-mode');
+    // Resetear vista de login
+    showProfileSelection();
+    // Quitar botón de logout flotante si existe
+    const qrLogoutBtn = document.getElementById('qrLogoutBtn');
+    if (qrLogoutBtn) qrLogoutBtn.remove();
 }
 
-// Función para forzar mostrar login (útil para testing)
-function forceLoginScreen() {
-    currentUser = null;
-    localStorage.removeItem(AUTH_KEY);
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('mainApp').classList.add('hidden');
+// Función para cambiar de perfil sin salir completamente
+function switchProfile() {
+    logout();
 }
 
 function showMainApp() {
@@ -97,17 +102,35 @@ function addLogoutButton() {
     document.body.appendChild(btn);
 }
 
-function switchLoginTab(tab) {
-    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-
-    if (tab === 'admin') {
+function selectProfile(profile) {
+    // Ocultar selección de perfiles
+    document.querySelector('.login-profiles').classList.add('hidden');
+    document.querySelector('.login-brand').classList.add('hidden');
+    
+    // Mostrar formulario correspondiente
+    if (profile === 'admin') {
         document.getElementById('adminLoginForm').classList.remove('hidden');
         document.getElementById('qrLoginForm').classList.add('hidden');
     } else {
         document.getElementById('adminLoginForm').classList.add('hidden');
         document.getElementById('qrLoginForm').classList.remove('hidden');
     }
+    
+    // Limpiar error
+    document.getElementById('loginError').textContent = '';
+}
+
+function showProfileSelection() {
+    // Mostrar selección de perfiles
+    document.querySelector('.login-profiles').classList.remove('hidden');
+    document.querySelector('.login-brand').classList.remove('hidden');
+    
+    // Ocultar formularios
+    document.getElementById('adminLoginForm').classList.add('hidden');
+    document.getElementById('qrLoginForm').classList.add('hidden');
+    
+    // Limpiar error
+    document.getElementById('loginError').textContent = '';
 }
 
 /* ---- STATE ---- */
