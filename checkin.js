@@ -242,15 +242,104 @@ function showSuccess(emp, type, time) {
     }, 1000);
 }
 
+let _pendingOverrideType = null; // Guarda el tipo de registro pendiente (entry/exit)
+
 function showAlreadyRegistered(type) {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('alreadyType', type === 'entry' ? 'entrada' : 'salida');
-    // Mensaje claro sobre la política de un registro por día
-    setEl('alreadyMsg', 
-        'El sistema permite marcar tu entrada y salida una sola vez por día. ' +
-        'Si necesitas corregir un registro o hubo un error técnico, presiona "Contactar Soporte".'
-    );
+    // Guardar el tipo para usarlo en el formulario de justificación
+    _pendingOverrideType = type;
     showScreen('screen-already');
+}
+
+// Mostrar formulario de justificación
+function showOverrideForm() {
+    const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    setEl('overrideType', _pendingOverrideType === 'entry' ? 'entrada' : 'salida');
+    
+    // Limpiar campos
+    document.getElementById('overrideName').value = '';
+    document.getElementById('overrideReason').value = '';
+    document.getElementById('overrideDetails').value = '';
+    
+    showScreen('screen-override');
+}
+
+// Enviar registro con justificación
+async function submitOverride() {
+    const name = document.getElementById('overrideName').value.trim();
+    const reason = document.getElementById('overrideReason').value;
+    const details = document.getElementById('overrideDetails').value.trim();
+    
+    // Validaciones
+    if (!name) {
+        showToastLocal('❌ Ingresa tu nombre completo', 'error');
+        return;
+    }
+    if (!reason) {
+        showToastLocal('❌ Selecciona un motivo', 'error');
+        return;
+    }
+    
+    const emp = cState.selectedEmployee;
+    if (!emp) {
+        showToastLocal('❌ Error: No se encontró información del empleado', 'error');
+        return;
+    }
+    
+    // Deshabilitar botón
+    const btn = document.querySelector('#screen-override .btn-primary');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Enviando...';
+    }
+    
+    const now = new Date();
+    const nonce = cState.tokenPayload?.nonce || null;
+    
+    const logEntry = {
+        id: Date.now(),
+        empId: emp.id,
+        empName: `${emp.firstName} ${emp.lastName}`,
+        type: _pendingOverrideType,
+        ts: now.toISOString(),
+        tokenNonce: nonce,
+        status: 'override', // Marcar como registro con justificación
+        reason: _pendingOverrideType === 'entry' ? 'Entrada con justificación' : 'Salida con justificación',
+        source: 'checkin',
+        location: window._locationData,
+        overrideData: {
+            reportedName: name,
+            reason: reason,
+            details: details,
+            originalReason: reason === 'olvidado' ? 'Olvidó marcar a tiempo' :
+                           reason === 'error' ? 'Error técnico' :
+                           reason === 'salida_emergencia' ? 'Emergencia y regresó' :
+                           reason === 'trabajo_externo' ? 'Trabajo externo' :
+                           reason === 'reunion' ? 'Reunión extendida' : 'Otro motivo'
+        }
+    };
+    
+    try {
+        const res = await fetch('/api/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(logEntry),
+        });
+        const json = await res.json();
+        
+        if (!res.ok || json.error) {
+            throw new Error(json.error || 'Error del servidor');
+        }
+        
+        showSuccess(emp, _pendingOverrideType, now, true); // true = es override
+    } catch (e) {
+        showToastLocal('❌ Error: ' + e.message, 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '✅ Enviar Solicitud';
+        }
+    }
 }
 
 /* ---- SUPPORT CONTACT ---- */
