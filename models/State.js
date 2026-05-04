@@ -161,18 +161,25 @@ const ContractSchema = new mongoose.Schema({
     id: String,
     empId: String,
     empName: String,
+    dept: String,
     position: String,
+    type: String, // indefinido, temporal, proyecto, medio_tiempo, practicas
+    contractType: String, // compatibilidad legacy
     salary: Number,
     startDate: String,
-    contractType: String, // indefinido, temporal, por proyecto
-    workSchedule: String,
+    schedule: String,
+    workSchedule: String, // compatibilidad legacy
     benefits: String,
     terms: String,
+    fileName: String,
+    filePath: String,
+    fileSize: Number,
+    mimeType: String,
+    pdfPath: String, // compatibilidad legacy
     signatureEmployee: String, // Base64 de firma digital
     signatureEmployer: String, // Base64 de firma digital
     signedDate: String,
-    pdfPath: String,
-    status: { type: String, default: 'pending' }, // pending, signed, active, terminated
+    status: { type: String, default: 'active' }, // pending, signed, active, terminated
     createdAt: String,
     updatedAt: String
 });
