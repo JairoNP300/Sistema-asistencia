@@ -425,6 +425,72 @@ async function startStationQR() {
     }, 1000);
 }
 
+// Función para modo QR display (pantalla de solo QR)
+async function startQRDisplayMode() {
+    if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
+    if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
+
+    await renderQRDisplay();
+
+    // Renovar QR cada 60 segundos
+    state._qrDisplayTimer = setInterval(async () => {
+        await renderQRDisplay();
+    }, state.config.tokenLife * 1000);
+
+    // Contador regresivo
+    state._qrDisplayCountdown = setInterval(() => {
+        const life = state.config.tokenLife;
+        const remaining = life - (Math.floor(Date.now() / 1000) % life);
+        const timerEl = document.getElementById('qrTimer');
+        if (timerEl) timerEl.textContent = remaining;
+    }, 1000);
+
+    // Actualizar hora
+    updateQRDisplayTime();
+    setInterval(updateQRDisplayTime, 1000);
+}
+
+async function renderQRDisplay() {
+    const result = await generateStationToken();
+    state.currentStationToken = result;
+
+    const host = window.location.host;
+    const protocol = window.location.protocol;
+    const baseUrl = `${protocol}//${host}/checkin.html`;
+    const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
+
+    const qrDiv = document.getElementById('qrDisplayCode');
+    if (!qrDiv) return;
+
+    qrDiv.innerHTML = '';
+    new QRCode(qrDiv, {
+        text: url,
+        width: 300,
+        height: 300,
+        colorDark: '#07071a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+    });
+
+    // Actualizar nombre de empresa
+    const companyEl = document.getElementById('qrCompanyName');
+    if (companyEl) companyEl.textContent = state.adminConfig.company || 'Mi Empresa S.A.';
+}
+
+function updateQRDisplayTime() {
+    const timeEl = document.getElementById('qrCurrentTime');
+    if (timeEl) {
+        timeEl.textContent = new Date().toLocaleString('es-MX', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
 async function renderStationQR() {
     const result = await generateStationToken();
     state.currentStationToken = result;
