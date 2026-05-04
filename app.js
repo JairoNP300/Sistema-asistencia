@@ -121,12 +121,13 @@ function showMainApp() {
 }
 
 function addLogoutButton() {
+    // Solo agregar si no existe
     const existing = document.getElementById('qrLogoutBtn');
     if (existing) return;
 
     const btn = document.createElement('button');
     btn.id = 'qrLogoutBtn';
-    btn.className = 'logout-btn';
+    btn.className = 'logout-btn-float';
     btn.innerHTML = '🚪 Salir';
     btn.onclick = logout;
     document.body.appendChild(btn);
