@@ -2,6 +2,103 @@
    QR-ASISTENCIA — MAIN APP LOGIC
    ============================================================ */
 
+/* ---- AUTH / ROLES ---- */
+const AUTH_KEY = 'qr_auth';
+let currentUser = null; // { role: 'admin' | 'qr', username: string }
+
+// Credenciales predefinidas (en producción usar hash)
+const CREDENTIALS = {
+    admin: { username: 'admin', password: 'admin123' },
+    qr: { code: 'qr2024' } // código simple para modo QR
+};
+
+function checkAuth() {
+    const auth = localStorage.getItem(AUTH_KEY);
+    if (auth) {
+        try {
+            currentUser = JSON.parse(auth);
+            return true;
+        } catch { }
+    }
+    return false;
+}
+
+function login(role) {
+    const errorEl = document.getElementById('loginError');
+    errorEl.textContent = '';
+
+    if (role === 'admin') {
+        const user = document.getElementById('adminUser').value.trim();
+        const pass = document.getElementById('adminPass').value;
+
+        if (user === CREDENTIALS.admin.username && pass === CREDENTIALS.admin.password) {
+            currentUser = { role: 'admin', username: user };
+            localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+            showMainApp();
+        } else {
+            errorEl.textContent = '❌ Usuario o contraseña incorrectos';
+        }
+    } else if (role === 'qr') {
+        const code = document.getElementById('qrCode').value.trim();
+
+        if (code === CREDENTIALS.qr.code) {
+            currentUser = { role: 'qr', username: 'QR Display' };
+            localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+            showMainApp();
+        } else {
+            errorEl.textContent = '❌ Código de acceso incorrecto';
+        }
+    }
+}
+
+function logout() {
+    currentUser = null;
+    localStorage.removeItem(AUTH_KEY);
+    location.reload();
+}
+
+function showMainApp() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+
+    if (currentUser?.role === 'qr') {
+        // Modo QR: solo mostrar página QR, ocultar sidebar
+        document.body.classList.add('qr-mode');
+        showPage('qr');
+        // Agregar botón de logout flotante
+        addLogoutButton();
+    } else {
+        // Modo Admin: mostrar todo
+        document.body.classList.remove('qr-mode');
+        showPage('dashboard');
+    }
+}
+
+function addLogoutButton() {
+    const existing = document.getElementById('qrLogoutBtn');
+    if (existing) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'qrLogoutBtn';
+    btn.className = 'logout-btn';
+    btn.innerHTML = '🚪 Salir';
+    btn.onclick = logout;
+    document.body.appendChild(btn);
+}
+
+function switchLoginTab(tab) {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+
+    if (tab === 'admin') {
+        document.getElementById('adminLoginForm').classList.remove('hidden');
+        document.getElementById('qrLoginForm').classList.add('hidden');
+    } else {
+        document.getElementById('adminLoginForm').classList.add('hidden');
+        document.getElementById('qrLoginForm').classList.remove('hidden');
+    }
+}
+
 /* ---- STATE ---- */
 const STORE_KEY = 'qr_asist';
 let state = {
@@ -14,6 +111,15 @@ let state = {
 };
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
+    // Verificar autenticación primero
+    if (checkAuth()) {
+        showMainApp();
+    } else {
+        // Mostrar pantalla de login
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
+
     await loadFromStorage();
     if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
     if (!state.employees.length) seedDemoEmployees();
@@ -24,7 +130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     logSecurity('info', '🟢 Sistema iniciado', 'HMAC-SHA256 activo. Anti-replay habilitado.');
     startPolling();
     initWakeLock();
-    showPage('dashboard');
     startVersionCheck();
     // Cargar historial de logs en segundo plano
     loadLogsHistory();
