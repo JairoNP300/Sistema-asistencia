@@ -94,15 +94,34 @@ async function migrateToCloud() {
 // --- CONEXIÓN A MONGODB ---
 let useMongo = false;
 if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('USUARIO:PASSWORD')) {
-    mongoose.connect(process.env.MONGODB_URI)
-        .then(async () => {
+    const mongoOpts = {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 15000,
+        socketTimeoutMS: 45000,
+        retryWrites: true,
+        retryReads: true,
+    };
+
+    async function connectMongo(attempt = 1) {
+        try {
+            await mongoose.connect(process.env.MONGODB_URI, mongoOpts);
             console.log('✅ Conectado a MongoDB Atlas (Cloud Mode)');
             useMongo = true;
             await migrateToCloud();
-        })
-        .catch(err => {
-            console.warn('⚠️ No se pudo conectar a MongoDB. Usando modo Local (data.json):', err.message);
-        });
+        } catch (err) {
+            const maxAttempts = 5;
+            const delay = Math.min(attempt * 3000, 15000);
+            if (attempt < maxAttempts) {
+                console.warn(`⚠️ MongoDB intento ${attempt}/${maxAttempts} fallido: ${err.message}`);
+                console.log(`   Reintentando en ${delay / 1000}s...`);
+                setTimeout(() => connectMongo(attempt + 1), delay);
+            } else {
+                console.warn(`⚠️ No se pudo conectar a MongoDB tras ${maxAttempts} intentos. Usando modo Local (data.json).`);
+            }
+        }
+    }
+
+    connectMongo();
 }
 
 // --- API ROUTES (Escalable & Cloud Optimized) ---
