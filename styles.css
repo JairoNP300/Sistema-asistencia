@@ -3325,3 +3325,77 @@ body.qr-mode #page-qr {
     background: rgba(15, 23, 42, 0.9);
     border-color: rgba(59, 130, 246, 0.5);
 }
+
+/* ============================================================
+   SWITCH TO ADMIN OVERLAY
+   ============================================================ */
+.switch-admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 7, 26, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: fadeIn 0.25s ease;
+}
+
+.switch-admin-overlay.hidden {
+    display: none;
+}
+
+.switch-admin-card {
+    background: rgba(30, 35, 60, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+.switch-admin-icon {
+    font-size: 2.5rem;
+    margin-bottom: 4px;
+}
+
+.switch-admin-card h3 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.switch-admin-card p {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+/* QR mode — switch to admin button */
+.qr-switch-admin-btn {
+    align-self: flex-end;
+    padding: 8px 16px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 99px;
+    color: #818cf8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font, 'Outfit', sans-serif);
+}
+
+.qr-switch-admin-btn:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: rgba(99, 102, 241, 0.5);
+    color: #a5b4fc;
+}
