@@ -1169,41 +1169,108 @@ function initLocationMap() {
     refreshLocationMap();
 }
 
+let _locationHistory = []; // Historial persistente de ubicaciones
+
 async function refreshLocationMap() {
     try {
         const res = await fetch('/api/location/records');
         if (!res.ok) return;
         const records = await res.json();
+        
+        // Guardar en historial persistente (evitar duplicados por ID)
+        records.forEach(rec => {
+            const exists = _locationHistory.some(h => h.id === rec.id);
+            if (!exists) _locationHistory.push(rec);
+        });
+        
         renderLocationPanel(records);
         if (!_locationMap) return;
-        if (!records.length) {
-            document.getElementById('locEmptyMsg').style.display = 'flex';
-            document.getElementById('locationMap').style.opacity = '0.2';
-            return;
-        }
-        document.getElementById('locEmptyMsg').style.display = 'none';
+        
+        // Siempre mostrar el mapa normalmente
+        document.getElementById('locEmptyMsg').style.display = _locationHistory.length ? 'none' : 'flex';
         document.getElementById('locationMap').style.opacity = '1';
-        // Limpiar marcadores anteriores
-        Object.values(_locationMarkers).forEach(m => _locationMap.removeLayer(m));
-        _locationMarkers = {};
+        
+        // Limpiar solo si es la primera carga o hay cambios significativos
+        const currentIds = Object.keys(_locationMarkers);
+        const newIds = _locationHistory.map(r => r.id);
+        
+        // Actualizar marcadores: remover los que ya no existen, actualizar existentes, agregar nuevos
+        currentIds.forEach(id => {
+            if (!newIds.includes(id)) {
+                _locationMap.removeLayer(_locationMarkers[id]);
+                delete _locationMarkers[id];
+            }
+        });
+        
         const bounds = [];
-        records.forEach(rec => {
+        _locationHistory.forEach(rec => {
             const emp = state.employees.find(e => e.id === rec.empId);
-            const typeLabel = rec.type === 'entry' ? '🟢 Entrada' : '🔴 Salida';
-            const time = new Date(rec.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-            const accuracyLabel = rec.accuracy < 50 ? 'Alta' : rec.accuracy < 200 ? 'Media' : 'Baja';
+            const typeLabel = rec.type === 'entry' ? '🟢 ENTRADA' : '🔴 SALIDA';
+            const typeColor = rec.type === 'entry' ? '#10b981' : '#f43f5e';
+            const time = new Date(rec.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const date = new Date(rec.timestamp).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+            const accuracyLabel = rec.accuracy < 50 ? '📍 Alta' : rec.accuracy < 200 ? '📍 Media' : '📍 Baja';
+            
+            // Crear icono con número si es entrada
+            const iconHtml = rec.type === 'entry' 
+                ? `<div style="background:${typeColor};width:36px;height:36px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,0.4);cursor:pointer">${emp?.avatar || '👤'}</div>`
+                : `<div style="background:${typeColor};width:36px;height:36px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(0,0,0,0.4);cursor:pointer">${emp?.avatar || '👤'}</div>`;
+            
             const icon = L.divIcon({
-                html: `<div style="background:${rec.type === 'entry' ? '#10b981' : '#f43f5e'};width:32px;height:32px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">${emp?.avatar || '👤'}</div>`,
-                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+                html: iconHtml,
+                className: 'location-marker', 
+                iconSize: [36, 36], 
+                iconAnchor: [18, 18]
             });
-            const marker = L.marker([rec.lat, rec.lng], { icon })
-                .addTo(_locationMap)
-                .bindPopup(`<div style="min-width:180px;font-family:Outfit,sans-serif">
-                    <strong>${rec.empName}</strong><br>
-                    <span style="color:#64748b;font-size:0.85em">${rec.dept || '—'}</span><br>
-                    <span>${typeLabel}</span> · <span>${time}</span><br>
-                    <span style="font-size:0.8em;color:#94a3b8">Precisión: ${rec.accuracy ? Math.round(rec.accuracy) + 'm (' + accuracyLabel + ')' : '—'}</span>
-                </div>`);
+            
+            // Popup mejorado con más información
+            const popupContent = `
+                <div style="min-width:220px;font-family:Outfit,sans-serif;padding:8px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-bottom:2px solid ${typeColor};padding-bottom:8px">
+                        <span style="font-size:28px">${emp?.avatar || '👤'}</span>
+                        <div>
+                            <div style="font-weight:700;font-size:1.1em;color:#1e293b">${rec.empName}</div>
+                            <div style="color:#64748b;font-size:0.85em">${rec.dept || 'Departamento no especificado'}</div>
+                        </div>
+                    </div>
+                    <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:10px">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                            <span style="font-size:16px">${rec.type === 'entry' ? '🟢' : '🔴'}</span>
+                            <span style="font-weight:600;color:${typeColor}">${typeLabel}</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:0.9em">
+                            <span style="color:#94a3b8">📅 Fecha:</span>
+                            <span style="font-weight:500">${date}</span>
+                            <span style="color:#94a3b8">🕐 Hora:</span>
+                            <span style="font-weight:500">${time}</span>
+                            <span style="color:#94a3b8">🎯 Precisión:</span>
+                            <span style="font-weight:500">${rec.accuracy ? Math.round(rec.accuracy) + 'm (' + accuracyLabel + ')' : '—'}</span>
+                        </div>
+                    </div>
+                    ${rec.lat && rec.lng ? `
+                    <div style="display:flex;gap:8px">
+                        <a href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank" style="flex:1;background:#6366f1;color:#fff;text-decoration:none;padding:8px 12px;border-radius:6px;text-align:center;font-size:0.85em;font-weight:600">
+                            🗺️ Google Maps
+                        </a>
+                        <button onclick="focusLocationMarker('${rec.empId}')" style="flex:1;background:#e2e8f0;color:#475569;border:none;padding:8px 12px;border-radius:6px;text-align:center;font-size:0.85em;font-weight:600;cursor:pointer">
+                            👤 Ver Empleado
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Si el marcador ya existe, actualizarlo; si no, crearlo
+            if (_locationMarkers[rec.id]) {
+                _locationMarkers[rec.id].setLatLng([rec.lat, rec.lng]);
+                _locationMarkers[rec.id].setIcon(icon);
+                _locationMarkers[rec.id].setPopupContent(popupContent);
+            } else {
+                const marker = L.marker([rec.lat, rec.lng], { icon })
+                    .addTo(_locationMap)
+                    .bindPopup(popupContent);
+                _locationMarkers[rec.id] = marker;
+            }
             _locationMarkers[rec.empId] = marker;
             bounds.push([rec.lat, rec.lng]);
         });
