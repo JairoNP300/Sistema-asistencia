@@ -29,6 +29,56 @@
 
 <body>
 
+    <!-- ========== LOGIN SCREEN ========== -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">🔐</div>
+                <h1>Sistema de <strong>asistencia</strong></h1>
+                <p>Control de Personal v2.6</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchLoginTab('admin')" id="tabAdmin">
+                    👤 Administrador
+                </button>
+                <button class="login-tab" onclick="switchLoginTab('qr')" id="tabQr">
+                    📱 Modo QR
+                </button>
+            </div>
+
+            <!-- Admin Login Form -->
+            <div id="adminLoginForm" class="login-form">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="adminUser" class="form-input" placeholder="admin" value="admin">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="adminPass" class="form-input" placeholder="••••••" value="admin123">
+                </div>
+                <button class="btn-primary full" onclick="login('admin')">Ingresar como Administrador</button>
+            </div>
+
+            <!-- QR Mode Login Form -->
+            <div id="qrLoginForm" class="login-form hidden">
+                <div class="form-group">
+                    <label>Código de Acceso QR</label>
+                    <input type="password" id="qrCode" class="form-input" placeholder="Ingresa el código QR">
+                </div>
+                <p class="login-hint">Este modo solo muestra el código QR para que los empleados puedan escanearlo.</p>
+                <button class="btn-primary full" onclick="login('qr')">Ingresar en Modo QR</button>
+            </div>
+
+            <div class="login-footer">
+                <p id="loginError" class="login-error"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APP (hidden until login) ========== -->
+    <div id="mainApp" class="main-app hidden">
+
     <!-- ========== SIDEBAR ========== -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
