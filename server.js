@@ -1575,6 +1575,77 @@ app.put('/api/hr/confidentiality/:id', async (req, res) => {
     }
 });
 
+// GET /api/hr/confidentiality/:id — Obtener carta específica
+app.get('/api/hr/confidentiality/:id', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { id } = req.params;
+        let letter = null;
+        
+        if (useMongo) {
+            const state = await State.findOne();
+            letter = state?.confidentialityLetters?.find(l => l.id === id) || null;
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            letter = data.confidentialityLetters?.find(l => l.id === id) || null;
+        }
+        
+        if (!letter) {
+            return res.status(404).json({ error: 'Documento no encontrado' });
+        }
+        
+        res.json(letter);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/hr/confidentiality/:id — Eliminar carta
+app.delete('/api/hr/confidentiality/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        let deleted = false;
+        let letter = null;
+
+        if (useMongo) {
+            const state = await State.findOne();
+            const idx = state.confidentialityLetters?.findIndex(l => l.id === id);
+            if (idx !== undefined && idx !== -1) {
+                letter = state.confidentialityLetters[idx];
+                state.confidentialityLetters.splice(idx, 1);
+                state.markModified('confidentialityLetters');
+                await state.save();
+                deleted = true;
+            }
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const idx = data.confidentialityLetters?.findIndex(l => l.id === id);
+            if (idx !== undefined && idx !== -1) {
+                letter = data.confidentialityLetters[idx];
+                data.confidentialityLetters.splice(idx, 1);
+                fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+                deleted = true;
+            }
+        }
+
+        // Eliminar archivo adjunto si existe
+        if (letter?.filePath) {
+            const filePath = path.join(__dirname, letter.filePath);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        if (!deleted) {
+            return res.status(404).json({ error: 'Documento no encontrado' });
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ========== ENDPOINTS DE CONSTANCIAS DE TIEMPO LABORAL ==========
 
 // POST /api/hr/certificates/generate — Generar constancia
