@@ -347,11 +347,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!state.employees.length) seedDemoEmployees();
     await saveToStorage();
 
-    // Siempre entrar como admin directamente (sin login)
-    // El modo QR se activa desde el menú del topbar
-    currentUser = { role: 'admin', username: 'Admin' };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-    showMainApp();
+    // Verificar autenticación - mostrar login si no hay sesión
+    if (checkAuth()) {
+        showMainApp();
+    } else {
+        // Mostrar pantalla de login
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
 
     initClock();
     initTokenTimer();
