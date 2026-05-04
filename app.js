@@ -73,6 +73,36 @@ function switchProfile() {
     logout();
 }
 
+function toggleUserMenu() {
+    const dropdown = document.getElementById('userMenuDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+// Cerrar menú al hacer clic fuera
+document.addEventListener('click', (e) => {
+    const userChip = document.getElementById('userChip');
+    const dropdown = document.getElementById('userMenuDropdown');
+    if (userChip && dropdown && !userChip.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+function copyQrLink() {
+    const input = document.getElementById('qrManualUrl');
+    if (input) {
+        input.select();
+        navigator.clipboard.writeText(input.value).then(() => {
+            showToast('✅ Link copiado al portapapeles', 'success');
+        }).catch(() => {
+            // Fallback
+            document.execCommand('copy');
+            showToast('✅ Link copiado', 'success');
+        });
+    }
+}
+
 function showMainApp() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
