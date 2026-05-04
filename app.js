@@ -123,18 +123,12 @@ let state = {
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
     // Verificar autenticación primero
-    // TEMP: Deshabilitado forzado para siempre mostrar login
-    const hasAuth = checkAuth();
-    const forceLogin = true; // Cambiar a false para habilitar auth normal
-    
-    if (hasAuth && !forceLogin) {
+    if (checkAuth()) {
         showMainApp();
     } else {
         // Mostrar pantalla de login
         document.getElementById('loginScreen').classList.remove('hidden');
         document.getElementById('mainApp').classList.add('hidden');
-        // Limpiar auth si existe
-        if (forceLogin) localStorage.removeItem(AUTH_KEY);
     }
 
     await loadFromStorage();
