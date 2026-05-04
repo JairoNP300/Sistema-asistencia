@@ -342,14 +342,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!state.employees.length) seedDemoEmployees();
     await saveToStorage();
 
-    // Verificar autenticación - mostrar login si no hay sesión
-    if (checkAuth()) {
-        showMainApp();
-    } else {
-        // Mostrar pantalla de login
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
-    }
+    // El login se ha eliminado; cargar directamente la aplicación
+    showMainApp();
 
     initClock();
     initTokenTimer();
