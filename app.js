@@ -182,12 +182,10 @@ function confirmSwitchAdmin() {
         localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
         document.body.classList.remove('qr-mode');
         
-        // Restaurar sidebar y topbar
-        const sidebar = document.getElementById('sidebar');
+        // Restaurar topbar
         const topbar = document.querySelector('.topbar');
         const mainWrap = document.querySelector('.main-wrap');
         
-        if (sidebar) sidebar.style.display = '';
         if (topbar) topbar.style.display = 'flex';
         if (mainWrap) {
             mainWrap.style.marginLeft = '';
@@ -268,12 +266,10 @@ function showMainApp() {
         // Modo QR: solo mostrar página QR, ocultar TODO excepto el QR
         document.body.classList.add('qr-mode');
         
-        // Ocultar elementos del layout
-        const sidebar = document.getElementById('sidebar');
+        // Ocultar topbar en modo QR
         const topbar = document.querySelector('.topbar');
         const mainWrap = document.querySelector('.main-wrap');
         
-        if (sidebar) sidebar.style.display = 'none';
         if (topbar) topbar.style.display = 'none';
         if (mainWrap) {
             mainWrap.style.marginLeft = '0';
@@ -292,12 +288,10 @@ function showMainApp() {
         // Modo Admin: mostrar todo el layout
         document.body.classList.remove('qr-mode');
         
-        // Restaurar sidebar, topbar y main wrap
-        const sidebar = document.getElementById('sidebar');
+        // Restaurar topbar y main wrap
         const topbar = document.querySelector('.topbar');
         const mainWrap = document.querySelector('.main-wrap');
         
-        if (sidebar) sidebar.style.display = '';
         if (topbar) topbar.style.display = 'flex';
         if (mainWrap) {
             mainWrap.style.marginLeft = '';
@@ -553,12 +547,6 @@ function showPage(id) {
     if (id === 'admin') renderAdminPage();
     if (id === 'location') { initLocationMap(); startLocationAutoRefresh(); }
     else { stopLocationAutoRefresh(); }
-}
-
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.querySelector('.main-wrap').classList.toggle('expanded');
 }
 
 /* ---- RENDER ALL ---- */
