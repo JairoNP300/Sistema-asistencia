@@ -528,29 +528,44 @@ async function renderQRDisplay() {
     const baseUrl = `${protocol}//${host}/checkin.html`;
     const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
 
-    // Guardar URL para acceso manual
+    // Guardar URL para compartir
     state.currentQRUrl = url;
 
+    // Ocultar loading y mostrar QR
+    const loading = document.getElementById('qrDisplayLoading');
     const qrDiv = document.getElementById('qrDisplayCode');
+    
+    if (loading) loading.style.display = 'none';
     if (!qrDiv) return;
+    qrDiv.style.display = 'block';
 
     qrDiv.innerHTML = '';
     new QRCode(qrDiv, {
         text: url,
-        width: 280,
-        height: 280,
+        width: 260,
+        height: 260,
         colorDark: '#07071a',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
     });
 
-    // Actualizar nombre de empresa
-    const companyEl = document.getElementById('qrCompanyName');
-    if (companyEl) companyEl.textContent = state.adminConfig.company || 'Mi Empresa S.A.';
+    // Actualizar detalles del token
+    const now = new Date();
+    const expTime = new Date(now.getTime() + 60000); // 60 segundos
+    
+    const tokenIdEl = document.getElementById('qrDisplayTokenId');
+    const genTimeEl = document.getElementById('qrDisplayGenTime');
+    const expTimeEl = document.getElementById('qrDisplayExpTime');
+    const sigEl = document.getElementById('qrDisplaySig');
+    const urlInput = document.getElementById('qrDisplayUrl');
+    const companyEl = document.getElementById('qrDisplayCompany');
 
-    // Actualizar URL manual
-    const urlInput = document.getElementById('qrManualUrl');
+    if (tokenIdEl) tokenIdEl.textContent = result.payload?.nonce?.slice(0, 16) + '…' || '—';
+    if (genTimeEl) genTimeEl.textContent = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (expTimeEl) expTimeEl.textContent = expTime.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (sigEl) sigEl.textContent = result.encoded?.slice(-16) || '—';
     if (urlInput) urlInput.value = url;
+    if (companyEl) companyEl.textContent = state.adminConfig.company || 'Mi Empresa S.A.';
 }
 
 function updateQRDisplayTime() {
