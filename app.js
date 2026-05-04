@@ -73,15 +73,7 @@ function togglePasswordVisibility() {
 
 // loginV2 eliminado
 
-// Función legacy para compatibilidad
-function login(role) {
-    // Redirigir al nuevo sistema
-    if (role === 'qr') {
-        selectedLocation = 'soyapango-puesto'; // Default
-        locationRequiresPassword = false;
-        loginV2();
-    }
-}
+// login() eliminado
 
 function logout() {
     currentUser = null;
