@@ -975,6 +975,15 @@ app.post('/api/hr/payrolls/generate/weekly', async (req, res) => {
             const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
             const workedDays = uniqueDates.size;
 
+            // Calcular entradas tardías
+            const lateEntries = empLogs.filter(l => l.isLate);
+            const lateDaysCount = lateEntries.length;
+            const totalMinutesLate = lateEntries.reduce((sum, l) => sum + (l.minutesLate || 0), 0);
+
+            // Calcular descuento por tardanzas
+            const hourlyRate = (emp.monthlySalary || 0) / 30 / 8;
+            const lateDeduction = (totalMinutesLate / 60) * hourlyRate;
+
             // Salario semanal = mensual / 4.33 (aproximadamente)
             const monthlySalary = emp.monthlySalary || 0;
             const weeklySalaryBase = monthlySalary / 4.33;
@@ -982,14 +991,20 @@ app.post('/api/hr/payrolls/generate/weekly', async (req, res) => {
             // Calcular proporcional según días trabajados (7 días = semana completa)
             const proportionalSalary = deductions.calculateProportionalSalary(weeklySalaryBase, workedDays, 7);
             
+            // Aplicar descuento por tardanzas
+            const salaryAfterLateDeduction = Math.max(0, proportionalSalary - lateDeduction);
+            
             // Usar tabla semanal
-            const deductionResults = deductions.calculateAllDeductions(proportionalSalary, 'weekly');
+            const deductionResults = deductions.calculateAllDeductions(salaryAfterLateDeduction, 'weekly');
 
             payrollEmployees.push({
                 empId: emp.id,
                 empNum: emp.empNum,
                 fullName: `${emp.firstName} ${emp.lastName}`,
                 workedDays,
+                lateDaysCount,
+                totalMinutesLate,
+                lateDeduction: parseFloat(lateDeduction.toFixed(2)),
                 weeklySalary: deductionResults.grossSalary,
                 isss: deductionResults.isss,
                 afp: deductionResults.afp,
