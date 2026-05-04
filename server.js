@@ -1375,29 +1375,27 @@ app.delete('/api/hr/permissions/:id', async (req, res) => {
 // POST /api/hr/contracts — Crear contrato (con archivo opcional)
 app.post('/api/hr/contracts', upload.single('contractFile'), async (req, res) => {
     try {
+        // Nueva estructura simplificada: solo archivo + metadata básica
         const contractData = {
+            id: `contract_${Date.now()}`,
             empId: req.body.empId,
             empName: req.body.empName,
-            position: req.body.position,
-            type: req.body.type,
-            startDate: req.body.startDate,
-            salary: parseFloat(req.body.salary) || 0,
-            schedule: req.body.schedule,
-            benefits: req.body.benefits,
-            terms: req.body.terms,
-            id: `contract_${Date.now()}`,
+            docType: req.body.docType || 'otro',
+            description: req.body.description || '',
             status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
         
-        // Si se adjuntó archivo, agregar información del archivo
-        if (req.file) {
-            contractData.fileName = req.file.originalname;
-            contractData.filePath = `/uploads/${req.file.filename}`;
-            contractData.fileSize = req.file.size;
-            contractData.mimeType = req.file.mimetype;
+        // El archivo es obligatorio
+        if (!req.file) {
+            return res.status(400).json({ error: 'Se requiere un archivo' });
         }
+        
+        contractData.fileName = req.file.originalname;
+        contractData.filePath = `/uploads/${req.file.filename}`;
+        contractData.fileSize = req.file.size;
+        contractData.mimeType = req.file.mimetype;
 
         if (useMongo) {
             const state = await State.findOne();
