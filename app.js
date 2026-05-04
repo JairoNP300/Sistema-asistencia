@@ -28,26 +28,26 @@ function login(role) {
     errorEl.textContent = '';
 
     if (role === 'admin') {
-        const user = document.getElementById('adminUser').value.trim();
         const pass = document.getElementById('adminPass').value;
 
-        if (user === CREDENTIALS.admin.username && pass === CREDENTIALS.admin.password) {
-            currentUser = { role: 'admin', username: user };
+        if (pass === CREDENTIALS.admin.password) {
+            currentUser = { role: 'admin', username: 'Admin' };
             localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+            // Limpiar contraseña
+            document.getElementById('adminPass').value = '';
             showMainApp();
         } else {
-            errorEl.textContent = '❌ Usuario o contraseña incorrectos';
+            errorEl.textContent = '❌ Contraseña incorrecta';
+            // Animación de shake
+            const form = document.getElementById('adminLoginForm');
+            form.style.animation = 'none';
+            setTimeout(() => form.style.animation = 'shake 0.5s ease', 10);
         }
     } else if (role === 'qr') {
-        const code = document.getElementById('qrCode').value.trim();
-
-        if (code === CREDENTIALS.qr.code) {
-            currentUser = { role: 'qr', username: 'QR Display' };
-            localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-            showMainApp();
-        } else {
-            errorEl.textContent = '❌ Código de acceso incorrecto';
-        }
+        // Acceso directo sin contraseña
+        currentUser = { role: 'qr', username: 'QR Display' };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+        showMainApp();
     }
 }
 
@@ -57,6 +57,9 @@ function logout() {
     // Limpiar también timers de QR
     if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
     if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
+    // Limpiar campos de login
+    const adminPass = document.getElementById('adminPass');
+    if (adminPass) adminPass.value = '';
     // Mostrar login y resetear a selección de perfiles
     document.getElementById('mainApp').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
