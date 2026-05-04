@@ -2,6 +2,11 @@
    QR-ASISTENCIA — PREMIUM STYLES
    ============================================================ */
 
+/* Clase utilitaria global */
+.hidden {
+    display: none !important;
+}
+
 *,
 *::before,
 *::after {
