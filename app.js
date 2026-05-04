@@ -262,19 +262,20 @@ let state = {
 };
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Verificar autenticación primero
-    if (checkAuth()) {
-        showMainApp();
-    } else {
-        // Mostrar pantalla de login
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainApp').classList.add('hidden');
-    }
-
+    // Cargar datos PRIMERO antes de mostrar cualquier pantalla
     await loadFromStorage();
     if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
     if (!state.employees.length) seedDemoEmployees();
     await saveToStorage();
+
+    // Verificar autenticación después de cargar datos
+    if (checkAuth()) {
+        showMainApp();
+    } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('hidden');
+    }
+
     initClock();
     initTokenTimer();
     renderAll();
@@ -282,7 +283,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     startPolling();
     initWakeLock();
     startVersionCheck();
-    // Cargar historial de logs en segundo plano
     loadLogsHistory();
 });
 
