@@ -123,23 +123,7 @@
         </div>
     </div>
 
-    <!-- STATUS: already registered -->
-    <div class="screen hidden" id="screen-already">
-        <div class="success-wrap">
-            <div class="success-anim warning">⚠️</div>
-            <h2 class="success-title">Ya registraste tu <span id="alreadyType">entrada</span> hoy</h2>
-            <p class="success-note" id="alreadyMsg">
-                El sistema permite un registro por día.<br>
-                Si necesitas registrar nuevamente, justifica el motivo.
-            </p>
-            <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;width:100%">
-                <button class="btn-primary full" onclick="showOverrideForm()">📝 Justificar Nuevo Registro</button>
-                <button class="btn-secondary full" onclick="goBack()">← Volver</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STATUS: override form (solicitar motivo para nuevo registro) -->
+    <!-- STATUS: override form (solicitar motivo para nuevo registro o asistencia técnica) -->
     <div class="screen hidden" id="screen-override">
         <div class="success-wrap" style="max-width:400px">
             <div class="success-anim" style="background:#6366f1">📝</div>
