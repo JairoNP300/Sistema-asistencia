@@ -1224,39 +1224,14 @@ async function refreshLocationMap() {
             });
             
             // Popup mejorado con más información
+            // Popup simple inicial (se actualizará al hacer clic)
             const popupContent = `
-                <div style="min-width:220px;font-family:Outfit,sans-serif;padding:8px">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-bottom:2px solid ${typeColor};padding-bottom:8px">
-                        <span style="font-size:28px">${emp?.avatar || '👤'}</span>
-                        <div>
-                            <div style="font-weight:700;font-size:1.1em;color:#1e293b">${rec.empName}</div>
-                            <div style="color:#64748b;font-size:0.85em">${rec.dept || 'Departamento no especificado'}</div>
-                        </div>
-                    </div>
-                    <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:10px">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                            <span style="font-size:16px">${rec.type === 'entry' ? '🟢' : '🔴'}</span>
-                            <span style="font-weight:600;color:${typeColor}">${typeLabel}</span>
-                        </div>
-                        <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:0.9em">
-                            <span style="color:#94a3b8">📅 Fecha:</span>
-                            <span style="font-weight:500">${date}</span>
-                            <span style="color:#94a3b8">🕐 Hora:</span>
-                            <span style="font-weight:500">${time}</span>
-                            <span style="color:#94a3b8">🎯 Precisión:</span>
-                            <span style="font-weight:500">${rec.accuracy ? Math.round(rec.accuracy) + 'm (' + accuracyLabel + ')' : '—'}</span>
-                        </div>
-                    </div>
-                    ${rec.lat && rec.lng ? `
-                    <div style="display:flex;gap:8px">
-                        <a href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank" style="flex:1;background:#6366f1;color:#fff;text-decoration:none;padding:8px 12px;border-radius:6px;text-align:center;font-size:0.85em;font-weight:600">
-                            🗺️ Google Maps
-                        </a>
-                        <button onclick="focusLocationMarker('${rec.empId}')" style="flex:1;background:#e2e8f0;color:#475569;border:none;padding:8px 12px;border-radius:6px;text-align:center;font-size:0.85em;font-weight:600;cursor:pointer">
-                            👤 Ver Empleado
-                        </button>
-                    </div>
-                    ` : ''}
+                <div style="min-width:200px;font-family:Outfit,sans-serif;padding:8px;text-align:center">
+                    <div style="font-size:24px;margin-bottom:4px">${emp?.avatar || '👤'}</div>
+                    <div style="font-weight:700;font-size:1.1em">${rec.empName}</div>
+                    <div style="color:#64748b;font-size:0.85em;margin-bottom:8px">${rec.dept || '—'}</div>
+                    <div style="color:${typeColor};font-weight:600">${typeLabel} · ${time}</div>
+                    <div style="font-size:0.8em;color:#94a3b8;margin-top:4px">Haz clic para ver detalles</div>
                 </div>
             `;
             
@@ -1268,7 +1243,8 @@ async function refreshLocationMap() {
             } else {
                 const marker = L.marker([rec.lat, rec.lng], { icon })
                     .addTo(_locationMap)
-                    .bindPopup(popupContent);
+                    .bindPopup(popupContent)
+                    .on('click', () => showEmployeeLocationPopup(rec.empId));
                 _locationMarkers[rec.id] = marker;
             }
             bounds.push([rec.lat, rec.lng]);
