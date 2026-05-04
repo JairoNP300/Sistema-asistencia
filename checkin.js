@@ -252,11 +252,9 @@ function showSuccess(emp, type, time, isOverride = false) {
 let _pendingOverrideType = null; // Guarda el tipo de registro pendiente (entry/exit)
 
 function showAlreadyRegistered(type) {
-    const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    setEl('alreadyType', type === 'entry' ? 'entrada' : 'salida');
-    // Guardar el tipo para usarlo en el formulario de justificación
+    // Ir directamente al formulario de justificación, sin pantalla intermedia
     _pendingOverrideType = type;
-    showScreen('screen-already');
+    showOverrideForm();
 }
 
 // Mostrar formulario de justificación
@@ -269,6 +267,12 @@ function showOverrideForm() {
     document.getElementById('overrideReason').value = '';
     document.getElementById('overrideDetails').value = '';
     
+    showScreen('screen-override');
+}
+
+// Redirigir contactSupport al formulario de justificación
+function contactSupport() {
+    // En lugar de abrir WhatsApp, mostrar el formulario de justificación
     showScreen('screen-override');
 }
 
@@ -349,25 +353,6 @@ async function submitOverride() {
     }
 }
 
-/* ---- SUPPORT CONTACT ---- */
-function contactSupport() {
-    // Obtener información del empleado si está disponible
-    const emp = cState.selectedEmployee;
-    const empInfo = emp ? `\n\nEmpleado: ${emp.firstName} ${emp.lastName} (${emp.empNum})` : '';
-    const companyInfo = cState.adminConfig?.company ? `\nEmpresa: ${cState.adminConfig.company}` : '';
-    const timestamp = `\nFecha/Hora: ${new Date().toLocaleString('es-MX')}`;
-    
-    const message = `Hola, necesito asistencia con el sistema de asistencia QR.${empInfo}${companyInfo}${timestamp}\n\nProblema: [Describe tu problema aquí]`;
-    
-    // Abrir WhatsApp o mailto
-    const phoneNumber = '50300000000'; // Número de soporte (personalizar)
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    
-    // Intentar WhatsApp primero
-    window.open(whatsappUrl, '_blank');
-    
-    showToastLocal('📞 Redirigiendo a soporte técnico...', 'info');
-}
 
 /* ---- HELPERS ---- */
 function showExpired(msg, detail) {
