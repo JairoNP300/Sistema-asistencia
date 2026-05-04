@@ -77,10 +77,8 @@ function togglePasswordVisibility() {
 
 // logout() eliminado
 
-// Función para cambiar de perfil sin salir completamente
-function switchProfile() {
-    logout();
-}
+// Función para cambiar de perfil (el login ha sido eliminado) - no-op
+function switchProfile() { /* no-op */ }
 
 // Cambiar de modo QR a Admin sin volver al login
 function switchToAdmin() {
