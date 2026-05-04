@@ -477,6 +477,35 @@ app.get('/api/version', (req, res) => {
     res.json({ version, ts: Date.now() });
 });
 
+// -- QR View (solo código QR) --
+// Acceso público a un QR renderizado en una página mínima
+app.get('/qr-view', (req, res) => {
+    const t = req.query.t || '';
+    const html = `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR - Ver código</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>body{font-family:Arial, sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#0b1020;margin:0} #qr{padding:20px;border-radius:12px;background:#111;box-shadow:0 0 0 1px #333 inset}</style>
+  </head>
+  <body>
+    <div id="qr" aria-label="Código QR"></div>
+    <script>
+      const payload = ${JSON.stringify(t)};
+      const div = document.getElementById('qr');
+      if (payload) {
+        new QRCode(div, { text: payload, width: 320, height: 320, colorDark: '#fff', colorLight: '#000', correctLevel: QRCode.CorrectLevel.H });
+      } else {
+        div.innerText = 'Sin payload';
+      }
+    </script>
+  </body>
+  </html>`;
+    res.send(html);
+});
+
 // --- LOCATION ENDPOINTS ---
 
 // POST /api/location/checkin — Registrar ubicación GPS (sin autenticación, igual que /api/checkin)
