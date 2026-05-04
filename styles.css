@@ -3404,9 +3404,32 @@ body.qr-mode #page-qr {
     color: #a5b4fc;
 }
 
-/* QR Mode — ocultar hamburger del sidebar */
-body.qr-mode .hamburger-main {
+/* QR Mode — ocultar completamente sidebar y menú */
+body.qr-mode .hamburger-main,
+body.qr-mode .sidebar,
+body.qr-mode .sidebar-header,
+body.qr-mode .sidebar-nav,
+body.qr-mode .sidebar-footer {
     display: none !important;
+}
+
+body.qr-mode .topbar {
+    display: none !important;
+}
+
+body.qr-mode .main-wrap {
+    margin-left: 0 !important;
+    padding: 0 !important;
+}
+
+body.qr-mode .content {
+    padding: 0 !important;
+}
+
+body.qr-mode #page-qr {
+    padding: 0 !important;
+    height: 100vh;
+    overflow: auto;
 }
 
 /* Menú usuario — item cambiar a admin */
