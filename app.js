@@ -54,7 +54,18 @@ function login(role) {
 function logout() {
     currentUser = null;
     localStorage.removeItem(AUTH_KEY);
+    // Limpiar también timers de QR
+    if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
+    if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
     location.reload();
+}
+
+// Función para forzar mostrar login (útil para testing)
+function forceLoginScreen() {
+    currentUser = null;
+    localStorage.removeItem(AUTH_KEY);
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
 }
 
 function showMainApp() {
