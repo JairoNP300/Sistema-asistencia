@@ -710,20 +710,35 @@ app.post('/api/hr/payrolls/generate', async (req, res) => {
             const uniqueDates = new Set(empLogs.map(l => l.ts.split('T')[0]));
             const workedDays = uniqueDates.size;
 
+            // Calcular entradas tardías
+            const lateEntries = empLogs.filter(l => l.isLate);
+            const lateDaysCount = lateEntries.length;
+            const totalMinutesLate = lateEntries.reduce((sum, l) => sum + (l.minutesLate || 0), 0);
+
+            // Calcular descuento por tardanzas (1 minuto = 1/60 de hora)
+            const hourlyRate = (emp.monthlySalary || 0) / 30 / 8; // Salario/30 dias/8 horas
+            const lateDeduction = (totalMinutesLate / 60) * hourlyRate;
+
             // Salario base mensual
             const monthlySalary = emp.monthlySalary || 0;
             
             // Calcular salario proporcional según días trabajados (30 días = mes completo)
             const proportionalSalary = deductions.calculateProportionalSalary(monthlySalary, workedDays, 30);
             
+            // Aplicar descuento por tardanzas
+            const salaryAfterLateDeduction = Math.max(0, proportionalSalary - lateDeduction);
+            
             // Usar el nuevo módulo de deducciones para cálculos según tablas oficiales
-            const deductionResults = deductions.calculateAllDeductions(proportionalSalary, 'monthly');
+            const deductionResults = deductions.calculateAllDeductions(salaryAfterLateDeduction, 'monthly');
 
             payrollEmployees.push({
                 empId: emp.id,
                 empNum: emp.empNum,
                 fullName: `${emp.firstName} ${emp.lastName}`,
                 workedDays,
+                lateDaysCount,
+                totalMinutesLate,
+                lateDeduction: parseFloat(lateDeduction.toFixed(2)),
                 monthlySalary: deductionResults.grossSalary,
                 isss: deductionResults.isss,
                 afp: deductionResults.afp,
