@@ -254,18 +254,22 @@ function showMainApp() {
     document.getElementById('mainApp').classList.remove('hidden');
 
     if (currentUser?.role === 'qr') {
+        // Modo QR: solo mostrar página QR, ocultar TODO excepto el QR
         document.body.classList.add('qr-mode');
+        
+        // Ocultar elementos del layout
+        const sidebar = document.getElementById('sidebar');
         const topbar = document.querySelector('.topbar');
-        if (topbar) topbar.style.display = 'flex';
-        // Ocultar timer de token en modo QR (no relevante para empleados)
-        const tokenTimer = document.getElementById('tokenTimerWrap');
-        if (tokenTimer) tokenTimer.style.display = 'none';
-        // Mostrar opción "Cambiar a Admin" en el menú
-        const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
-        if (menuSwitchAdmin) menuSwitchAdmin.classList.remove('hidden');
-        // Ocultar opción "Modo QR" (ya estamos en QR)
-        const menuModoQR = document.querySelector('#userMenuDropdown .user-menu-item:first-child');
-        if (menuModoQR) menuModoQR.style.display = 'none';
+        const mainWrap = document.querySelector('.main-wrap');
+        
+        if (sidebar) sidebar.style.display = 'none';
+        if (topbar) topbar.style.display = 'none';
+        if (mainWrap) {
+            mainWrap.style.marginLeft = '0';
+            mainWrap.style.padding = '0';
+        }
+        
+        // Mostrar solo la página QR
         // Actualizar chip de usuario
         const userAvatar = document.getElementById('userAvatar');
         const userNameDisplay = document.getElementById('userNameDisplay');
