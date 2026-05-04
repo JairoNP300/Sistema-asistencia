@@ -1384,6 +1384,31 @@ app.get('/api/hr/contracts', async (req, res) => {
     }
 });
 
+// GET /api/hr/contracts/:id — Obtener contrato específico
+app.get('/api/hr/contracts/:id', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { id } = req.params;
+        let contract = null;
+        
+        if (useMongo) {
+            const state = await State.findOne();
+            contract = state?.contracts?.find(c => c.id === id) || null;
+        } else {
+            const data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+            contract = data.contracts?.find(c => c.id === id) || null;
+        }
+        
+        if (!contract) {
+            return res.status(404).json({ error: 'Contrato no encontrado' });
+        }
+        
+        res.json(contract);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // PUT /api/hr/contracts/:id — Actualizar contrato
 app.put('/api/hr/contracts/:id', async (req, res) => {
     try {
