@@ -1368,6 +1368,135 @@ function renderLocationPanel(records) {
         : '<div style="font-size:0.8rem;color:var(--text-muted);padding:8px 0">Todos los empleados activos compartieron ubicación.</div>';
 }
 
+function showEmployeeLocationPopup(empId) {
+    const emp = state.employees.find(e => e.id === empId);
+    const empRecords = _locationHistory.filter(r => r.empId === empId);
+    
+    if (!empRecords.length) {
+        showToast('❌ No hay ubicaciones registradas para este empleado', 'error');
+        return;
+    }
+    
+    // Buscar entrada y salida más recientes
+    const entry = empRecords.filter(r => r.type === 'entry').sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    const exit = empRecords.filter(r => r.type === 'exit').sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    
+    const empName = emp ? `${emp.firstName} ${emp.lastName}` : (entry?.empName || exit?.empName || 'Empleado');
+    const dept = emp?.dept || entry?.dept || exit?.dept || '—';
+    
+    // Formatear tiempos
+    const formatTime = (rec) => {
+        if (!rec) return null;
+        const date = new Date(rec.timestamp);
+        return {
+            date: date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+            time: date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            accuracy: rec.accuracy ? Math.round(rec.accuracy) + 'm' : '—'
+        };
+    };
+    
+    const entryData = formatTime(entry);
+    const exitData = formatTime(exit);
+    
+    // Construir HTML del popup
+    let popupHtml = `
+        <div style="min-width:260px;font-family:Outfit,sans-serif;padding:8px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;border-bottom:2px solid #6366f1;padding-bottom:10px">
+                <span style="font-size:32px">${emp?.avatar || '👤'}</span>
+                <div>
+                    <div style="font-weight:700;font-size:1.15em;color:#1e293b">${empName}</div>
+                    <div style="color:#64748b;font-size:0.9em">${dept}</div>
+                </div>
+            </div>
+    `;
+    
+    // Sección de Entrada
+    if (entryData) {
+        popupHtml += `
+            <div style="background:#ecfdf5;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #10b981">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                    <span style="font-size:18px">🟢</span>
+                    <span style="font-weight:700;color:#10b981;font-size:1em">ENTRADA</span>
+                </div>
+                <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 15px;font-size:0.9em">
+                    <span style="color:#6b7280">📅 Fecha:</span>
+                    <span style="font-weight:600">${entryData.date}</span>
+                    <span style="color:#6b7280">🕐 Hora:</span>
+                    <span style="font-weight:600">${entryData.time}</span>
+                    <span style="color:#6b7280">🎯 Precisión:</span>
+                    <span style="font-weight:600">${entryData.accuracy}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Sección de Salida
+    if (exitData) {
+        popupHtml += `
+            <div style="background:#fff1f2;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #f43f5e">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                    <span style="font-size:18px">🔴</span>
+                    <span style="font-weight:700;color:#f43f5e;font-size:1em">SALIDA</span>
+                </div>
+                <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 15px;font-size:0.9em">
+                    <span style="color:#6b7280">📅 Fecha:</span>
+                    <span style="font-weight:600">${exitData.date}</span>
+                    <span style="color:#6b7280">🕐 Hora:</span>
+                    <span style="font-weight:600">${exitData.time}</span>
+                    <span style="color:#6b7280">🎯 Precisión:</span>
+                    <span style="font-weight:600">${exitData.accuracy}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Estado de la jornada
+    let statusHtml = '';
+    if (entryData && exitData) {
+        statusHtml = `<span style="color:#10b981;font-weight:600">✅ Jornada Completada</span>`;
+    } else if (entryData && !exitData) {
+        statusHtml = `<span style="color:#f59e0b;font-weight:600">🟡 En Jornada</span>`;
+    } else if (!entryData && exitData) {
+        statusHtml = `<span style="color:#ef4444;font-weight:600">⚠️ Solo Salida Registrada</span>`;
+    }
+    
+    popupHtml += `
+            <div style="background:#f8fafc;border-radius:6px;padding:10px;text-align:center;margin-bottom:12px">
+                ${statusHtml}
+            </div>
+    `;
+    
+    // Botones de acción
+    const latestRec = entry || exit;
+    if (latestRec && latestRec.lat && latestRec.lng) {
+        popupHtml += `
+            <div style="display:flex;gap:8px">
+                <a href="https://www.google.com/maps?q=${latestRec.lat},${latestRec.lng}" target="_blank" style="flex:1;background:#6366f1;color:#fff;text-decoration:none;padding:10px 12px;border-radius:6px;text-align:center;font-size:0.85em;font-weight:600">
+                    🗺️ Google Maps
+                </a>
+            </div>
+        `;
+    }
+    
+    popupHtml += `</div>`;
+    
+    // Encontrar el marcador más reciente y mostrar popup
+    const latestRecord = empRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+    const marker = _locationMarkers[latestRecord.id];
+    
+    if (marker) {
+        marker.setPopupContent(popupHtml);
+        marker.openPopup();
+        _locationMap.setView(marker.getLatLng(), 16);
+    } else {
+        // Crear popup en las coordenadas
+        const popup = L.popup({ maxWidth: 300 })
+            .setLatLng([latestRecord.lat, latestRecord.lng])
+            .setContent(popupHtml)
+            .openOn(_locationMap);
+    }
+}
+
 function focusLocationMarker(empId) {
     if (!_locationMap) return;
     
@@ -1378,17 +1507,8 @@ function focusLocationMarker(empId) {
         return;
     }
     
-    // Obtener el registro más reciente
-    const latestRecord = empRecords[empRecords.length - 1];
-    const marker = _locationMarkers[latestRecord.id];
-    
-    if (marker) {
-        _locationMap.setView(marker.getLatLng(), 16);
-        marker.openPopup();
-    } else {
-        // Si no hay marcador, centrar en las coordenadas
-        _locationMap.setView([latestRecord.lat, latestRecord.lng], 16);
-    }
+    // Mostrar popup completo con entrada y salida
+    showEmployeeLocationPopup(empId);
 }
 
 function startLocationAutoRefresh() {
