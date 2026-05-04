@@ -153,6 +153,45 @@ function switchProfile() {
     logout();
 }
 
+// Cambiar de modo QR a Admin sin volver al login
+function switchToAdmin() {
+    const overlay = document.getElementById('switchAdminOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        const input = document.getElementById('switchAdminPass');
+        if (input) { input.value = ''; input.focus(); }
+        document.getElementById('switchAdminError').textContent = '';
+    }
+}
+
+function closeSwitchAdmin() {
+    const overlay = document.getElementById('switchAdminOverlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+
+function confirmSwitchAdmin() {
+    const pass = document.getElementById('switchAdminPass').value;
+    const errorEl = document.getElementById('switchAdminError');
+    if (pass === CREDENTIALS.admin.password) {
+        closeSwitchAdmin();
+        // Limpiar timers QR
+        if (state._qrDisplayTimer) clearInterval(state._qrDisplayTimer);
+        if (state._qrDisplayCountdown) clearInterval(state._qrDisplayCountdown);
+        // Cambiar a admin
+        currentUser = { role: 'admin', username: 'Admin' };
+        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+        document.body.classList.remove('qr-mode');
+        const topbar = document.querySelector('.topbar');
+        if (topbar) topbar.style.display = 'flex';
+        showPage('dashboard');
+        showToast('✅ Modo Administrador activado', 'success');
+    } else {
+        errorEl.textContent = '❌ Contraseña incorrecta';
+        document.getElementById('switchAdminPass').value = '';
+        document.getElementById('switchAdminPass').focus();
+    }
+}
+
 function toggleUserMenu() {
     const dropdown = document.getElementById('userMenuDropdown');
     if (dropdown) {
