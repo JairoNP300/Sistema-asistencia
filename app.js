@@ -2504,6 +2504,159 @@ async function deleteContract(contractId) {
     }
 }
 
+// ========== CONFIDENCIALIDAD ==========
+
+let currentConfFile = null;
+
+function openConfidentialityModal() {
+    // Limpiar formulario
+    document.getElementById('confEmpId').value = '';
+    document.getElementById('confDocType').value = 'carta_confidencialidad';
+    document.getElementById('confDescription').value = '';
+    document.getElementById('confFileName').textContent = '';
+    currentConfFile = null;
+    
+    // Poblar select de empleados
+    const select = document.getElementById('confEmpId');
+    select.innerHTML = '<option value="">Seleccionar empleado...</option>' +
+        state.employees.filter(e => e.status === 'active').map(e => 
+            `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.empNum})</option>`
+        ).join('');
+    
+    // Mostrar modal
+    document.getElementById('confidentialityModal').style.display = 'flex';
+}
+
+function closeConfidentialityModal() {
+    document.getElementById('confidentialityModal').style.display = 'none';
+    currentConfFile = null;
+}
+
+// Manejar selección de archivo de confidencialidad
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('confFileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                currentConfFile = e.target.files[0];
+                document.getElementById('confFileName').textContent = '📎 ' + e.target.files[0].name;
+            }
+        });
+    }
+});
+
+async function saveConfidentiality() {
+    const empId = document.getElementById('confEmpId').value;
+    const docType = document.getElementById('confDocType').value;
+    const description = document.getElementById('confDescription').value.trim();
+    
+    // Validaciones
+    if (!empId) { showToast('❌ Selecciona un empleado', 'error'); return; }
+    if (!currentConfFile) { showToast('❌ Selecciona un archivo para subir', 'error'); return; }
+    
+    const emp = state.employees.find(e => e.id === empId);
+    if (!emp) { showToast('❌ Empleado no encontrado', 'error'); return; }
+    
+    // Crear FormData para subir archivo
+    const formData = new FormData();
+    formData.append('empId', empId);
+    formData.append('empName', `${emp.firstName} ${emp.lastName}`);
+    formData.append('docType', docType);
+    formData.append('description', description);
+    formData.append('confFile', currentConfFile);
+    
+    try {
+        showToast('⬆️ Subiendo documento...', 'info');
+        const res = await fetch('/api/hr/confidentiality', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Error subiendo documento');
+        
+        showToast('✅ Documento subido exitosamente', 'success');
+        closeConfidentialityModal();
+        loadConfidentiality();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function loadConfidentiality() {
+    try {
+        const res = await fetch('/api/hr/confidentiality');
+        if (!res.ok) throw new Error('Error cargando documentos');
+        const letters = await res.json();
+        renderConfidentialityTable(letters);
+    } catch (e) {
+        console.warn('Error cargando confidencialidad:', e);
+        renderConfidentialityTable([]);
+    }
+}
+
+function renderConfidentialityTable(letters) {
+    const tbody = document.getElementById('confidentialityTableBody');
+    if (!letters || !letters.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-feed">No hay documentos registrados. Haz clic en "+ Subir Documento" para agregar uno.</td></tr>';
+        return;
+    }
+    
+    const docTypeLabels = {
+        'carta_confidencialidad': '🔒 Carta Confidencialidad',
+        'acuerdo_nda': '🛡️ NDA',
+        'compromiso_seguridad': '🔐 Compromiso Seguridad',
+        'politica_privacidad': '📋 Política Privacidad',
+        'otro': '📄 Otro'
+    };
+    
+    tbody.innerHTML = letters.map(l => {
+        const emp = state.employees.find(e => e.id === l.empId);
+        const empName = emp ? `${emp.firstName} ${emp.lastName}` : (l.empName || '—');
+        const empDept = emp ? emp.dept : (l.dept || '—');
+        const docTypeLabel = docTypeLabels[l.docType] || docTypeLabels[l.type] || '🔒 Documento';
+        const fileIcon = l.fileName ? getFileIcon(l.fileName) : '📄';
+        
+        return `<tr>
+            <td><strong>${empName}</strong><br><small style="color:#888">${empDept}</small></td>
+            <td><span class="status-chip">${docTypeLabel}</span></td>
+            <td><div style="display:flex;align-items:center;gap:6px">${fileIcon} <span style="font-size:0.85em;max-width:150px;overflow:hidden;text-overflow:ellipsis">${l.fileName || '—'}</span></div></td>
+            <td><span class="token-mono">${formatDateTime(l.createdAt)}</span></td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn-table" onclick="downloadConfidentiality('${l.id}')" ${l.filePath ? '' : 'disabled style="opacity:0.4"'}>⬇️ Descargar</button>
+                    <button class="btn-table del" onclick="deleteConfidentiality('${l.id}')">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function downloadConfidentiality(confId) {
+    try {
+        const res = await fetch(`/api/hr/confidentiality/${confId}`);
+        if (!res.ok) throw new Error('Error cargando documento');
+        const l = await res.json();
+        
+        if (l.filePath) {
+            window.open(l.filePath, '_blank');
+        } else {
+            showToast('❌ No hay documento adjunto', 'error');
+        }
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
+async function deleteConfidentiality(confId) {
+    if (!confirm('¿Estás seguro de eliminar este documento? Esta acción no se puede deshacer.')) return;
+    
+    try {
+        const res = await fetch(`/api/hr/confidentiality/${confId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error eliminando documento');
+        
+        showToast('🗑 Documento eliminado', 'warning');
+        loadConfidentiality();
+    } catch (e) {
+        showToast('❌ Error: ' + e.message, 'error');
+    }
+}
+
 // ========== INICIALIZACIÓN ==========
 
 // Actualizar showPage para incluir RRHH
