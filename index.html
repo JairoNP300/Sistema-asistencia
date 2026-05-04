@@ -1285,7 +1285,8 @@
                         <div class="qr-direct-url-box">
                             <label>🔗 Enlace directo (si no puedes escanear)</label>
                             <div class="url-row">
-                                <input type="text" id="qrDisplayUrl" readonly class="url-input" />
+                                <input type="text" id="qrDisplayUrl" readonly class="url-input" style="display:none" />
+                                <a id="qrDisplayUrlLink" href="#" target="_blank" class="qr-url-visible" onclick="return false;">Generando enlace...</a>
                                 <button class="btn-icon-sm" onclick="copyQrLink()" title="Copiar URL">📋</button>
                             </div>
                         </div>
