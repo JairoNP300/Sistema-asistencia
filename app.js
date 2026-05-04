@@ -670,9 +670,15 @@ async function renderQRDisplay() {
 
     // Actualizar URL y empresa
     const urlInput = document.getElementById('qrDisplayUrl');
+    const urlLink = document.getElementById('qrDisplayUrlLink');
     const companyEl = document.getElementById('qrDisplayCompany');
 
     if (urlInput) urlInput.value = url;
+    if (urlLink) {
+        urlLink.href = url;
+        urlLink.textContent = url;
+        urlLink.onclick = (e) => { e.preventDefault(); copyQrLink(); };
+    }
     if (companyEl) companyEl.textContent = state.adminConfig.company || 'Mi Empresa S.A.';
 }
 
