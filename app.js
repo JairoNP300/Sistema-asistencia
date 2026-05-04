@@ -2384,39 +2384,54 @@ async function loadContracts() {
 function renderContractsTable(contracts) {
     const tbody = document.getElementById('contractsTableBody');
     if (!contracts || !contracts.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-feed">No hay contratos registrados. Haz clic en "+ Nuevo Contrato" para agregar uno.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-feed">No hay documentos registrados. Haz clic en "+ Nuevo Contrato" para subir uno.</td></tr>';
         return;
     }
     
-    const typeLabels = {
-        'indefinido': 'Indefinido',
-        'temporal': 'Temporal',
-        'proyecto': 'Por Proyecto',
-        'medio_tiempo': 'Medio Tiempo',
-        'practicas': 'Prácticas'
+    const docTypeLabels = {
+        'contrato_laboral': '📄 Contrato',
+        'renovacion': '🔄 Renovación',
+        'adenda': '✏️ Adenda',
+        'terminacion': '🚫 Terminación',
+        'otro': '📋 Otro'
     };
     
     tbody.innerHTML = contracts.map(c => {
         const emp = state.employees.find(e => e.id === c.empId);
         const empName = emp ? `${emp.firstName} ${emp.lastName}` : (c.empName || '—');
         const empDept = emp ? emp.dept : (c.dept || '—');
+        const docTypeLabel = docTypeLabels[c.docType] || docTypeLabels[c.type] || '📄 Documento';
+        const fileIcon = c.fileName ? getFileIcon(c.fileName) : '📄';
         
         return `<tr>
             <td><strong>${empName}</strong><br><small style="color:#888">${empDept}</small></td>
-            <td>${c.position || '—'}</td>
-            <td><span class="status-chip">${typeLabels[c.type] || c.type}</span></td>
-            <td>${formatDate(c.startDate)}</td>
-            <td><strong>$${(c.salary || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</strong></td>
-            <td><span class="status-chip status-active">Activo</span></td>
+            <td><span class="status-chip">${docTypeLabel}</span></td>
+            <td><div style="display:flex;align-items:center;gap:6px">${fileIcon} <span style="font-size:0.85em;max-width:150px;overflow:hidden;text-overflow:ellipsis">${c.fileName || '—'}</span></div></td>
+            <td><span class="token-mono">${formatDateTime(c.createdAt)}</span></td>
             <td>
                 <div class="action-btns">
-                    <button class="btn-table edit" onclick="viewContract('${c.id}')">👁 Ver</button>
-                    <button class="btn-table" onclick="downloadContract('${c.id}')" ${c.filePath ? '' : 'disabled style="opacity:0.4"'}>⬇️ Doc</button>
+                    <button class="btn-table" onclick="downloadContract('${c.id}')" ${c.filePath ? '' : 'disabled style="opacity:0.4"'}>⬇️ Descargar</button>
                     <button class="btn-table del" onclick="deleteContract('${c.id}')">🗑</button>
                 </div>
             </td>
         </tr>`;
     }).join('');
+}
+
+// Helper para obtener icono según extensión de archivo
+function getFileIcon(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const icons = {
+        'pdf': '📕',
+        'doc': '📘', 'docx': '📘',
+        'xls': '📗', 'xlsx': '📗',
+        'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+        'txt': '📝',
+        'zip': '📦', 'rar': '📦',
+        'mp4': '🎥', 'avi': '🎥', 'mov': '🎥',
+        'mp3': '🎵', 'wav': '🎵'
+    };
+    return icons[ext] || '📄';
 }
 
 async function viewContract(contractId) {
