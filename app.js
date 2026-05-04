@@ -1318,10 +1318,26 @@ function renderLocationPanel(records) {
 }
 
 function focusLocationMarker(empId) {
-    if (!_locationMap || !_locationMarkers[empId]) return;
-    const marker = _locationMarkers[empId];
-    _locationMap.setView(marker.getLatLng(), 15);
-    marker.openPopup();
+    if (!_locationMap) return;
+    
+    // Buscar el registro más reciente del empleado en el historial
+    const empRecords = _locationHistory.filter(r => r.empId === empId);
+    if (!empRecords.length) {
+        showToast('❌ No hay ubicaciones registradas para este empleado', 'error');
+        return;
+    }
+    
+    // Obtener el registro más reciente
+    const latestRecord = empRecords[empRecords.length - 1];
+    const marker = _locationMarkers[latestRecord.id];
+    
+    if (marker) {
+        _locationMap.setView(marker.getLatLng(), 16);
+        marker.openPopup();
+    } else {
+        // Si no hay marcador, centrar en las coordenadas
+        _locationMap.setView([latestRecord.lat, latestRecord.lng], 16);
+    }
 }
 
 function startLocationAutoRefresh() {
