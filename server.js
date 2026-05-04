@@ -1436,6 +1436,52 @@ app.put('/api/hr/contracts/:id', async (req, res) => {
     }
 });
 
+// DELETE /api/hr/contracts/:id — Eliminar contrato
+app.delete('/api/hr/contracts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        let deleted = false;
+        let contract = null;
+
+        if (useMongo) {
+            const state = await State.findOne();
+            const idx = state.contracts?.findIndex(c => c.id === id);
+            if (idx !== undefined && idx !== -1) {
+                contract = state.contracts[idx];
+                state.contracts.splice(idx, 1);
+                state.markModified('contracts');
+                await state.save();
+                deleted = true;
+            }
+        } else {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            const idx = data.contracts?.findIndex(c => c.id === id);
+            if (idx !== undefined && idx !== -1) {
+                contract = data.contracts[idx];
+                data.contracts.splice(idx, 1);
+                fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+                deleted = true;
+            }
+        }
+
+        // Eliminar archivo adjunto si existe
+        if (contract?.filePath) {
+            const filePath = path.join(__dirname, contract.filePath);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        if (!deleted) {
+            return res.status(404).json({ error: 'Contrato no encontrado' });
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ========== ENDPOINTS DE CARTAS DE CONFIDENCIALIDAD ==========
 
 // POST /api/hr/confidentiality — Crear carta de confidencialidad
