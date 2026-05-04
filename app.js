@@ -186,13 +186,16 @@ function confirmSwitchAdmin() {
         // Restaurar menú
         const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
         if (menuSwitchAdmin) menuSwitchAdmin.classList.add('hidden');
-        const menuModoQR = document.querySelector('.user-menu-item:first-child');
+        const menuModoQR = document.querySelector('#userMenuDropdown .user-menu-item:first-child');
         if (menuModoQR) menuModoQR.style.display = '';
         // Restaurar chip
         const userAvatar = document.getElementById('userAvatar');
         const userNameDisplay = document.getElementById('userNameDisplay');
         if (userAvatar) userAvatar.textContent = 'AD';
         if (userNameDisplay) userNameDisplay.textContent = 'Admin';
+        // Restaurar timer
+        const tokenTimer = document.getElementById('tokenTimerWrap');
+        if (tokenTimer) tokenTimer.style.display = '';
         showPage('dashboard');
         showToast('✅ Modo Administrador activado', 'success');
     } else {
