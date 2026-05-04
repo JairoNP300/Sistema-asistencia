@@ -251,16 +251,17 @@ function showMainApp() {
     document.getElementById('mainApp').classList.remove('hidden');
 
     if (currentUser?.role === 'qr') {
-        // Modo QR: ocultar sidebar, mantener topbar con botón de cambio a admin
         document.body.classList.add('qr-mode');
-        // Mostrar topbar pero simplificado
         const topbar = document.querySelector('.topbar');
         if (topbar) topbar.style.display = 'flex';
+        // Ocultar timer de token en modo QR (no relevante para empleados)
+        const tokenTimer = document.getElementById('tokenTimerWrap');
+        if (tokenTimer) tokenTimer.style.display = 'none';
         // Mostrar opción "Cambiar a Admin" en el menú
         const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
         if (menuSwitchAdmin) menuSwitchAdmin.classList.remove('hidden');
         // Ocultar opción "Modo QR" (ya estamos en QR)
-        const menuModoQR = document.querySelector('.user-menu-item:first-child');
+        const menuModoQR = document.querySelector('#userMenuDropdown .user-menu-item:first-child');
         if (menuModoQR) menuModoQR.style.display = 'none';
         // Actualizar chip de usuario
         const userAvatar = document.getElementById('userAvatar');
@@ -270,16 +271,18 @@ function showMainApp() {
         showPage('qr');
         startQRDisplayMode();
     } else {
-        // Modo Admin: mostrar todo
         document.body.classList.remove('qr-mode');
         const topbar = document.querySelector('.topbar');
         if (topbar) topbar.style.display = 'flex';
-        // Ocultar opción "Cambiar a Admin", mostrar "Modo QR"
+        // Restaurar timer de token
+        const tokenTimer = document.getElementById('tokenTimerWrap');
+        if (tokenTimer) tokenTimer.style.display = '';
+        // Ocultar "Cambiar a Admin", mostrar "Modo QR"
         const menuSwitchAdmin = document.getElementById('menuSwitchAdmin');
         if (menuSwitchAdmin) menuSwitchAdmin.classList.add('hidden');
-        const menuModoQR = document.querySelector('.user-menu-item:first-child');
+        const menuModoQR = document.querySelector('#userMenuDropdown .user-menu-item:first-child');
         if (menuModoQR) menuModoQR.style.display = '';
-        // Restaurar chip de usuario
+        // Restaurar chip
         const userAvatar = document.getElementById('userAvatar');
         const userNameDisplay = document.getElementById('userNameDisplay');
         if (userAvatar) userAvatar.textContent = 'AD';
