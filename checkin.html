@@ -129,14 +129,54 @@
             <div class="success-anim warning">⚠️</div>
             <h2 class="success-title">Ya registraste tu <span id="alreadyType">entrada</span> hoy</h2>
             <p class="success-note" id="alreadyMsg">
-                El sistema permite solo un registro por día.<br>
-                Si necesitas corregir un error, contacta al administrador.
+                El sistema permite un registro por día.<br>
+                Si necesitas registrar nuevamente, justifica el motivo.
             </p>
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;width:100%">
-                <button class="btn-primary full" onclick="goBack()">← Volver</button>
-                <button class="btn-secondary full" onclick="contactSupport()" style="background:transparent;border:1px solid #f59e0b;color:#f59e0b">
-                    📞 Contactar Soporte
-                </button>
+                <button class="btn-primary full" onclick="showOverrideForm()">📝 Justificar Nuevo Registro</button>
+                <button class="btn-secondary full" onclick="goBack()">← Volver</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATUS: override form (solicitar motivo para nuevo registro) -->
+    <div class="screen hidden" id="screen-override">
+        <div class="success-wrap" style="max-width:400px">
+            <div class="success-anim" style="background:#6366f1">📝</div>
+            <h2 class="success-title">Justificar Nuevo Registro</h2>
+            <p class="success-note">
+                Ya registraste tu <span id="overrideType">entrada</span> hoy.<br>
+                Para registrar nuevamente, completa la siguiente información:
+            </p>
+            
+            <div style="width:100%;margin-top:20px">
+                <div style="margin-bottom:16px">
+                    <label style="display:block;font-size:0.85em;color:#94a3b8;margin-bottom:6px">Tu Nombre Completo *</label>
+                    <input type="text" id="overrideName" class="form-input" placeholder="Ej: Juan Pérez García" style="width:100%;padding:12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#fff;font-size:1em" />
+                </div>
+                
+                <div style="margin-bottom:16px">
+                    <label style="display:block;font-size:0.85em;color:#94a3b8;margin-bottom:6px">Motivo del Nuevo Registro *</label>
+                    <select id="overrideReason" class="form-input" style="width:100%;padding:12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#fff;font-size:1em">
+                        <option value="">Seleccionar motivo...</option>
+                        <option value="olvidado">Olvidé marcar a tiempo</option>
+                        <option value="error">Error técnico en el primer intento</option>
+                        <option value="salida_emergencia">Tuve que salir por emergencia y regresé</option>
+                        <option value="trabajo_externo">Trabajé fuera de la oficina y regresé</option>
+                        <option value="reunion">Reunión que se extendió</option>
+                        <option value="otro">Otro motivo (especificar)</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom:20px">
+                    <label style="display:block;font-size:0.85em;color:#94a3b8;margin-bottom:6px">Detalles Adicionales</label>
+                    <textarea id="overrideDetails" class="form-input" rows="3" placeholder="Describe brevemente la situación..." style="width:100%;padding:12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#fff;font-size:1em;resize:vertical"></textarea>
+                </div>
+                
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    <button class="btn-primary full" onclick="submitOverride()">✅ Enviar Solicitud</button>
+                    <button class="btn-secondary full" onclick="goBack()">← Cancelar</button>
+                </div>
             </div>
         </div>
     </div>
