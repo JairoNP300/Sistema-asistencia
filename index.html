@@ -1820,6 +1820,29 @@
 
     </div><!-- /mainApp -->
 
+    <!-- Switch to Admin Overlay -->
+    <div class="switch-admin-overlay hidden" id="switchAdminOverlay">
+        <div class="switch-admin-card">
+            <div class="switch-admin-icon">🔐</div>
+            <h3>Cambiar a Administrador</h3>
+            <p>Ingresa la contraseña de administrador para continuar</p>
+            <div class="password-input-wrap" style="width:100%;margin-top:16px">
+                <input type="password" id="switchAdminPass" placeholder="Contraseña de administrador"
+                    autocomplete="off" onkeydown="if(event.key==='Enter')confirmSwitchAdmin()" />
+                <button type="button" class="password-toggle" onclick="
+                    const i=document.getElementById('switchAdminPass');
+                    i.type=i.type==='password'?'text':'password';
+                    this.querySelector('span').textContent=i.type==='password'?'VER':'OCULTAR';
+                "><span>VER</span></button>
+            </div>
+            <p id="switchAdminError" style="color:#f43f5e;font-size:0.85rem;margin-top:8px;min-height:20px"></p>
+            <div style="display:flex;gap:12px;width:100%;margin-top:8px">
+                <button class="btn-login-v2" style="flex:1;padding:12px" onclick="confirmSwitchAdmin()">Ingresar</button>
+                <button class="btn-login-v2" style="flex:1;padding:12px;background:rgba(100,116,139,0.3);box-shadow:none" onclick="closeSwitchAdmin()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="crypto-utils.js"></script>
     <script src="app.js"></script>
 </body>
