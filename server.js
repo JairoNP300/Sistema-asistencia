@@ -869,7 +869,6 @@ app.post('/api/hr/payrolls/generate/biweekly', async (req, res) => {
                 lateDaysCount,
                 totalMinutesLate,
                 lateDeduction: parseFloat(lateDeduction.toFixed(2)),
-                workedDays,
                 biweeklySalary: deductionResults.grossSalary,
                 isss: deductionResults.isss,
                 afp: deductionResults.afp,
