@@ -1543,69 +1543,47 @@
 
     <!-- ===== MODAL: CONTRATO ===== -->
     <div class="modal-overlay" id="contractModal" style="display:none">
-        <div class="modal-box" style="max-width:700px">
+        <div class="modal-box" style="max-width:500px">
             <div class="modal-header">
-                <h3>📄 Contrato Laboral</h3>
+                <h3>📄 Subir Contrato Laboral</h3>
                 <button class="modal-close" onclick="closeContractModal()">✕</button>
             </div>
             <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Empleado *</label>
-                        <select id="contractEmpId" class="form-input">
-                            <option value="">Seleccionar empleado...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Cargo / Puesto *</label>
-                        <input type="text" id="contractPosition" class="form-input" placeholder="Ej: Analista de Sistemas" />
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tipo de Contrato *</label>
-                        <select id="contractType" class="form-input">
-                            <option value="indefinido">Tiempo Indefinido</option>
-                            <option value="temporal">Temporal</option>
-                            <option value="proyecto">Por Proyecto</option>
-                            <option value="prueba">Período de Prueba</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Fecha de Inicio *</label>
-                        <input type="date" id="contractStartDate" class="form-input" />
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Salario Mensual ($) *</label>
-                        <input type="number" id="contractSalary" class="form-input" placeholder="0.00" step="0.01" min="0" />
-                    </div>
-                    <div class="form-group">
-                        <label>Horario de Trabajo</label>
-                        <input type="text" id="contractSchedule" class="form-input" placeholder="Ej: Lunes a Viernes 8:00-17:00" />
-                    </div>
+                <div class="form-group">
+                    <label>Empleado *</label>
+                    <select id="contractEmpId" class="form-input">
+                        <option value="">Seleccionar empleado...</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Beneficios Adicionales</label>
-                    <textarea id="contractBenefits" class="form-input" rows="2" placeholder="Ej: Seguro médico, bono de transporte, etc."></textarea>
+                    <label>Tipo de Documento</label>
+                    <select id="contractDocType" class="form-input">
+                        <option value="contrato_laboral">Contrato Laboral</option>
+                        <option value="renovacion">Renovación de Contrato</option>
+                        <option value="adenda">Adenda/Modificación</option>
+                        <option value="terminacion">Carta de Terminación</option>
+                        <option value="otro">Otro Documento</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Términos y Condiciones Especiales</label>
-                    <textarea id="contractTerms" class="form-input" rows="3" placeholder="Cláusulas especiales del contrato..."></textarea>
+                    <label>Descripción (opcional)</label>
+                    <input type="text" id="contractDescription" class="form-input" placeholder="Ej: Contrato 2024-2025, Renovación anual, etc." />
                 </div>
                 <div class="form-group">
-                    <label>Adjuntar Contrato Firmado (PDF/Imagen)</label>
-                    <div class="upload-drop-zone sm" onclick="document.getElementById('contractFileInput').click()">
-                        <span>📎 Clic para adjuntar archivo</span>
-                        <input type="file" id="contractFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" />
+                    <label>Adjuntar Archivo *</label>
+                    <div class="upload-drop-zone" onclick="document.getElementById('contractFileInput').click()" style="padding:40px;text-align:center;border:2px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s">
+                        <div style="font-size:48px;margin-bottom:12px">📁</div>
+                        <div style="font-weight:600;color:#475569;margin-bottom:4px">Clic para seleccionar archivo</div>
+                        <div style="font-size:0.85em;color:#94a3b8">O arrastra y suelta aquí</div>
+                        <div style="font-size:0.75em;color:#94a3b8;margin-top:8px">PDF, Word, Imágenes, o cualquier formato</div>
+                        <input type="file" id="contractFileInput" style="display:none" />
                     </div>
-                    <span id="contractFileName" style="font-size:12px;color:#888;margin-top:4px;display:block"></span>
+                    <span id="contractFileName" style="font-size:13px;color:#6366f1;margin-top:8px;display:block;font-weight:500"></span>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-ghost" onclick="closeContractModal()">Cancelar</button>
-                <button class="btn-primary" onclick="saveContract()">💾 Guardar Contrato</button>
+                <button class="btn-primary" onclick="saveContract()">⬆️ Subir Documento</button>
             </div>
         </div>
     </div>
