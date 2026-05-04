@@ -254,6 +254,45 @@ app.delete('/api/employees/:id', async (req, res) => {
     }
 });
 
+// GET /api/checkin/status/:empId - Verificar estado de registro del empleado hoy
+app.get('/api/checkin/status/:empId', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    try {
+        const { empId } = req.params;
+        const today = new Date().toDateString();
+        
+        let data;
+        if (useMongo) {
+            data = await State.findOne();
+        } else {
+            data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : {};
+        }
+        
+        const logs = data.logs || [];
+        
+        // Buscar registros de hoy
+        const todayEntry = logs.find(l => 
+            l.empId === empId && 
+            l.type === 'entry' && 
+            new Date(l.ts).toDateString() === today
+        );
+        const todayExit = logs.find(l => 
+            l.empId === empId && 
+            l.type === 'exit' && 
+            new Date(l.ts).toDateString() === today
+        );
+        
+        res.json({
+            hasEntryToday: !!todayEntry,
+            hasExitToday: !!todayExit,
+            entryTime: todayEntry ? todayEntry.ts : null,
+            exitTime: todayExit ? todayExit.ts : null
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // POST /api/checkin - Registro de acceso desde móviles
 app.post('/api/checkin', async (req, res) => {
     try {
@@ -264,16 +303,16 @@ app.post('/api/checkin', async (req, res) => {
             return res.status(400).json({ error: 'empId y type son requeridos' });
         }
 
-        // Validación obligatoria de ubicación
-        if (!logEntry.location || !logEntry.location.lat || !logEntry.location.lng) {
+        // Validación obligatoria de ubicación (excepto para registros con justificación)
+        if ((!logEntry.location || !logEntry.location.lat || !logEntry.location.lng) && logEntry.status !== 'override') {
             return res.status(400).json({ 
                 error: 'Ubicación obligatoria', 
                 details: 'Es obligatorio compartir tu ubicación GPS para registrar entrada o salida' 
             });
         }
 
-        // Validar precisión de la ubicación (opcional pero recomendado)
-        if (logEntry.location.accuracy > 100) {
+        // Validar precisión de la ubicación solo si no es override
+        if (logEntry.location && logEntry.location.accuracy > 100 && logEntry.status !== 'override') {
             return res.status(400).json({ 
                 error: 'Precisión de ubicación insuficiente', 
                 details: 'La precisión del GPS es muy baja. Intenta nuevamente en un lugar con mejor señal.' 
@@ -294,6 +333,24 @@ app.post('/api/checkin', async (req, res) => {
         if (!data.presentSet) data.presentSet = [];
         if (!data.stats) data.stats = { present: 0, entries: 0, exits: 0, blocked: 0 };
         if (!data.usedTokens) data.usedTokens = [];
+        
+        // Verificar si ya existe registro del mismo tipo hoy (solo para registros normales, no overrides)
+        if (logEntry.status !== 'override') {
+            const today = new Date().toDateString();
+            const existingToday = data.logs.find(l => 
+                l.empId === logEntry.empId && 
+                l.type === logEntry.type && 
+                new Date(l.ts).toDateString() === today &&
+                l.status !== 'override' // Los overrides previos no bloquean
+            );
+            
+            if (existingToday) {
+                return res.status(409).json({ 
+                    error: 'Ya existe un registro de este tipo hoy',
+                    existing: existingToday
+                });
+            }
+        }
 
         // Registrar el log
         data.logs.push(logEntry);
