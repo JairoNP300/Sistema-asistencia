@@ -1271,7 +1271,6 @@ async function refreshLocationMap() {
                     .bindPopup(popupContent);
                 _locationMarkers[rec.id] = marker;
             }
-            _locationMarkers[rec.empId] = marker;
             bounds.push([rec.lat, rec.lng]);
         });
         if (bounds.length) _locationMap.fitBounds(bounds, { padding: [40, 40] });
