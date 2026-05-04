@@ -72,40 +72,18 @@ function togglePasswordVisibility() {
 }
 
 function loginV2() {
-    const errorEl = document.getElementById('loginError');
-    errorEl.textContent = '';
-    
-    if (!selectedLocation) {
-        errorEl.textContent = '⚠️ Selecciona una ubicación';
-        return;
-    }
-    
-    // Ubicaciones QR (sin contraseña)
-    if (selectedLocation !== 'admin') {
-        currentUser = { 
-            role: 'qr', 
-            username: 'QR Display',
-            location: selectedLocation 
-        };
-        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-        showMainApp();
-        return;
-    }
-    
-    // Administrador (con contraseña)
-    const pass = document.getElementById('adminPass').value;
-    if (pass === CREDENTIALS.admin.password) {
-        currentUser = { role: 'admin', username: 'Admin' };
-        localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
-        document.getElementById('adminPass').value = '';
-        showMainApp();
-    } else {
-        errorEl.textContent = '❌ Contraseña incorrecta';
-        // Animación shake
-        const card = document.querySelector('.login-card-v2');
-        card.style.animation = 'none';
-        setTimeout(() => card.style.animation = 'shake 0.5s ease', 10);
-    }
+    // Elimina el gating de login: siempre otorga acceso como admin
+    currentUser = { role: 'admin', username: 'Admin' };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+    // Ocultar pantalla de login si existe y mostrar main
+    const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen) loginScreen.style.display = 'none';
+    const mainApp = document.getElementById('mainApp');
+    if (mainApp) mainApp.classList.remove('hidden');
+    // Ir al dashboard
+    showPage('dashboard');
+    // Notificar
+    showToast('✅ Acceso como Admin concedido', 'success');
 }
 
 // Función legacy para compatibilidad
