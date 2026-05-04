@@ -101,6 +101,10 @@ body {
     margin-left: 0;
 }
 
+.main-wrap.no-sidebar {
+    margin-left: 0;
+}
+
 /* ---------- SIDEBAR ---------- */
 .sidebar-header {
     padding: 20px 20px 16px;
@@ -299,31 +303,6 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
-}
-
-.hamburger-main {
-    width: 36px;
-    height: 36px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    color: var(--text-muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    flex-shrink: 0;
-}
-
-.hamburger-main:hover {
-    color: var(--text);
-    border-color: var(--primary);
-}
-
-.hamburger-main svg {
-    width: 18px;
-    height: 18px;
 }
 
 .page-title {
@@ -2272,17 +2251,9 @@ body {
 
 /* APP NAVIGATION */
 @media (max-width: 768px) {
-    .sidebar { display: none !important; }
-    .main-wrap { margin-left: 0 !important; padding-bottom: 80px; }
-    .mobile-nav { 
-        display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; 
-        height: 70px; background: #0f172a; border-top: 1px solid #ffffff14; 
-        justify-content: space-around; align-items: center; z-index: 9999;
-    }
-    .m-nav-item { color: #94a3b8; font-size: 11px; display: flex; flex-direction: column; align-items: center; background: none; border: none; }
-    .m-nav-item.active { color: #818cf8; }
+    .main-wrap { margin-left: 0 !important; }
+    .main-wrap.no-sidebar { margin-left: 0 !important; }
 }
-@media (min-width: 769px) { .mobile-nav { display: none !important; } }
 
 /* ============================================================
    LOCATION MODULE — Ubicación en Tiempo Real
@@ -3124,9 +3095,6 @@ body.qr-mode .main-wrap {
     margin-left: 0 !important;
 }
 
-body.qr-mode .mobile-nav {
-    display: none !important;
-}
 
 body.qr-mode #page-qr {
     padding: 0 !important;
@@ -3405,7 +3373,6 @@ body.qr-mode #page-qr {
 }
 
 /* QR Mode — ocultar completamente sidebar y menú */
-body.qr-mode .hamburger-main,
 body.qr-mode .sidebar,
 body.qr-mode .sidebar-header,
 body.qr-mode .sidebar-nav,
