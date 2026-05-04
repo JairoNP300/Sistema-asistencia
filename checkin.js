@@ -219,13 +219,20 @@ async function submitCheckin(type) {
 }
 
 /* ---- SUCCESS SCREEN ---- */
-function showSuccess(emp, type, time) {
+function showSuccess(emp, type, time, isOverride = false) {
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
     setEl('scName', `${emp.firstName} ${emp.lastName}`);
-    setEl('scType', type === 'entry' ? '🟢 Entrada' : '🔴 Salida');
+    
+    if (isOverride) {
+        setEl('scType', type === 'entry' ? '🟢 Entrada (Justificada)' : '🔴 Salida (Justificada)');
+        setEl('successTitle', type === 'entry' ? '✅ Entrada Registrada con Justificación' : '✅ Salida Registrada con Justificación');
+    } else {
+        setEl('scType', type === 'entry' ? '🟢 Entrada' : '🔴 Salida');
+        setEl('successTitle', type === 'entry' ? '¡Bienvenido! 👋' : '¡Hasta pronto! 👋');
+    }
+    
     setEl('scTime', time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     setEl('scDept', emp.dept);
-    setEl('successTitle', type === 'entry' ? '¡Bienvenido! 👋' : '¡Hasta pronto! 👋');
     showScreen('screen-success');
 
     let count = 6;
