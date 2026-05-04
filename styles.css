@@ -3403,3 +3403,17 @@ body.qr-mode #page-qr {
     border-color: rgba(99, 102, 241, 0.5);
     color: #a5b4fc;
 }
+
+/* QR Mode — ocultar hamburger del sidebar */
+body.qr-mode .hamburger-main {
+    display: none !important;
+}
+
+/* Menú usuario — item cambiar a admin */
+.admin-switch-item {
+    color: #818cf8 !important;
+}
+
+.admin-switch-item:hover {
+    background: rgba(99, 102, 241, 0.12) !important;
+}
