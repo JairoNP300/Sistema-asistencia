@@ -288,6 +288,7 @@ function showPage(id) {
     document.getElementById('pageSub').textContent = sub;
     if (id !== 'scanner') stopScanner();
     if (id === 'generate') startStationQR();
+    if (id === 'qr') { startQRDisplayMode(); }
     if (id === 'employees') renderEmployeeTable();
     if (id === 'logs') { loadLogsHistory().then(() => renderLogs()); }
     if (id === 'reports') renderReports();
