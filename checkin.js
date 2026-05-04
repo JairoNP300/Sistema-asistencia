@@ -556,6 +556,25 @@ async function submitCheckinWithLocation(type) {
     if (btnEntry) btnEntry.disabled = true;
     if (btnExit) btnExit.disabled = true;
 
+    // Primero verificar si ya existe un registro de este tipo hoy
+    try {
+        const statusRes = await fetch(`/api/checkin/status/${emp.id}`);
+        if (statusRes.ok) {
+            const status = await statusRes.json();
+            
+            // Si ya existe un registro del mismo tipo hoy, mostrar formulario de justificación
+            if ((type === 'entry' && status.hasEntryToday) || (type === 'exit' && status.hasExitToday)) {
+                showAlreadyRegistered(type);
+                if (btnEntry) btnEntry.disabled = false;
+                if (btnExit) btnExit.disabled = false;
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn('No se pudo verificar estado previo:', e);
+        // Continuar con el registro normalmente
+    }
+
     const now = new Date();
     const nonce = cState.tokenPayload?.nonce || null;
 
@@ -597,7 +616,7 @@ async function submitCheckinWithLocation(type) {
     }
 
     // Todos los intentos fallaron
-    showToastLocal('?? No se pudo conectar. Intenta de nuevo.', 'error');
+    showToastLocal('❌ No se pudo conectar. Intenta de nuevo.', 'error');
     if (btnEntry) btnEntry.disabled = false;
     if (btnExit) btnExit.disabled = false;
 }
