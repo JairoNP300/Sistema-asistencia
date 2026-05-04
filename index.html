@@ -265,9 +265,21 @@
                     <span class="topbar-time" id="topbarTime"></span>
                     <span class="topbar-date" id="topbarDate"></span>
                 </div>
-                <div class="user-chip" id="userChip">
-                    <span class="user-avatar">AD</span>
-                    <span class="user-name">Admin</span>
+                <div class="user-chip" id="userChip" onclick="toggleUserMenu()">
+                    <span class="user-avatar" id="userAvatar">AD</span>
+                    <span class="user-name" id="userNameDisplay">Admin</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6,9 12,15 18,9"></polyline>
+                    </svg>
+                    <!-- Dropdown menu -->
+                    <div class="user-menu-dropdown hidden" id="userMenuDropdown">
+                        <button class="user-menu-item" onclick="switchProfile(); event.stopPropagation();">
+                            <span>🔄</span> Cambiar Perfil
+                        </button>
+                        <button class="user-menu-item logout" onclick="logout(); event.stopPropagation();">
+                            <span>🚪</span> Cerrar Sesión
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
