@@ -1243,28 +1243,68 @@
 
             <!-- === QR DISPLAY MODE === -->
             <section class="page" id="page-qr">
-                <div class="qr-display-container">
-                    <div class="qr-display-header">
-                        <h2>� Sistema de Asistencia</h2>
-                        <p>Escanea el código QR para registrar tu entrada o salida</p>
-                    </div>
+                <div class="station-layout qr-fullscreen">
+                    <div class="station-qr-panel qr-centered">
+                        <div class="station-qr-header">
+                            <div class="station-badge">📍 QR de Estación</div>
+                            <h2 id="qrDisplayTitle">Código de Acceso de Entrada</h2>
+                            <p>Coloca esta pantalla en la entrada. Los empleados escanean este único código con su teléfono.</p>
+                        </div>
 
-                    <div class="qr-code-box">
-                        <div id="qrDisplayCode"></div>
-                    </div>
+                        <div class="station-qr-wrap" id="qrDisplayWrap">
+                            <div class="qr-loading" id="qrDisplayLoading">
+                                <div class="qr-spinner"></div>
+                                <span>Generando QR seguro…</span>
+                            </div>
+                            <div id="qrDisplayCode" style="display:none"></div>
+                        </div>
 
-                    <div class="qr-timer" id="qrTimer">60</div>
-                    <div class="qr-timer-label">El código se renueva automáticamente cada 60 segundos</div>
+                        <!-- Countdown ring -->
+                        <div class="station-countdown">
+                            <div class="qr-ring-wrap">
+                                <svg viewBox="0 0 80 80" class="qr-ring-svg">
+                                    <circle class="qr-ring-bg" cx="40" cy="40" r="34" />
+                                    <circle class="qr-ring-fill" id="qrDisplayRingFill" cx="40" cy="40" r="34" />
+                                </svg>
+                                <span class="qr-ring-num" id="qrDisplayRingNum">60</span>
+                            </div>
+                            <div class="qr-cd-text">
+                                <span>El QR rota en</span>
+                                <span class="qr-cd-warn" id="qrDisplayWarn">Seguro</span>
+                            </div>
+                            <div class="token-details" style="flex:1">
+                                <div class="td-row">
+                                    <span class="td-key">Token ID</span>
+                                    <span class="td-val mono" id="qrDisplayTokenId">—</span>
+                                </div>
+                                <div class="td-row">
+                                    <span class="td-key">Generado</span>
+                                    <span class="td-val" id="qrDisplayGenTime">—</span>
+                                </div>
+                                <div class="td-row">
+                                    <span class="td-key">Expira</span>
+                                    <span class="td-val warning" id="qrDisplayExpTime">—</span>
+                                </div>
+                                <div class="td-row">
+                                    <span class="td-key">Firma HMAC</span>
+                                    <span class="td-val mono success" id="qrDisplaySig">—</span>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="qr-company" id="qrCompanyName">Mi Empresa S.A.</div>
-                    <div class="qr-datetime" id="qrCurrentTime"></div>
+                        <!-- URL sharing -->
+                        <div class="url-share-box">
+                            <label>🔗 URL del Check-in (para compartir)</label>
+                            <div class="url-row">
+                                <input type="text" id="qrDisplayUrl" readonly class="url-input" />
+                                <button class="btn-icon-sm" onclick="copyQrLink()" title="Copiar URL">📋</button>
+                            </div>
+                        </div>
 
-                    <!-- Link manual para acceso sin escaneo -->
-                    <div class="qr-manual-link">
-                        <p>¿No puedes escanear? Accede manualmente:</p>
-                        <div class="qr-link-box">
-                            <input type="text" id="qrManualUrl" readonly>
-                            <button onclick="copyQrLink()">Copiar</button>
+                        <!-- Company info -->
+                        <div class="qr-company-info">
+                            <div id="qrDisplayCompany">Mi Empresa S.A.</div>
+                            <div id="qrDisplayDateTime"></div>
                         </div>
                     </div>
                 </div>
