@@ -524,14 +524,17 @@ async function renderQRDisplay() {
     const baseUrl = `${protocol}//${host}/checkin.html`;
     const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
 
+    // Guardar URL para acceso manual
+    state.currentQRUrl = url;
+
     const qrDiv = document.getElementById('qrDisplayCode');
     if (!qrDiv) return;
 
     qrDiv.innerHTML = '';
     new QRCode(qrDiv, {
         text: url,
-        width: 300,
-        height: 300,
+        width: 280,
+        height: 280,
         colorDark: '#07071a',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
@@ -540,6 +543,10 @@ async function renderQRDisplay() {
     // Actualizar nombre de empresa
     const companyEl = document.getElementById('qrCompanyName');
     if (companyEl) companyEl.textContent = state.adminConfig.company || 'Mi Empresa S.A.';
+
+    // Actualizar URL manual
+    const urlInput = document.getElementById('qrManualUrl');
+    if (urlInput) urlInput.value = url;
 }
 
 function updateQRDisplayTime() {
