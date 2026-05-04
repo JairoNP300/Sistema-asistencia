@@ -1285,26 +1285,77 @@ function renderLocationPanel(records) {
         records.filter(r => new Date(r.timestamp).toDateString() === today).map(r => r.empId)
     );
     document.getElementById('locDayCount').textContent = todayEmpIds.size;
-    // Ordenar por timestamp descendente
-    const sorted = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Agrupar registros por empleado y tipo (entrada/salida)
+    const empRecords = {};
+    records.forEach(rec => {
+        if (!empRecords[rec.empId]) {
+            empRecords[rec.empId] = { entry: null, exit: null, empName: rec.empName, dept: rec.dept };
+        }
+        if (rec.type === 'entry') {
+            // Mantener la entrada más reciente
+            if (!empRecords[rec.empId].entry || new Date(rec.timestamp) > new Date(empRecords[rec.empId].entry.timestamp)) {
+                empRecords[rec.empId].entry = rec;
+            }
+        } else if (rec.type === 'exit') {
+            // Mantener la salida más reciente
+            if (!empRecords[rec.empId].exit || new Date(rec.timestamp) > new Date(empRecords[rec.empId].exit.timestamp)) {
+                empRecords[rec.empId].exit = rec;
+            }
+        }
+    });
+    
+    // Convertir a array y ordenar por timestamp más reciente
+    const sortedEmps = Object.values(empRecords).sort((a, b) => {
+        const aTime = a.exit?.timestamp || a.entry?.timestamp || 0;
+        const bTime = b.exit?.timestamp || b.entry?.timestamp || 0;
+        return new Date(bTime) - new Date(aTime);
+    });
+    
     const locList = document.getElementById('locList');
-    if (!sorted.length) {
+    if (!sortedEmps.length) {
         locList.innerHTML = '<div class="empty-feed">No hay ubicaciones registradas aún.</div>';
     } else {
-        locList.innerHTML = sorted.map(rec => {
-            const emp = state.employees.find(e => e.id === rec.empId);
-            const time = new Date(rec.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-            const typeLabel = rec.type === 'entry' ? '🟢 Entrada' : '🔴 Salida';
-            const acc = rec.accuracy;
-            const accClass = acc < 50 ? 'loc-accuracy-high' : acc < 200 ? 'loc-accuracy-mid' : 'loc-accuracy-low';
-            const accLabel = acc < 50 ? 'Alta' : acc < 200 ? 'Media' : 'Baja';
-            return `<div class="loc-item" onclick="focusLocationMarker('${rec.empId}')">
-                <div class="loc-item-avatar">${emp?.avatar || rec.empName?.[0] || '👤'}</div>
-                <div class="loc-item-body">
-                    <div class="loc-item-name">${rec.empName}</div>
-                    <div class="loc-item-meta">${rec.dept || '—'} · ${typeLabel} · ${time}</div>
+        locList.innerHTML = sortedEmps.map(empData => {
+            const emp = state.employees.find(e => e.id === Object.keys(empRecords).find(k => empRecords[k] === empData));
+            const entry = empData.entry;
+            const exit = empData.exit;
+            
+            const entryTime = entry ? new Date(entry.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : null;
+            const exitTime = exit ? new Date(exit.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : null;
+            
+            // Determinar el estado del empleado
+            let statusHtml = '';
+            if (entry && exit) {
+                statusHtml = `<span style="color:#10b981;font-size:0.85em">✅ Completado</span>`;
+            } else if (entry && !exit) {
+                statusHtml = `<span style="color:#f59e0b;font-size:0.85em">🟡 En jornada</span>`;
+            } else if (!entry && exit) {
+                statusHtml = `<span style="color:#ef4444;font-size:0.85em">⚠️ Solo salida</span>`;
+            }
+            
+            // Construir info de entrada y salida
+            let timesHtml = '';
+            if (entryTime) {
+                timesHtml += `<span style="color:#10b981">🟢 Entrada: ${entryTime}</span>`;
+            }
+            if (exitTime) {
+                if (timesHtml) timesHtml += ' · ';
+                timesHtml += `<span style="color:#f43f5e">🔴 Salida: ${exitTime}</span>`;
+            }
+            
+            const empId = Object.keys(empRecords).find(k => empRecords[k] === empData);
+            
+            return `<div class="loc-item" onclick="focusLocationMarker('${empId}')">
+                <div class="loc-item-avatar">${emp?.avatar || empData.empName?.[0] || '👤'}</div>
+                <div class="loc-item-body" style="flex:1">
+                    <div class="loc-item-name">${empData.empName}</div>
+                    <div class="loc-item-meta">${empData.dept || '—'}</div>
+                    <div style="font-size:0.8em;margin-top:4px">${timesHtml}</div>
                 </div>
-                <span class="loc-accuracy-badge ${accClass}">${accLabel}</span>
+                <div style="text-align:right">
+                    ${statusHtml}
+                </div>
             </div>`;
         }).join('');
     }
