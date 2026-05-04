@@ -737,8 +737,8 @@ async function renderQRDisplay() {
         text: url,
         width: 260,
         height: 260,
-        colorDark: '#07071a',
-        colorLight: '#ffffff',
+        colorDark: '#1e1b4b',
+        colorLight: '#f0f4ff',
         correctLevel: QRCode.CorrectLevel.M
     });
 
