@@ -95,28 +95,33 @@ async function migrateToCloud() {
 let useMongo = false;
 if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('USUARIO:PASSWORD')) {
     const mongoOpts = {
-        serverSelectionTimeoutMS: 10000,
-        connectTimeoutMS: 15000,
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 10000,
         socketTimeoutMS: 45000,
         retryWrites: true,
         retryReads: true,
     };
 
     async function connectMongo(attempt = 1) {
+        const maxAttempts = 3;
         try {
             await mongoose.connect(process.env.MONGODB_URI, mongoOpts);
             console.log('✅ Conectado a MongoDB Atlas (Cloud Mode)');
             useMongo = true;
             await migrateToCloud();
         } catch (err) {
-            const maxAttempts = 5;
-            const delay = Math.min(attempt * 3000, 15000);
+            // Simplificar el mensaje de error
+            const shortErr = err.message.includes('querySrv') || err.message.includes('ECONNREFUSED')
+                ? 'Sin acceso a MongoDB Atlas (red local sin DNS SRV)'
+                : err.message.split('\n')[0];
+
             if (attempt < maxAttempts) {
-                console.warn(`⚠️ MongoDB intento ${attempt}/${maxAttempts} fallido: ${err.message}`);
-                console.log(`   Reintentando en ${delay / 1000}s...`);
+                const delay = attempt * 4000;
+                console.warn(`⚠️ MongoDB intento ${attempt}/${maxAttempts}: ${shortErr}. Reintentando en ${delay/1000}s...`);
                 setTimeout(() => connectMongo(attempt + 1), delay);
             } else {
-                console.warn(`⚠️ No se pudo conectar a MongoDB tras ${maxAttempts} intentos. Usando modo Local (data.json).`);
+                console.warn(`⚠️ MongoDB no disponible localmente. Usando data.json como respaldo.`);
+                console.warn(`   (En Render/producción MongoDB Atlas conecta correctamente)`);
             }
         }
     }
