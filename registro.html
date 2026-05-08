@@ -280,17 +280,70 @@
         let selectedEmployee = null;
         let locationData = null;
 
-        // Cargar empleados del servidor
+        // Cargar empleados del servidor con reintentos
         async function cargarEmpleados() {
-            try {
-                const response = await fetch('/api/data');
-                const data = await response.json();
-                employees = data.employees || [];
-                mostrarEmpleados();
-            } catch (error) {
-                console.error('Error cargando empleados:', error);
-                mostrarEstado('error', '❌ Error al cargar empleados. Intenta de nuevo.');
+            mostrarEstado('loading', '⏳ Cargando empleados...');
+            
+            // Reintentar hasta 3 veces
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const response = await fetch('/api/data', {
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    employees = data.employees || [];
+                    
+                    // Si no hay empleados, cargar los permanentes
+                    if (employees.length === 0) {
+                        console.log('No hay empleados, cargando permanentes...');
+                        await cargarEmpleadosPermanentes();
+                    }
+                    
+                    mostrarEmpleados();
+                    mostrarEstado('success', `✅ ${employees.length} empleados cargados`);
+                    return;
+                    
+                } catch (error) {
+                    console.error(`Intento ${i + 1} fallido:`, error);
+                    if (i < 2) {
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                    } else {
+                        mostrarEstado('error', '❌ No se pudieron cargar los empleados. Intenta recargar la página.');
+                    }
+                }
             }
+        }
+
+        // Cargar empleados permanentes si no hay datos
+        async function cargarEmpleadosPermanentes() {
+            const permanentEmployees = [
+                { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '1', dept: 'RRHH', role: 'GERENTE RRHH', email: 'carlos@empresa.com', avatar: '👨‍💼', status: 'active' },
+                { firstName: 'ANGEL', lastName: 'GONZALEZ', empNum: '2', dept: 'RRHH', role: 'RECLUTADOR', email: 'angel@empresa.com', avatar: '👨‍💼', status: 'active' },
+                { firstName: 'MIGUEL', lastName: 'MARTINEZ', empNum: '3', dept: 'OPERACIONES', role: 'OPERADOR', email: 'miguel@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'EDGAR', lastName: 'MARTINEZ', empNum: '4', dept: 'OPERACIONES', role: 'OPERADOR', email: 'edgar@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '5', dept: 'OPERACIONES', role: 'OPERADOR', email: 'carlos.martinez@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'JAVIER', lastName: 'MARTINEZ', empNum: '6', dept: 'OPERACIONES', role: 'OPERADOR', email: 'javier@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'JOSE', lastName: 'MARTINEZ', empNum: '7', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jose@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'JUAN', lastName: 'MARTINEZ', empNum: '8', dept: 'OPERACIONES', role: 'OPERADOR', email: 'juan@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'ANTONIO', lastName: 'MARTINEZ', empNum: '9', dept: 'OPERACIONES', role: 'OPERADOR', email: 'antonio@empresa.com', avatar: '👷', status: 'active' },
+                { firstName: 'JESUS', lastName: 'MARTINEZ', empNum: '10', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jesus@empresa.com', avatar: '👷', status: 'active' }
+            ];
+
+            employees = permanentEmployees.map((emp, i) => ({
+                ...emp,
+                id: `emp_permanent_${i}`,
+                createdAt: new Date().toISOString(),
+                lastAccess: null
+            }));
         }
 
         // Mostrar lista de empleados
@@ -445,8 +498,35 @@
         // Buscar
         document.getElementById('searchInput').addEventListener('input', mostrarEmpleados);
 
+        // Sistema de sincronización de versiones
+        function sincronizarVersion() {
+            const currentVersion = Date.now();
+            localStorage.setItem('registro_version', currentVersion);
+            
+            // Forzar recarga si hay cambios en el servidor
+            setInterval(async () => {
+                try {
+                    const response = await fetch('/api/version?t=' + Date.now(), { cache: 'no-store' });
+                    const data = await response.json();
+                    const serverVersion = data.version || 'unknown';
+                    const localVersion = localStorage.getItem('registro_version');
+                    
+                    if (serverVersion !== localVersion) {
+                        console.log('Nueva versión detectada, recargando...');
+                        localStorage.setItem('registro_version', serverVersion);
+                        window.location.reload(true);
+                    }
+                } catch (error) {
+                    console.error('Error verificando versión:', error);
+                }
+            }, 30000); // Verificar cada 30 segundos
+        }
+
         // Iniciar
-        document.addEventListener('DOMContentLoaded', cargarEmpleados);
+        document.addEventListener('DOMContentLoaded', () => {
+            sincronizarVersion();
+            cargarEmpleados();
+        });
     </script>
 </body>
 </html>
