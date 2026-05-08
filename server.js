@@ -176,7 +176,7 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
-// POST /api/token - Generar nuevo token para acceso permanente
+// POST /api/token - Generar nuevo token para acceso permanente (SIN EXPIRACIÓN)
 app.post('/api/token', async (req, res) => {
     try {
         // Importar las mismas utilidades que usa el frontend
@@ -194,19 +194,17 @@ app.post('/api/token', async (req, res) => {
             return res.status(500).json({ error: 'Sistema no configurado' });
         }
         
-        // Generar token con la misma lógica que el frontend
+        // Generar token SIN expiración - para acceso 24/7
         const now = Math.floor(Date.now() / 1000);
-        const life = data.config?.tokenLife || 60;
-        const quantizedTs = Math.floor(now / life) * life;
         const nonce = CryptoUtils.generateNonce();
-        const message = `station|${quantizedTs}|${nonce}`;
+        const message = `station|${now}|${nonce}`;
         const sig = await CryptoUtils.hmacSign(message, data.secretKey);
         
         const payload = {
             v: 2,
             type: 'station',
-            ts: quantizedTs,
-            exp: quantizedTs + life,
+            ts: now,
+            exp: 9999999999, // Expiración muy lejana (prácticamente nunca)
             nonce,
             sig: sig.slice(0, 32)
         };
@@ -215,14 +213,14 @@ app.post('/api/token', async (req, res) => {
         
         res.json({ 
             token,
-            expiresAt: (quantizedTs + life) * 1000,
-            life,
-            message: 'Token generado exitosamente'
+            expiresAt: 9999999999000, // Fecha muy lejana
+            life: 'permanente',
+            message: 'Token permanente generado exitosamente'
         });
         
     } catch (error) {
-        console.error('Error generando token:', error);
-        res.status(500).json({ error: 'Error generando token' });
+        console.error('Error generando token permanente:', error);
+        res.status(500).json({ error: 'Error generando token permanente' });
     }
 });
 

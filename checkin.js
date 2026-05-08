@@ -114,20 +114,18 @@ async function validateStationToken(encoded) {
     if (payload?.type !== 'station') return { valid: false, reason: 'Tipo de token incorrecto', code: 'WRONG_TYPE' };
     if (!payload.ts || !payload.nonce || !payload.sig) return { valid: false, reason: 'Token incompleto', code: 'INCOMPLETE' };
 
-    // Ventana MUY generosa: hasta 10 minutos de tolerancia para problemas de conexión
+    // ELIMINAR VALIDACIÓN DE TIEMPO - Aceptar tokens sin límite de expiración
+    // Esto permite que el link funcione 24/7 sin restricciones
     const life = cState.config.tokenLife || 60;
-    // Aumentamos la tolerancia a 600 segundos (10 minutos) para dar margen suficiente
-    const tolerance = 600;
     const age = now - payload.ts;
 
-    // Permitimos tokens con hasta 10 minutos de antigüedad más el tiempo de vida del token
-    if (age > life + tolerance) {
-        return { valid: false, reason: `QR expirado. Escanea el código actualizado en la pantalla de entrada.`, code: 'EXPIRED' };
-    }
-    // Tolerancia de 120s para diferencias de reloj entre dispositivos
-    if (payload.ts > now + 120) {
+    // Solo verificar que el token no sea del futuro (margen de 5 minutos por seguridad)
+    if (payload.ts > now + 300) {
         return { valid: false, reason: 'QR con hora futura. Verifica la hora de tu dispositivo.', code: 'FUTURE_TS' };
     }
+
+    // SIN VALIDACIÓN DE EXPIRACIÓN - Aceptar tokens de cualquier edad
+    // Esto elimina completamente la restricción de tiempo
 
     // Si no hay secretKey en el servidor, aceptar el token (modo sin firma)
     if (!cState.secretKey) {
