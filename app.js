@@ -124,6 +124,15 @@ function seedDemoEmployees() {
         { firstName: 'Luis', lastName: 'Hernández', empNum: 'EMP-004', dept: 'Operaciones', role: 'Supervisor', email: 'luis@empresa.com', avatar: '👷', status: 'active' },
         { firstName: 'Sofia', lastName: 'Ramírez', empNum: 'EMP-005', dept: 'Finanzas', role: 'Contadora', email: 'sofia@empresa.com', avatar: '👩‍🏫', status: 'active' },
         { firstName: 'Jorge', lastName: 'Torres', empNum: 'EMP-006', dept: 'TI', role: 'DevOps Engineer', email: 'jorge@empresa.com', avatar: '🧑‍💻', status: 'inactive' },
+        { firstName: 'Pedro', lastName: 'González', empNum: 'EMP-007', dept: 'TI', role: 'Desarrollador', email: 'pedro@empresa.com', avatar: '👨‍💻', status: 'active' },
+        { firstName: 'Laura', lastName: 'Sánchez', empNum: 'EMP-008', dept: 'Ventas', role: 'Vendedora', email: 'laura@empresa.com', avatar: '👩‍💼', status: 'active' },
+        { firstName: 'Miguel', lastName: 'Rodríguez', empNum: 'EMP-009', dept: 'Operaciones', role: 'Operador', email: 'miguel@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'Carmen', lastName: 'Díaz', empNum: 'EMP-010', dept: 'Finanzas', role: 'Analista Financiero', email: 'carmen@empresa.com', avatar: '👩‍🏫', status: 'active' },
+        { firstName: 'Roberto', lastName: 'Mendoza', empNum: 'EMP-011', dept: 'TI', role: 'QA Engineer', email: 'roberto@empresa.com', avatar: '👨‍💻', status: 'active' },
+        { firstName: 'Patricia', lastName: 'Vargas', empNum: 'EMP-012', dept: 'RRHH', role: 'Reclutadora', email: 'patricia@empresa.com', avatar: '👩‍💼', status: 'active' },
+        { firstName: 'Fernando', lastName: 'Castillo', empNum: 'EMP-013', dept: 'Ventas', role: 'Gerente de Ventas', email: 'fernando@empresa.com', avatar: '👨‍💼', status: 'active' },
+        { firstName: 'Gabriela', lastName: 'Morales', empNum: 'EMP-014', dept: 'Operaciones', role: 'Coordinadora', email: 'gabriela@empresa.com', avatar: '👩‍💼', status: 'active' },
+        { firstName: 'Ricardo', lastName: 'Silva', empNum: 'EMP-015', dept: 'Finanzas', role: 'Auditor', email: 'ricardo@empresa.com', avatar: '👨‍💼', status: 'active' },
     ];
     demos.forEach((d, i) => {
         state.employees.push({ ...d, id: `emp_${Date.now()}_${i}`, createdAt: new Date().toISOString(), lastAccess: null });
