@@ -14,9 +14,18 @@ let state = {
 };
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
+    // Limpiar localStorage para eliminar todos los datos
+    localStorage.removeItem(STORE_KEY);
+    
+    // Inicializar estado limpio
+    state.employees = [];
+    state.logs = [];
+    state.presentSet = new Set();
+    state.stats = { present: 0, entries: 0, exits: 0, blocked: 0 };
+    
     await loadFromStorage();
     if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
-    if (!state.employees.length) seedDemoEmployees();
+    // No agregar empleados automáticamente
     await saveToStorage();
     initClock();
     initTokenTimer();
