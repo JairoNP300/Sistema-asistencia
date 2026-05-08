@@ -176,6 +176,56 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
+// POST /api/token - Generar nuevo token para acceso permanente
+app.post('/api/token', async (req, res) => {
+    try {
+        // Importar las mismas utilidades que usa el frontend
+        const CryptoUtils = require('./crypto-utils.js');
+        
+        // Obtener el estado actual para generar el token
+        let data;
+        if (useMongo) {
+            data = await State.findOne();
+        } else {
+            data = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) : null;
+        }
+        
+        if (!data || !data.secretKey) {
+            return res.status(500).json({ error: 'Sistema no configurado' });
+        }
+        
+        // Generar token con la misma lógica que el frontend
+        const now = Math.floor(Date.now() / 1000);
+        const life = data.config?.tokenLife || 60;
+        const quantizedTs = Math.floor(now / life) * life;
+        const nonce = CryptoUtils.generateNonce();
+        const message = `station|${quantizedTs}|${nonce}`;
+        const sig = await CryptoUtils.hmacSign(message, data.secretKey);
+        
+        const payload = {
+            v: 2,
+            type: 'station',
+            ts: quantizedTs,
+            exp: quantizedTs + life,
+            nonce,
+            sig: sig.slice(0, 32)
+        };
+        
+        const token = btoa(JSON.stringify(payload));
+        
+        res.json({ 
+            token,
+            expiresAt: (quantizedTs + life) * 1000,
+            life,
+            message: 'Token generado exitosamente'
+        });
+        
+    } catch (error) {
+        console.error('Error generando token:', error);
+        res.status(500).json({ error: 'Error generando token' });
+    }
+});
+
 // POST /api/save - Sincronizar estado completo (Admin)
 app.post('/api/save', async (req, res) => {
     try {
