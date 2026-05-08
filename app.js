@@ -374,20 +374,26 @@ async function renderStationQR() {
     const host = window.location.host;
     const protocol = window.location.protocol;
 
-    // Generar la URL completa de check-in
+    // Generar URL permanente SIN token - el token se obtendrá dinámicamente
     const baseUrl = `${protocol}//${host}/checkin.html`;
-    const url = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
-    // Update URL display
+    const permanentUrl = baseUrl; // URL sin parámetros de token
+    
+    // Generar URL temporal con token para el QR actual
+    const tempUrl = `${baseUrl}?t=${encodeURIComponent(result.encoded)}`;
+    
+    // Update URL display - mostrar el link permanente
     const urlInput = document.getElementById('stationUrl');
-    if (urlInput) urlInput.value = url;
-    // Render QR
+    if (urlInput) urlInput.value = permanentUrl;
+    
+    // Render QR con URL temporal (que rota)
     const loading = document.getElementById('stationQrLoading');
     const qrDiv = document.getElementById('stationQrCode');
     if (!qrDiv) return;
     qrDiv.innerHTML = '';
     qrDiv.style.display = 'block';
     if (loading) loading.style.display = 'none';
-    new QRCode(qrDiv, { text: url, width: 240, height: 240, colorDark: '#07071a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(qrDiv, { text: tempUrl, width: 240, height: 240, colorDark: '#07071a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    
     // Update token info
     const p = result.payload;
     const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -395,10 +401,23 @@ async function renderStationQR() {
     setEl('stationGenTime', new Date(p.ts * 1000).toLocaleTimeString('es-MX'));
     setEl('stationExpTime', new Date(result.expiresAt).toLocaleTimeString('es-MX'));
     setEl('stationSig', p.sig.slice(0, 20) + '…');
+    
     // Show countdown
     const cd = document.getElementById('stationCountdown');
     if (cd) cd.style.display = 'flex';
     updateStationRing(state.config.tokenLife, state.config.tokenLife);
+    
+    // Agregar información sobre el link permanente
+    const permanentInfo = document.getElementById('permanentLinkInfo');
+    if (permanentInfo) {
+        permanentInfo.innerHTML = `
+            <div style="margin-top: 10px; padding: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px;">
+                <strong>🔗 Link Permanente:</strong><br>
+                <span style="font-family: monospace; font-size: 12px; word-break: break-all;">${permanentUrl}</span><br>
+                <small style="color: #0369a1;">Este link nunca expira. El QR rota cada ${state.config.tokenLife}s.</small>
+            </div>
+        `;
+    }
 }
 
 function updateStationRing(remaining, total) {

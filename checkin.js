@@ -22,8 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const tokenEncoded = params.get('t');
 
+    // Si no hay token, mostrar pantalla para obtener token dinámicamente
     if (!tokenEncoded) {
-        showExpired('No se encontró un código de acceso en esta URL.', 'Escanea el QR en la pantalla de entrada.');
+        showTokenRequestScreen();
         return;
     }
 
