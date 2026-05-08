@@ -37,8 +37,8 @@ start https://sistema-asistencia-s0m2.onrender.com
 
 timeout /t 3 >nul
 
-echo Abriendo link de registro optimizado...
-start https://sistema-asistencia-s0m2.onrender.com/registro.html
+echo Abriendo link de registro simple y funcional...
+start https://sistema-asistencia-s0m2.onrender.com/registro-simple.html
 
 REM Iniciar servidor Y watch-deploy en paralelo
 echo Iniciando servidor local...

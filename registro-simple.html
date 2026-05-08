@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Asistencia - Registro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #07071a;
+            --surface: #0f0f2a;
+            --primary: #6366f1;
+            --accent: #a78bfa;
+            --green: #10b981;
+            --red: #f43f5e;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --font: 'Outfit', sans-serif;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .employees-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .employee-card {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .employee-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            border-color: var(--primary);
+        }
+
+        .employee-avatar {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .employee-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .employee-details {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 99px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-entry {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-exit {
+            background: linear-gradient(135deg, var(--red), #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: var(--radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status.error {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--red);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .status.loading {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--yellow);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .employees-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔐</div>
+            <h1 class="title">QR<strong>Asistencia</strong></h1>
+            <p style="color: var(--muted);">Registro de Entrada y Salida</p>
+        </div>
+
+        <div id="status" class="status loading">
+            <div class="loading-spinner"></div>
+            Cargando empleados...
+        </div>
+
+        <div id="employeesContainer" class="employees-grid">
+            <!-- Los empleados se cargarán aquí -->
+        </div>
+    </div>
+
+    <script>
+        let employees = [];
+        let selectedEmployee = null;
+
+        // Lista de empleados permanentes
+        const permanentEmployees = [
+            { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '1', dept: 'RRHH', role: 'GERENTE RRHH', email: 'carlos@empresa.com', avatar: '👨‍💼', status: 'active' },
+            { firstName: 'ANGEL', lastName: 'GONZALEZ', empNum: '2', dept: 'RRHH', role: 'RECLUTADOR', email: 'angel@empresa.com', avatar: '👨‍💼', status: 'active' },
+            { firstName: 'MIGUEL', lastName: 'MARTINEZ', empNum: '3', dept: 'OPERACIONES', role: 'OPERADOR', email: 'miguel@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'EDGAR', lastName: 'MARTINEZ', empNum: '4', dept: 'OPERACIONES', role: 'OPERADOR', email: 'edgar@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '5', dept: 'OPERACIONES', role: 'OPERADOR', email: 'carlos.martinez@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'JAVIER', lastName: 'MARTINEZ', empNum: '6', dept: 'OPERACIONES', role: 'OPERADOR', email: 'javier@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'JOSE', lastName: 'MARTINEZ', empNum: '7', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jose@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'JUAN', lastName: 'MARTINEZ', empNum: '8', dept: 'OPERACIONES', role: 'OPERADOR', email: 'juan@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'ANTONIO', lastName: 'MARTINEZ', empNum: '9', dept: 'OPERACIONES', role: 'OPERADOR', email: 'antonio@empresa.com', avatar: '👷', status: 'active' },
+            { firstName: 'JESUS', lastName: 'MARTINEZ', empNum: '10', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jesus@empresa.com', avatar: '👷', status: 'active' }
+        ];
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEmployees();
+        });
+
+        // Cargar empleados
+        async function loadEmployees() {
+            try {
+                // Intentar cargar del servidor primero
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                employees = data.employees || [];
+                
+                if (employees.length === 0) {
+                    // Si no hay empleados en el servidor, usar los permanentes
+                    employees = permanentEmployees.map((emp, i) => ({
+                        ...emp,
+                        id: `emp_permanent_${i}`,
+                        createdAt: new Date().toISOString(),
+                        lastAccess: null
+                    }));
+                }
+                
+                renderEmployees();
+                updateStatus('success', `✅ ${employees.length} empleados cargados`);
+            } catch (error) {
+                console.error('Error cargando empleados:', error);
+                // Si hay error, cargar permanentes
+                employees = permanentEmployees.map((emp, i) => ({
+                    ...emp,
+                    id: `emp_permanent_${i}`,
+                    createdAt: new Date().toISOString(),
+                    lastAccess: null
+                }));
+                renderEmployees();
+                updateStatus('success', `✅ ${employees.length} empleados cargados (modo local)`);
+            }
+        }
+
+        // Renderizar empleados
+        function renderEmployees() {
+            const container = document.getElementById('employeesContainer');
+            container.innerHTML = employees.map(emp => `
+                <div class="employee-card" onclick="selectEmployee('${emp.id}')">
+                    <div class="employee-avatar">${emp.avatar || emp.firstName[0]}</div>
+                    <div class="employee-name">${emp.firstName} ${emp.lastName}</div>
+                    <div class="employee-details">${emp.dept} • ${emp.empNum}</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-entry" onclick="event.stopPropagation(); registerAttendance('${emp.id}', 'entry')">
+                            🟢 Entrada
+                        </button>
+                        <button class="btn btn-exit" onclick="event.stopPropagation(); registerAttendance('${emp.id}', 'exit')">
+                            🔴 Salida
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Seleccionar empleado
+        function selectEmployee(empId) {
+            selectedEmployee = employees.find(emp => emp.id === empId);
+            console.log('Empleado seleccionado:', selectedEmployee);
+        }
+
+        // Registrar asistencia
+        async function registerAttendance(empId, type) {
+            const employee = employees.find(emp => emp.id === empId);
+            if (!employee) {
+                updateStatus('error', '❌ Error: Empleado no encontrado');
+                return;
+            }
+
+            try {
+                // Obtener ubicación
+                const location = await getLocation();
+                
+                // Crear registro
+                const record = {
+                    id: Date.now(),
+                    empId: employee.id,
+                    empName: `${employee.firstName} ${employee.lastName}`,
+                    type: type,
+                    ts: new Date().toISOString(),
+                    status: 'valid',
+                    reason: type === 'entry' ? 'Entrada registrada' : 'Salida registrada',
+                    source: 'registro_simple',
+                    location: location
+                };
+
+                // Enviar al servidor
+                const response = await fetch('/api/checkin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(record)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    updateStatus('success', `✅ ${type === 'entry' ? 'Entrada' : 'Salida'} registrada para ${employee.firstName} ${employee.lastName}`);
+                    
+                    // Limpiar mensaje después de 3 segundos
+                    setTimeout(() => {
+                        updateStatus('success', `✅ ${employees.length} empleados cargados`);
+                    }, 3000);
+                } else {
+                    updateStatus('error', `❌ Error: ${result.error || 'Error desconocido'}`);
+                }
+            } catch (error) {
+                console.error('Error registrando asistencia:', error);
+                updateStatus('error', '❌ Error al registrar asistencia');
+            }
+        }
+
+        // Obtener ubicación
+        async function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                    },
+                    (error) => {
+                        console.warn('Error obteniendo ubicación:', error);
+                        resolve(null);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        // Actualizar estado
+        function updateStatus(type, message) {
+            const statusElement = document.getElementById('status');
+            statusElement.className = `status ${type}`;
+            statusElement.innerHTML = message;
+        }
+    </script>
+</body>
+</html>
