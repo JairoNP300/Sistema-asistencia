@@ -14,18 +14,18 @@ let state = {
 };
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Limpiar localStorage para eliminar todos los datos
-    localStorage.removeItem(STORE_KEY);
-    
-    // Inicializar estado limpio
-    state.employees = [];
-    state.logs = [];
-    state.presentSet = new Set();
-    state.stats = { present: 0, entries: 0, exits: 0, blocked: 0 };
-    
+    // Cargar datos existentes sin limpiar
     await loadFromStorage();
     if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
-    // No agregar empleados automáticamente
+    
+    // Solicitar permisos de ubicación al iniciar
+    await requestLocationPermission();
+    
+    // Cargar empleados permanentes si no existen
+    if (!state.employees.length) {
+        loadPermanentEmployees();
+    }
+    
     await saveToStorage();
     initClock();
     initTokenTimer();
@@ -38,6 +38,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cargar historial de logs en segundo plano
     loadLogsHistory();
 });
+
+/* ---- LOCATION PERMISSION ---- */
+async function requestLocationPermission() {
+    if ('geolocation' in navigator) {
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+            console.log('Ubicación obtenida:', position.coords.latitude, position.coords.longitude);
+            return true;
+        } catch (error) {
+            console.warn('Error obteniendo ubicación:', error);
+            return false;
+        }
+    } else {
+        console.warn('Geolocalización no soportada');
+        return false;
+    }
+}
+
+/* ---- PERMANENT EMPLOYEES ---- */
+function loadPermanentEmployees() {
+    // Lista permanente de empleados que siempre deben estar
+    const permanentEmployees = [
+        { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '1', dept: 'RRHH', role: 'GERENTE RRHH', email: 'carlos@empresa.com', avatar: '👨‍💼', status: 'active' },
+        { firstName: 'ANGEL', lastName: 'GONZALEZ', empNum: '2', dept: 'RRHH', role: 'RECLUTADOR', email: 'angel@empresa.com', avatar: '👨‍💼', status: 'active' },
+        { firstName: 'MIGUEL', lastName: 'MARTINEZ', empNum: '3', dept: 'OPERACIONES', role: 'OPERADOR', email: 'miguel@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'EDGAR', lastName: 'MARTINEZ', empNum: '4', dept: 'OPERACIONES', role: 'OPERADOR', email: 'edgar@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '5', dept: 'OPERACIONES', role: 'OPERADOR', email: 'carlos.martinez@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'JAVIER', lastName: 'MARTINEZ', empNum: '6', dept: 'OPERACIONES', role: 'OPERADOR', email: 'javier@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'JOSE', lastName: 'MARTINEZ', empNum: '7', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jose@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'JUAN', lastName: 'MARTINEZ', empNum: '8', dept: 'OPERACIONES', role: 'OPERADOR', email: 'juan@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'ANTONIO', lastName: 'MARTINEZ', empNum: '9', dept: 'OPERACIONES', role: 'OPERADOR', email: 'antonio@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'JESUS', lastName: 'MARTINEZ', empNum: '10', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jesus@empresa.com', avatar: '👷', status: 'active' }
+    ];
+    
+    permanentEmployees.forEach((emp, i) => {
+        state.employees.push({ 
+            ...emp, 
+            id: `emp_permanent_${i}`, 
+            createdAt: new Date().toISOString(), 
+            lastAccess: null 
+        });
+    });
+    
+    console.log('Empleados permanentes cargados:', permanentEmployees.length);
+}
 
 /* ---- AUTO-REFRESH: detecta nueva versión en Render y recarga ---- */
 function startVersionCheck() {
@@ -481,6 +532,9 @@ async function scanFrame() {
 }
 
 async function processScannedCode(encoded) {
+    // Solicitar ubicación antes de procesar el registro
+    const location = await getCurrentLocation();
+    
     const result = await CryptoUtils.validateToken(encoded, state.secretKey, state.employees, state.usedTokens, state.config);
     const now = new Date();
     if (result.valid) {
@@ -489,7 +543,24 @@ async function processScannedCode(encoded) {
         if (type === 'entry') state.presentSet.add(emp.id); else state.presentSet.delete(emp.id);
         if (state.config.antiReplay) state.usedTokens.add(result.payload.nonce);
         state.stats[type === 'entry' ? 'entries' : 'exits']++;
-        const log = { id: Date.now(), empId: emp.id, empName: `${emp.firstName} ${emp.lastName}`, type, ts: now.toISOString(), tokenNonce: result.payload.nonce, status: 'valid', reason: type === 'entry' ? 'Entrada registrada' : 'Salida registrada' };
+        
+        // Agregar información de ubicación al log
+        const log = { 
+            id: Date.now(), 
+            empId: emp.id, 
+            empName: `${emp.firstName} ${emp.lastName}`, 
+            type, 
+            ts: now.toISOString(), 
+            tokenNonce: result.payload.nonce, 
+            status: 'valid', 
+            reason: type === 'entry' ? 'Entrada registrada' : 'Salida registrada',
+            location: location ? {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy
+            } : null
+        };
+        
         state.logs.push(log);
         emp.lastAccess = now.toISOString();
         saveToStorage();
@@ -500,16 +571,56 @@ async function processScannedCode(encoded) {
         document.getElementById('auditValid').textContent = parseInt(document.getElementById('auditValid').textContent || 0) + 1;
     } else {
         state.stats.blocked++;
-        const log = { id: Date.now(), empId: null, empName: '—', type: 'rejected', ts: now.toISOString(), tokenNonce: '—', status: 'rejected', reason: result.reason };
+        const log = { 
+            id: Date.now(), 
+            empId: null, 
+            empName: '—', 
+            type: 'rejected', 
+            ts: now.toISOString(), 
+            tokenNonce: '—', 
+            status: 'rejected', 
+            reason: result.reason,
+            location: location ? {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy
+            } : null
+        };
+        
         state.logs.push(log);
         saveToStorage();
         showScanResult(false, null, null, log, result.reason);
         addScanLogItem(null, 'rejected', false, result.reason);
         logSecurity('critical', `⛔ Acceso rechazado [${result.code}]`, result.reason);
-        updateDashboard();
         document.getElementById('auditRejected').textContent = parseInt(document.getElementById('auditRejected').textContent || 0) + 1;
     }
-    updateAuditRate();
+    updateDashboard();
+}
+
+/* ---- GET CURRENT LOCATION ---- */
+async function getCurrentLocation() {
+    if ('geolocation' in navigator) {
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+            return {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+        } catch (error) {
+            console.warn('Error obteniendo ubicación:', error);
+            return null;
+        }
+    } else {
+        console.warn('Geolocalización no soportada');
+        return null;
+    }
 }
 
 function showScanResult(valid, emp, type, log, reason) {
