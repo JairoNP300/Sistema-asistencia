@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Asistencia - Acceso Directo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #07071a;
+            --surface: #0f0f2a;
+            --primary: #6366f1;
+            --accent: #a78bfa;
+            --green: #10b981;
+            --red: #f43f5e;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --font: 'Outfit', sans-serif;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 99px;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .button.secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .button.secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .info {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .info h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+
+        .status.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status.loading {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--yellow);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔐</div>
+        <h1>QR<strong>Asistencia</strong></h1>
+        <p class="subtitle">Sistema de Registro de Asistencia</p>
+        
+        <div id="status-container">
+            <span class="status loading" id="status">Verificando sistema...</span>
+        </div>
+        
+        <div id="buttons-container" style="display: none;">
+            <a href="#" class="button" id="btn-registrar" onclick="irARegistro()">
+                📱 Registrar Asistencia
+            </a>
+            <a href="#" class="button secondary" id="btn-admin" onclick="irAAdmin()">
+                ⚙️ Panel Administrativo
+            </a>
+        </div>
+        
+        <div class="info">
+            <h3>📋 Instrucciones</h3>
+            <p>
+                <strong>📱 Para empleados:</strong> Haz clic en "Registrar Asistencia" para registrar tu entrada o salida.<br><br>
+                <strong>⚙️ Para administradores:</strong> Haz clic en "Panel Administrativo" para acceder al sistema de gestión.<br><br>
+                <strong>🌐 Acceso directo:</strong> Este enlace funciona 24/7 sin restricciones de tiempo.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Verificar estado del sistema
+        async function verificarSistema() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                
+                document.getElementById('status').className = 'status online';
+                document.getElementById('status').textContent = '✅ Sistema en línea';
+                document.getElementById('buttons-container').style.display = 'block';
+                
+                console.log('Sistema operativo:', data);
+            } catch (error) {
+                document.getElementById('status').className = 'status loading';
+                document.getElementById('status').textContent = '⚠️ Sistema fuera de línea';
+                document.getElementById('buttons-container').style.display = 'none';
+                
+                console.error('Error verificando sistema:', error);
+            }
+        }
+
+        function irARegistro() {
+            // Redirigir a la página de registro con un timestamp para evitar caché
+            const timestamp = Date.now();
+            window.location.href = `/checkin.html?t=${timestamp}`;
+        }
+
+        function irAAdmin() {
+            // Redirigir al panel administrativo
+            window.location.href = '/';
+        }
+
+        // Iniciar verificación al cargar la página
+        document.addEventListener('DOMContentLoaded', verificarSistema);
+        
+        // Reintentar verificación cada 30 segundos
+        setInterval(verificarSistema, 30000);
+    </script>
+</body>
+</html>
