@@ -64,7 +64,7 @@ async function requestLocationPermission() {
 
 /* ---- PERMANENT EMPLOYEES ---- */
 function loadPermanentEmployees() {
-    // Lista permanente de empleados que siempre deben estar
+    // Lista permanente de empleados según la imagen proporcionada
     const permanentEmployees = [
         { firstName: 'CARLOS', lastName: 'MARTINEZ', empNum: '1', dept: 'RRHH', role: 'GERENTE RRHH', email: 'carlos@empresa.com', avatar: '👨‍💼', status: 'active' },
         { firstName: 'ANGEL', lastName: 'GONZALEZ', empNum: '2', dept: 'RRHH', role: 'RECLUTADOR', email: 'angel@empresa.com', avatar: '👨‍💼', status: 'active' },
@@ -75,7 +75,17 @@ function loadPermanentEmployees() {
         { firstName: 'JOSE', lastName: 'MARTINEZ', empNum: '7', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jose@empresa.com', avatar: '👷', status: 'active' },
         { firstName: 'JUAN', lastName: 'MARTINEZ', empNum: '8', dept: 'OPERACIONES', role: 'OPERADOR', email: 'juan@empresa.com', avatar: '👷', status: 'active' },
         { firstName: 'ANTONIO', lastName: 'MARTINEZ', empNum: '9', dept: 'OPERACIONES', role: 'OPERADOR', email: 'antonio@empresa.com', avatar: '👷', status: 'active' },
-        { firstName: 'JESUS', lastName: 'MARTINEZ', empNum: '10', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jesus@empresa.com', avatar: '👷', status: 'active' }
+        { firstName: 'JESUS', lastName: 'MARTINEZ', empNum: '10', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jesus@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'LUIS', lastName: 'GONZALEZ', empNum: '11', dept: 'OPERACIONES', role: 'OPERADOR', email: 'luis@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'ROBERTO', lastName: 'MARTINEZ', empNum: '12', dept: 'OPERACIONES', role: 'OPERADOR', email: 'roberto@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'DANIEL', lastName: 'GONZALEZ', empNum: '13', dept: 'OPERACIONES', role: 'OPERADOR', email: 'daniel@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'MARIO', lastName: 'MARTINEZ', empNum: '14', dept: 'OPERACIONES', role: 'OPERADOR', email: 'mario@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'FRANCISCO', lastName: 'MARTINEZ', empNum: '15', dept: 'OPERACIONES', role: 'OPERADOR', email: 'francisco@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'JORGE', lastName: 'MARTINEZ', empNum: '16', dept: 'OPERACIONES', role: 'OPERADOR', email: 'jorge@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'RAUL', lastName: 'MARTINEZ', empNum: '17', dept: 'OPERACIONES', role: 'OPERADOR', email: 'raul@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'RICARDO', lastName: 'MARTINEZ', empNum: '18', dept: 'OPERACIONES', role: 'OPERADOR', email: 'ricardo@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'ALEJANDRO', lastName: 'MARTINEZ', empNum: '19', dept: 'OPERACIONES', role: 'OPERADOR', email: 'alejandro@empresa.com', avatar: '👷', status: 'active' },
+        { firstName: 'GABRIEL', lastName: 'MARTINEZ', empNum: '20', dept: 'OPERACIONES', role: 'OPERADOR', email: 'gabriel@empresa.com', avatar: '👷', status: 'active' }
     ];
     
     permanentEmployees.forEach((emp, i) => {
