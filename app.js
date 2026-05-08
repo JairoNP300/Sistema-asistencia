@@ -14,6 +14,9 @@ let state = {
 };
 /* ---- INIT ---- */
 document.addEventListener('DOMContentLoaded', async () => {
+    // Limpiar datos antiguos para forzar carga de nueva lista
+    localStorage.removeItem(STORE_KEY);
+    
     await loadFromStorage();
     if (!state.secretKey) state.secretKey = await CryptoUtils.generateKey();
     if (!state.employees.length) seedDemoEmployees();
