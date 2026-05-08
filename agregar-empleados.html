@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Asistencia - Agregar Empleados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #07071a;
+            --surface: #0f0f2a;
+            --primary: #6366f1;
+            --accent: #a78bfa;
+            --green: #10b981;
+            --red: #f43f5e;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --font: 'Outfit', sans-serif;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 1.1rem;
+        }
+
+        .form-section {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .employee-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: var(--text);
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 99px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: white;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--red), #dc2626);
+            color: white;
+            box-shadow: 0 4px 20px rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(244, 63, 94, 0.4);
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: var(--radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status.error {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--red);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .status.loading {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--yellow);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .employees-list {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .employee-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 15px;
+        }
+
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+
+        .employee-avatar {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            border-radius: 50%;
+            color: white;
+        }
+
+        .employee-info {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .employee-details {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .employee-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">👥</div>
+            <h1 class="title">QR<strong>Asistencia</strong></h1>
+            <p class="subtitle">Agregar Empleados al Sistema</p>
+        </div>
+
+        <div class="form-section">
+            <h2 class="form-title">📝 Agregar Nuevo Empleado</h2>
+            <div class="employee-form">
+                <div class="form-group">
+                    <label for="firstName">Nombre</label>
+                    <input type="text" id="firstName" placeholder="Ej: JUAN" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Apellido</label>
+                    <input type="text" id="lastName" placeholder="Ej: PEREZ" required>
+                </div>
+                <div class="form-group">
+                    <label for="empNum">Número de Empleado</label>
+                    <input type="text" id="empNum" placeholder="Ej: 001" required>
+                </div>
+                <div class="form-group">
+                    <label for="dept">Departamento</label>
+                    <select id="dept" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="RRHH">RRHH</option>
+                        <option value="OPERACIONES">OPERACIONES</option>
+                        <option value="VENTAS">VENTAS</option>
+                        <option value="TI">TI</option>
+                        <option value="FINANZAS">FINANZAS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="role">Puesto</label>
+                    <input type="text" id="role" placeholder="Ej: OPERADOR" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Ej: juan@empresa.com" required>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-primary" onclick="agregarEmpleado()">
+                    ➕ Agregar Empleado
+                </button>
+                <button class="btn btn-success" onclick="guardarEnBaseDeDatos()">
+                    💾 Guardar en Base de Datos
+                </button>
+                <button class="btn btn-danger" onclick="limpiarEmpleados()">
+                    🗑️ Limpiar Todos
+                </button>
+            </div>
+        </div>
+
+        <div id="status" class="status loading" style="display: none;">
+            Procesando...
+        </div>
+
+        <div class="employees-list">
+            <h2 class="form-title">👥 Empleados Agregados</h2>
+            <div id="employeesList">
+                <p style="color: var(--muted); text-align: center; padding: 20px;">
+                    No hay empleados agregados aún
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let empleadosAgregados = [];
+
+        // Cargar empleados del localStorage
+        function cargarEmpleados() {
+            const guardados = localStorage.getItem('empleados_permanentes');
+            if (guardados) {
+                empleadosAgregados = JSON.parse(guardados);
+                renderizarEmpleados();
+            }
+        }
+
+        // Agregar empleado
+        function agregarEmpleado() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const empNum = document.getElementById('empNum').value.trim();
+            const dept = document.getElementById('dept').value;
+            const role = document.getElementById('role').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!firstName || !lastName || !empNum || !dept || !role || !email) {
+                mostrarStatus('error', '❌ Por favor completa todos los campos');
+                return;
+            }
+
+            const empleado = {
+                firstName: firstName.toUpperCase(),
+                lastName: lastName.toUpperCase(),
+                empNum: empNum,
+                dept: dept,
+                role: role.toUpperCase(),
+                email: email,
+                avatar: dept === 'RRHH' ? '👨‍💼' : '👷',
+                status: 'active',
+                id: `emp_${Date.now()}`
+            };
+
+            empleadosAgregados.push(empleado);
+            guardarEmpleadosLocal();
+            renderizarEmpleados();
+            limpiarFormulario();
+            mostrarStatus('success', `✅ Empleado ${firstName} ${lastName} agregado`);
+        }
+
+        // Guardar en base de datos del servidor
+        async function guardarEnBaseDeDatos() {
+            if (empleadosAgregados.length === 0) {
+                mostrarStatus('error', '❌ No hay empleados para guardar');
+                return;
+            }
+
+            mostrarStatus('loading', '💾 Guardando empleados en base de datos...');
+
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                
+                // Agregar nuevos empleados a los existentes
+                const empleadosExistentes = data.employees || [];
+                const empleadosActualizados = [...empleadosExistentes, ...empleadosAgregados];
+
+                // Guardar en el servidor
+                const saveResponse = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...data,
+                        employees: empleadosActualizados
+                    })
+                });
+
+                if (saveResponse.ok) {
+                    mostrarStatus('success', `✅ ${empleadosAgregados.length} empleados guardados permanentemente`);
+                    empleadosAgregados = [];
+                    localStorage.removeItem('empleados_permanentes');
+                    renderizarEmpleados();
+                } else {
+                    mostrarStatus('error', '❌ Error al guardar en base de datos');
+                }
+            } catch (error) {
+                console.error('Error guardando empleados:', error);
+                mostrarStatus('error', '❌ Error de conexión al guardar');
+            }
+        }
+
+        // Limpiar todos los empleados
+        function limpiarEmpleados() {
+            if (confirm('¿Estás seguro de que quieres eliminar todos los empleados agregados?')) {
+                empleadosAgregados = [];
+                localStorage.removeItem('empleados_permanentes');
+                renderizarEmpleados();
+                mostrarStatus('success', '✅ Todos los empleados eliminados');
+            }
+        }
+
+        // Guardar en localStorage
+        function guardarEmpleadosLocal() {
+            localStorage.setItem('empleados_permanentes', JSON.stringify(empleadosAgregados));
+        }
+
+        // Renderizar empleados
+        function renderizarEmpleados() {
+            const container = document.getElementById('employeesList');
+            
+            if (empleadosAgregados.length === 0) {
+                container.innerHTML = `
+                    <p style="color: var(--muted); text-align: center; padding: 20px;">
+                        No hay empleados agregados aún
+                    </p>
+                `;
+                return;
+            }
+
+            container.innerHTML = empleadosAgregados.map(emp => `
+                <div class="employee-item">
+                    <div class="employee-avatar">${emp.avatar}</div>
+                    <div class="employee-info">
+                        <div class="employee-name">${emp.firstName} ${emp.lastName}</div>
+                        <div class="employee-details">${emp.dept} • ${emp.empNum} • ${emp.role}</div>
+                    </div>
+                    <div class="employee-actions">
+                        <button class="btn btn-danger btn-small" onclick="eliminarEmpleado('${emp.id}')">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Eliminar empleado
+        function eliminarEmpleado(empId) {
+            empleadosAgregados = empleadosAgregados.filter(emp => emp.id !== empId);
+            guardarEmpleadosLocal();
+            renderizarEmpleados();
+            mostrarStatus('success', '✅ Empleado eliminado');
+        }
+
+        // Limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('firstName').value = '';
+            document.getElementById('lastName').value = '';
+            document.getElementById('empNum').value = '';
+            document.getElementById('dept').value = '';
+            document.getElementById('role').value = '';
+            document.getElementById('email').value = '';
+        }
+
+        // Mostrar estado
+        function mostrarStatus(tipo, mensaje) {
+            const statusElement = document.getElementById('status');
+            statusElement.className = `status ${tipo}`;
+            statusElement.textContent = mensaje;
+            statusElement.style.display = 'block';
+            
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', cargarEmpleados);
+    </script>
+</body>
+</html>
