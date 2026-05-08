@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-Asistencia - Registro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #07071a;
+            --surface: #0f0f2a;
+            --primary: #6366f1;
+            --accent: #a78bfa;
+            --green: #10b981;
+            --red: #f43f5e;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --font: 'Outfit', sans-serif;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-size: 1.1rem;
+            font-family: var(--font);
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .employee-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .employee-item {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .employee-item.selected {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary);
+        }
+
+        .employee-avatar {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            border-radius: 50%;
+            color: white;
+        }
+
+        .employee-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .employee-details {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 99px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 150px;
+        }
+
+        .btn-entry {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: white;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-entry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-exit {
+            background: linear-gradient(135deg, var(--red), #dc2626);
+            color: white;
+            box-shadow: 0 4px 20px rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-exit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(244, 63, 94, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status.error {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--red);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .status.loading {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--yellow);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔐</div>
+        <h1>QR<strong>Asistencia</strong></h1>
+        <p class="subtitle">Registro de Asistencia</p>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar tu nombre o número de empleado...">
+        </div>
+        
+        <div class="employee-list" id="employeeList">
+            <div style="padding: 20px; color: var(--muted);">
+                Cargando lista de empleados...
+            </div>
+        </div>
+        
+        <div class="action-buttons hidden" id="actionButtons">
+            <button class="btn btn-entry" id="btnEntry" onclick="registrarAsistencia('entry')">
+                🟢 Registrar Entrada
+            </button>
+            <button class="btn btn-exit" id="btnExit" onclick="registrarAsistencia('exit')">
+                🔴 Registrar Salida
+            </button>
+        </div>
+        
+        <div class="status hidden" id="statusMessage"></div>
+    </div>
+
+    <script>
+        let employees = [];
+        let selectedEmployee = null;
+        let locationData = null;
+
+        // Cargar empleados del servidor
+        async function cargarEmpleados() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                employees = data.employees || [];
+                mostrarEmpleados();
+            } catch (error) {
+                console.error('Error cargando empleados:', error);
+                mostrarEstado('error', '❌ Error al cargar empleados. Intenta de nuevo.');
+            }
+        }
+
+        // Mostrar lista de empleados
+        function mostrarEmpleados() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredEmployees = employees.filter(emp => 
+                emp.status === 'active' && (
+                    emp.firstName.toLowerCase().includes(searchTerm) ||
+                    emp.lastName.toLowerCase().includes(searchTerm) ||
+                    emp.empNum.toLowerCase().includes(searchTerm)
+                )
+            );
+
+            const listContainer = document.getElementById('employeeList');
+            
+            if (filteredEmployees.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 20px; color: var(--muted);">
+                        No se encontraron empleados activos
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = filteredEmployees.map(emp => `
+                <div class="employee-item" onclick="seleccionarEmpleado('${emp.id}')">
+                    <div class="employee-avatar">${emp.avatar || emp.firstName[0]}</div>
+                    <div class="employee-info">
+                        <div class="employee-name">${emp.firstName} ${emp.lastName}</div>
+                        <div class="employee-details">${emp.dept} • ${emp.empNum}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Seleccionar empleado
+        function seleccionarEmpleado(employeeId) {
+            selectedEmployee = employees.find(emp => emp.id === employeeId);
+            
+            // Actualizar UI
+            document.querySelectorAll('.employee-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Mostrar botones de acción
+            document.getElementById('actionButtons').classList.remove('hidden');
+            
+            // Actualizar estado de botones según si ya tiene entrada hoy
+            const hoy = new Date().toDateString();
+            const entradaHoy = selectedEmployee.lastAccess && 
+                new Date(selectedEmployee.lastAccess).toDateString() === hoy;
+            
+            document.getElementById('btnEntry').disabled = entradaHoy;
+            document.getElementById('btnExit').disabled = !entradaHoy;
+        }
+
+        // Obtener ubicación
+        async function obtenerUbicacion() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                    },
+                    (error) => {
+                        console.warn('Error obteniendo ubicación:', error);
+                        resolve(null);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        // Registrar asistencia
+        async function registrarAsistencia(tipo) {
+            if (!selectedEmployee) {
+                mostrarEstado('error', '❌ Por favor selecciona un empleado');
+                return;
+            }
+
+            mostrarEstado('loading', '⏳ Obteniendo ubicación...');
+
+            try {
+                // Obtener ubicación
+                locationData = await obtenerUbicacion();
+
+                // Crear registro
+                const registro = {
+                    id: Date.now(),
+                    empId: selectedEmployee.id,
+                    empName: `${selectedEmployee.firstName} ${selectedEmployee.lastName}`,
+                    type: tipo,
+                    ts: new Date().toISOString(),
+                    status: 'valid',
+                    reason: tipo === 'entry' ? 'Entrada registrada' : 'Salida registrada',
+                    source: 'registro_directo',
+                    location: locationData
+                };
+
+                // Enviar al servidor
+                const response = await fetch('/api/checkin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registro)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    mostrarEstado('success', `✅ ${tipo === 'entry' ? 'Entrada' : 'Salida'} registrada exitosamente`);
+                    
+                    // Limpiar selección después de 3 segundos
+                    setTimeout(() => {
+                        selectedEmployee = null;
+                        document.getElementById('searchInput').value = '';
+                        document.getElementById('actionButtons').classList.add('hidden');
+                        mostrarEmpleados();
+                        document.getElementById('statusMessage').classList.add('hidden');
+                    }, 3000);
+                } else {
+                    mostrarEstado('error', `❌ Error: ${result.error || 'Error desconocido'}`);
+                }
+            } catch (error) {
+                console.error('Error registrando asistencia:', error);
+                mostrarEstado('error', '❌ Error al registrar asistencia. Intenta de nuevo.');
+            }
+        }
+
+        // Mostrar estado
+        function mostrarEstado(tipo, mensaje) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.className = `status status-${tipo}`;
+            statusElement.textContent = mensaje;
+            statusElement.classList.remove('hidden');
+        }
+
+        // Buscar
+        document.getElementById('searchInput').addEventListener('input', mostrarEmpleados);
+
+        // Iniciar
+        document.addEventListener('DOMContentLoaded', cargarEmpleados);
+    </script>
+</body>
+</html>
