@@ -26,7 +26,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="brand">
-                <div class="brand-icon">�</div>
+                <div class="brand-icon">👥</div>
                 <div class="brand-text">
                     <span class="brand-name">Sistema de <strong>RRHH</strong></span>
                     <span class="brand-sub">Recursos Humanos v2.6</span>
@@ -91,1577 +91,456 @@
 
             <div class="nav-section">
                 <span class="nav-label">Configuración</span>
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                    Seguridad
-                </button>
                 <button class="nav-item" id="nav-admin" onclick="showPage('admin')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
                     </svg>
-                    Configuración
+                    <span>Admin</span>
                 </button>
             </div>
         </nav>
 
         <div class="sidebar-footer">
-            <div class="security-status" id="securityStatus">
-                <span class="sec-dot"></span>
-                <div class="sec-info">
-                    <span class="sec-label">Sistema Seguro</span>
-                    <span class="sec-detail">HMAC-SHA256 Activo</span>
-                </div>
-            </div>
-            <div class="connection-status" id="connectionStatusBox" style="margin-top:10px; opacity:0.8;">
-                <span class="sec-dot" id="connDot" style="background:#10b981"></span>
-                <div class="sec-info">
-                    <span class="sec-label" id="connLabel">En línea</span>
-                    <span class="sec-detail">Sincronizado</span>
-                </div>
-            </div>
+            <button class="logout-btn" onclick="logout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Cerrar sesión</span>
+            </button>
         </div>
     </aside>
-    
-    <!-- BARRA DE NAVEGACIÓN MÓVIL (Solo visible en celulares) -->
-    <nav class="mobile-nav">
-        <button class="m-nav-item active" id="m-nav-dashboard" onclick="showPage('dashboard')">
-            <div class="m-nav-icon-wrap">🏠</div>
-            <span>Inicio</span>
-        </button>
-        <button class="m-nav-item" id="m-nav-scanner" onclick="showPage('scanner')">
-            <div class="m-nav-icon-wrap">📷</div>
-            <span>Escáner</span>
-        </button>
-        <button class="m-nav-item" id="m-nav-generate" onclick="showPage('generate')">
-            <div class="m-nav-icon-wrap">🔑</div>
-            <span>QR</span>
-        </button>
-        <button class="m-nav-item" id="m-nav-logs" onclick="showPage('logs')">
-            <div class="m-nav-icon-wrap">📋</div>
-            <span>Logs</span>
-        </button>
-    </nav>
 
-    <!-- ========== MAIN ========== -->
-    <div class="main-wrap">
-        <!-- TOP BAR -->
-        <header class="topbar">
-            <div class="topbar-left">
-                <button class="hamburger-main" id="hamburgerMain" onclick="toggleSidebar()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <line x1="3" y1="12" x2="21" y2="12" />
-                        <line x1="3" y1="18" x2="21" y2="18" />
-                    </svg>
-                </button>
-                <div class="page-title-wrap">
-                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
-                    <span class="page-sub" id="pageSub">Vista general del sistema</span>
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content" id="mainContent">
+        <!-- ========== DASHBOARD PAGE ========== -->
+        <section class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard RRHH</h1>
+                <p class="page-subtitle">Vista general de recursos humanos</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalEmployees">0</div>
+                        <div class="stat-label">Total Empleados</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">💼</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="activeEmployees">0</div>
+                        <div class="stat-label">Empleados Activos</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="openPositions">0</div>
+                        <div class="stat-label">Vacantes Abiertas</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingDocuments">0</div>
+                        <div class="stat-label">Documentos Pendientes</div>
+                    </div>
                 </div>
             </div>
-            <div class="topbar-right">
-                <div class="token-timer" id="tokenTimerWrap">
-                    <svg viewBox="0 0 36 36" class="timer-ring">
-                        <circle class="ring-bg" cx="18" cy="18" r="15" />
-                        <circle class="ring-progress" id="timerRing" cx="18" cy="18" r="15" />
-                    </svg>
-                    <div class="timer-info">
-                        <span class="timer-label">Próx. rotación</span>
-                        <span class="timer-count" id="timerCount">30s</span>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3 class="card-title">Empleados Recientes</h3>
+                    <div id="recentEmployees" class="recent-list">
+                        <p class="empty-state">No hay empleados recientes</p>
                     </div>
                 </div>
-                <div class="datetime-wrap">
-                    <span class="topbar-time" id="topbarTime"></span>
-                    <span class="topbar-date" id="topbarDate"></span>
-                </div>
-                <div class="user-chip" id="userChip">
-                    <span class="user-avatar">AD</span>
-                    <span class="user-name">Admin</span>
+
+                <div class="dashboard-card">
+                    <h3 class="card-title">Actividad Reciente</h3>
+                    <div id="recentActivity" class="activity-list">
+                        <p class="empty-state">No hay actividad reciente</p>
+                    </div>
                 </div>
             </div>
-        </header>
+        </section>
 
-        <!-- ========== PAGES ========== -->
-        <main class="content">
-
-            <!-- === DASHBOARD === -->
-            <section class="page active" id="page-dashboard">
-                <div class="stats-grid">
-                    <div class="stat-card" id="sc-present">
-                        <div class="stat-icon green">👥</div>
-                        <div class="stat-body">
-                            <span class="stat-val" id="statPresent">0</span>
-                            <span class="stat-lbl">Presentes Hoy</span>
-                        </div>
-                        <div class="stat-trend" id="trendPresent"></div>
-                    </div>
-                    <div class="stat-card" id="sc-entries">
-                        <div class="stat-icon blue">🟢</div>
-                        <div class="stat-body">
-                            <span class="stat-val" id="statEntries">0</span>
-                            <span class="stat-lbl">Entradas Hoy</span>
-                        </div>
-                    </div>
-                    <div class="stat-card" id="sc-exits">
-                        <div class="stat-icon orange">🔴</div>
-                        <div class="stat-body">
-                            <span class="stat-val" id="statExits">0</span>
-                            <span class="stat-lbl">Salidas Hoy</span>
-                        </div>
-                    </div>
-                    <div class="stat-card" id="sc-blocked">
-                        <div class="stat-icon red">🚫</div>
-                        <div class="stat-body">
-                            <span class="stat-val" id="statBlocked">0</span>
-                            <span class="stat-lbl">Intentos Rechazados</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dashboard-grid">
-                    <!-- Activity Feed -->
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>⚡ Actividad Reciente</h3>
-                            <span class="live-dot"></span>
-                        </div>
-                        <div class="activity-feed" id="activityFeed">
-                            <div class="empty-feed">No hay actividad aún. Los registros aparecerán aquí.</div>
-                        </div>
-                    </div>
-
-                    <!-- Present Now -->
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>🏢 Dentro Ahora</h3>
-                            <span class="count-chip" id="presentCount">0</span>
-                        </div>
-                        <div class="present-list" id="presentList">
-                            <div class="empty-feed">No hay personal registrado dentro.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline Chart (mini) -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>📈 Entradas / Salidas — Hoy</h3>
-                    </div>
-                    <div class="chart-wrap" id="chartWrap">
-                        <canvas id="timelineChart" height="120"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === SCANNER === -->
-            <section class="page" id="page-scanner">
-                <div class="scanner-layout">
-                    <div class="scanner-panel">
-                        <div class="scanner-header">
-                            <h2>📷 Escáner de Acceso</h2>
-                            <p>Apunta la cámara al código QR del empleado</p>
-                        </div>
-                        <div class="camera-container" id="cameraContainer">
-                            <video id="scannerVideo" autoplay playsinline muted></video>
-                            <canvas id="scannerCanvas" style="display:none"></canvas>
-                            <div class="scan-overlay">
-                                <div class="scan-frame">
-                                    <div class="corner tl"></div>
-                                    <div class="corner tr"></div>
-                                    <div class="corner bl"></div>
-                                    <div class="corner br"></div>
-                                    <div class="scan-line" id="scanLine"></div>
-                                </div>
-                            </div>
-                            <div class="camera-off" id="cameraOff">
-                                <div class="camera-off-icon">📷</div>
-                                <p>Cámara inactiva</p>
-                                <button class="btn-primary" onclick="startScanner()">Activar Cámara</button>
-                            </div>
-                        </div>
-                        <div class="scanner-controls">
-                            <button class="btn-primary" id="btnStartScan" onclick="startScanner()">▶ Iniciar
-                                Escáner</button>
-                            <button class="btn-ghost" id="btnStopScan" onclick="stopScanner()" style="display:none">⏹
-                                Detener</button>
-                            <button class="btn-ghost" onclick="toggleTorch()" id="btnTorch" style="display:none">🔦
-                                Luz</button>
-                        </div>
-                        <div class="scan-result" id="scanResult" style="display:none"></div>
-                    </div>
-
-                    <div class="scanner-info-panel">
-                        <div class="panel" style="margin-bottom:20px">
-                            <div class="panel-header">
-                                <h3>🔒 Estado de Seguridad</h3>
-                            </div>
-                            <div class="security-info-list">
-                                <div class="si-item">
-                                    <span class="si-label">Ventana de tiempo</span>
-                                    <span class="si-val" id="siWindow">±30s</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Algoritmo</span>
-                                    <span class="si-val">HMAC-SHA256</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Anti-replay</span>
-                                    <span class="si-val success">✅ Activo</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Clave activa</span>
-                                    <span class="si-val mono" id="siKeyPreview">••••••••</span>
-                                </div>
-                                <div class="si-item">
-                                    <span class="si-label">Tokens usados</span>
-                                    <span class="si-val" id="siUsedTokens">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h3>📋 Últimos Escaneos</h3>
-                            </div>
-                            <div class="scan-log" id="scanLog">
-                                <div class="empty-feed">Sin escaneos recientes</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === GENERATE QR (STATION) === -->
-            <section class="page" id="page-generate">
-                <div class="station-layout">
-
-                    <!-- Left: QR Display -->
-                    <div class="station-qr-panel">
-                        <div class="station-qr-header">
-                            <div class="station-badge">📍 QR de Estación</div>
-                            <h2>Código de Acceso de Entrada</h2>
-                            <p>Coloca esta pantalla en la entrada. Los empleados escanean este único código con su
-                                teléfono.</p>
-                        </div>
-
-                        <div class="station-qr-wrap" id="stationQrWrap">
-                            <div class="qr-loading" id="stationQrLoading">
-                                <div class="qr-spinner"></div>
-                                <span>Generando QR seguro…</span>
-                            </div>
-                            <div id="stationQrCode" style="display:none"></div>
-                        </div>
-
-                        <!-- Countdown ring -->
-                        <div class="station-countdown" id="stationCountdown">
-                            <div class="qr-ring-wrap">
-                                <svg viewBox="0 0 80 80" class="qr-ring-svg">
-                                    <circle class="qr-ring-bg" cx="40" cy="40" r="34" />
-                                    <circle class="qr-ring-fill" id="stationRingFill" cx="40" cy="40" r="34" />
-                                </svg>
-                                <span class="qr-ring-num" id="stationRingNum">30</span>
-                            </div>
-                            <div class="qr-cd-text">
-                                <span>El QR rota en</span>
-                                <span class="qr-cd-warn" id="stationWarnText">Seguro</span>
-                            </div>
-                            <div class="token-details" style="flex:1">
-                                <div class="td-row">
-                                    <span class="td-key">Token ID</span>
-                                    <span class="td-val mono" id="stationTokenId">—</span>
-                                </div>
-                                <div class="td-row">
-                                    <span class="td-key">Generado</span>
-                                    <span class="td-val" id="stationGenTime">—</span>
-                                </div>
-                                <div class="td-row">
-                                    <span class="td-key">Expira</span>
-                                    <span class="td-val warning" id="stationExpTime">—</span>
-                                </div>
-                                <div class="td-row">
-                                    <span class="td-key">Firma HMAC</span>
-                                    <span class="td-val mono success" id="stationSig">—</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- URL sharing -->
-                        <div class="url-share-box">
-                            <label>🔗 URL del Check-in (para compartir)</label>
-                            <div class="url-row">
-                                <input type="text" id="stationUrl" readonly class="url-input" />
-                                <button class="btn-icon-sm" onclick="copyCheckinUrl()" title="Copiar URL">📋</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Info + Stats -->
-                    <div class="station-info-col">
-                        <!-- Live scan stats -->
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h3>📊 Registros de Hoy</h3>
-                                <span class="live-dot"></span>
-                            </div>
-                            <div class="station-stats">
-                                <div class="sstat"><span class="sstat-val" id="sstEntries">0</span><span
-                                        class="sstat-lbl">Entradas</span></div>
-                                <div class="sstat"><span class="sstat-val" id="sstExits">0</span><span
-                                        class="sstat-lbl">Salidas</span>
-                                </div>
-                                <div class="sstat"><span class="sstat-val" id="sstPresent">0</span><span
-                                        class="sstat-lbl">Dentro</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Recent activity on this station -->
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h3>⚡ Actividad Reciente</h3>
-                            </div>
-                            <div class="activity-feed" id="stationFeed">
-                                <div class="empty-feed">Sin registros aún. Esperando escaneos…</div>
-                            </div>
-                        </div>
-
-                        <!-- Instructions -->
-                        <div class="panel">
-                            <div class="panel-header">
-                                <h3>📋 Instrucciones de Uso</h3>
-                            </div>
-                            <ol class="instructions-list">
-                                <li><span>1</span> El empleado escanea el QR con la cámara de su celular.</li>
-                                <li><span>2</span> Se abre el formulario en su teléfono automáticamente.</li>
-                                <li><span>3</span> El empleado selecciona su nombre y toca <strong>Entrada</strong> o
-                                    <strong>Salida</strong>.
-                                </li>
-                                <li><span>4</span> El registro aparece aquí en tiempo real.</li>
-                            </ol>
-                            <div class="security-note">
-                                🔐 El QR cambia cada <span id="instrTokenLife">30</span>s. Un QR expirado o falsificado
-                                es rechazado
-                                automáticamente.
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- === EMPLOYEES === -->
-            <section class="page" id="page-employees">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>👥 Gestión de Empleados</h3>
-                        <button class="btn-primary" onclick="openEmpModal()">+ Nuevo Empleado</button>
-                    </div>
-                    <div class="emp-search-bar">
-                        <input type="text" id="empSearch" placeholder="🔍 Buscar empleado..."
-                            oninput="renderEmployeeTable()" />
-                        <select id="empFilterDept" onchange="renderEmployeeTable()">
-                            <option value="">Todos los departamentos</option>
-                        </select>
-                        <select id="empFilterStatus" onchange="renderEmployeeTable()">
-                            <option value="">Todos los estados</option>
-                            <option value="active">Activos</option>
-                            <option value="inactive">Inactivos</option>
-                        </select>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="data-table" id="empTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Departamento</th>
-                                    <th>Cargo</th>
-                                    <th>Estado</th>
-                                    <th>Último Acceso</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="empTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === LOGS === -->
-            <section class="page" id="page-logs">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>📋 Registro de Accesos</h3>
-                        <div class="log-actions">
-                            <button class="btn-ghost sm" onclick="exportLogs()">📊 Exportar Excel</button>
-                            <button class="btn-ghost sm danger" onclick="clearLogs()">🗑 Limpiar</button>
-                        </div>
-                    </div>
-                    <div class="log-filters">
-                        <input type="date" id="logDate" onchange="renderLogs()" />
-                        <select id="logType" onchange="renderLogs()">
-                            <option value="">Todos los tipos</option>
-                            <option value="entry">Entradas</option>
-                            <option value="exit">Salidas</option>
-                            <option value="rejected">Rechazados</option>
-                        </select>
-                        <input type="text" id="logSearch" placeholder="🔍 Buscar..." oninput="renderLogs()" />
-                    </div>
-                    <div class="table-wrap">
-                        <table class="data-table" id="logTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Empleado</th>
-                                    <th>Tipo</th>
-                                    <th>Fecha/Hora</th>
-                                    <th>Token ID</th>
-                                    <th>Estado</th>
-                                    <th>Motivo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="logTableBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="table-footer" id="logTableFooter"></div>
-                </div>
-            </section>
-
-            <!-- === REPORTS === -->
-            <section class="page" id="page-reports">
-                <div class="panel" style="margin-bottom:16px">
-                    <div class="panel-header">
-                        <h3>📊 Resumen del Día</h3>
-                        <button class="btn-primary sm" onclick="exportReportExcel()">⬇ Exportar Excel</button>
-                    </div>
-                    <div id="attendanceSummary"></div>
-                </div>
-                <div class="reports-grid">
-                    <div class="panel">
-                        <div class="panel-header"><h3>📈 Entradas Esta Semana</h3></div>
-                        <canvas id="weeklyChart" height="180"></canvas>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header"><h3>🏢 Empleados por Departamento</h3></div>
-                        <div id="deptReport"></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header">
-                        <h3>👥 Detalle por Empleado</h3>
-                        <button class="btn-ghost sm" onclick="exportReportExcel()">📊 Exportar Excel</button>
-                    </div>
-                    <div id="employeeReport"></div>
-                </div>
-            </section>
-
-            <!-- === RRHH === -->
-            <section class="page" id="page-hr">
-                <div class="hr-tabs">
-                    <button class="hr-tab active" onclick="showHRTab('applications')">📋 Solicitudes</button>
-                    <button class="hr-tab" onclick="showHRTab('contracts')">📄 Contratos</button>
-                    <button class="hr-tab" onclick="showHRTab('confidentiality')">🔒 Confidencialidad</button>
-                    <button class="hr-tab" onclick="showHRTab('documents')">📁 Documentos</button>
-                    <button class="hr-tab" onclick="showHRTab('permissions')">🗓 Permisos</button>
-                    <button class="hr-tab" onclick="showHRTab('certificates')">📜 Constancias</button>
-                    <button class="hr-tab" onclick="showHRTab('payroll')">💰 Planilla</button>
-                </div>
-
-                <!-- Tab: Solicitudes de Empleo -->
-                <div class="hr-tab-content active" id="hr-tab-applications">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📋 Solicitudes de Empleo</h3>
-                            <button class="btn-primary" onclick="openApplicationModal()">+ Nueva Solicitud</button>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre Completo</th>
-                                        <th>DUI</th>
-                                        <th>Teléfono</th>
-                                        <th>Estado</th>
-                                        <th>Fecha</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="applicationsTableBody">
-                                    <tr><td colspan="6" class="empty-feed">No hay solicitudes registradas</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Contratos -->
-                <div class="hr-tab-content" id="hr-tab-contracts">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📄 Contratos y Documentos Laborales</h3>
-                            <button class="btn-primary" onclick="openContractModal()">+ Subir Documento</button>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Tipo Documento</th>
-                                        <th>Archivo</th>
-                                        <th>Fecha Subida</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="contractsTableBody">
-                                    <tr><td colspan="5" class="empty-feed">No hay documentos registrados</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Carta de Confidencialidad -->
-                <div class="hr-tab-content" id="hr-tab-confidentiality">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>🔒 Acuerdos de Confidencialidad</h3>
-                            <button class="btn-primary" onclick="openConfidentialityModal()">+ Subir Documento</button>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Tipo Documento</th>
-                                        <th>Archivo</th>
-                                        <th>Fecha Subida</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="confidentialityTableBody">
-                                    <tr><td colspan="5" class="empty-feed">No hay documentos registrados</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Documentos Personales -->
-                <div class="hr-tab-content" id="hr-tab-documents">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📁 Documentos Personales Escaneados</h3>
-                        </div>
-                        <div class="doc-upload-section">
-                            <div class="form-row" style="margin-bottom:16px">
-                                <div class="form-group">
-                                    <label>Empleado</label>
-                                    <select id="docEmpSelect" class="form-input">
-                                        <option value="">Seleccionar empleado...</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Tipo de Documento</label>
-                                    <select id="docType" class="form-input">
-                                        <option value="dui_front">DUI (Frente)</option>
-                                        <option value="dui_back">DUI (Reverso)</option>
-                                        <option value="nit">NIT</option>
-                                        <option value="photo">Foto del Empleado</option>
-                                        <option value="certificate">Certificado de Estudios</option>
-                                        <option value="recommendation">Carta de Recomendación</option>
-                                        <option value="isss">Carnet ISSS</option>
-                                        <option value="afp">Carnet AFP</option>
-                                        <option value="other">Otro Documento</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Descripción (opcional)</label>
-                                    <input type="text" id="docDescription" class="form-input" placeholder="Descripción del documento" />
-                                </div>
-                            </div>
-                            <div class="upload-drop-zone" id="uploadDropZone" onclick="document.getElementById('docFileInput').click()" ondragover="event.preventDefault()" ondrop="handleDocDrop(event)">
-                                <div class="upload-icon">📂</div>
-                                <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-                                <p class="upload-hint">PDF, JPG, PNG, JPEG — Máx. 10MB</p>
-                                <input type="file" id="docFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocFileSelect(event)" />
-                            </div>
-                            <button class="btn-primary" onclick="uploadDocument()" style="margin-top:12px">📤 Subir Documento</button>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📋 Documentos Subidos</h3>
-                            <div class="form-group" style="margin:0;min-width:200px">
-                                <select id="docFilterEmp" class="form-input" onchange="loadDocuments()">
-                                    <option value="">Todos los empleados</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Tipo</th>
-                                        <th>Archivo</th>
-                                        <th>Tamaño</th>
-                                        <th>Fecha Subida</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="documentsTableBody">
-                                    <tr><td colspan="6" class="empty-feed">No hay documentos subidos</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Formulario de Permisos -->
-                <div class="hr-tab-content" id="hr-tab-permissions">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>🗓 Solicitudes de Permiso</h3>
-                            <button class="btn-primary" onclick="openPermissionModal()">+ Nueva Solicitud</button>
-                        </div>
-                        <div class="log-filters">
-                            <select id="permFilterStatus" class="form-input" onchange="loadPermissions()">
-                                <option value="">Todos los estados</option>
-                                <option value="pending">Pendientes</option>
-                                <option value="approved">Aprobados</option>
-                                <option value="rejected">Rechazados</option>
-                            </select>
-                            <select id="permFilterEmp" class="form-input" onchange="loadPermissions()">
-                                <option value="">Todos los empleados</option>
-                            </select>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Tipo</th>
-                                        <th>Fecha Inicio</th>
-                                        <th>Fecha Fin</th>
-                                        <th>Días</th>
-                                        <th>Motivo</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="permissionsTableBody">
-                                    <tr><td colspan="8" class="empty-feed">No hay solicitudes de permiso</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Constancias de Tiempo Laboral -->
-                <div class="hr-tab-content" id="hr-tab-certificates">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📜 Generar Constancia de Tiempo Laboral</h3>
-                        </div>
-                        <div class="cert-gen-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Empleado *</label>
-                                    <select id="certEmpSelect" class="form-input">
-                                        <option value="">Seleccionar empleado...</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Propósito de la Constancia</label>
-                                    <select id="certPurpose" class="form-input">
-                                        <option value="tramites_bancarios">Trámites Bancarios</option>
-                                        <option value="visa">Solicitud de Visa</option>
-                                        <option value="alquiler">Alquiler de Vivienda</option>
-                                        <option value="credito">Solicitud de Crédito</option>
-                                        <option value="estudios">Estudios / Beca</option>
-                                        <option value="general">Uso General</option>
-                                        <option value="otro">Otro</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:24px">
-                                    <input type="checkbox" id="certIncludeSalary" />
-                                    <label for="certIncludeSalary">Incluir salario en la constancia</label>
-                                </div>
-                            </div>
-                            <button class="btn-primary" onclick="generateCertificate()">📜 Generar Constancia</button>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📚 Constancias Generadas</h3>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Cargo</th>
-                                        <th>Propósito</th>
-                                        <th>Incluye Salario</th>
-                                        <th>Fecha Generación</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="certificatesTableBody">
-                                    <tr><td colspan="6" class="empty-feed">No hay constancias generadas</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Planilla de Sueldos -->
-                <div class="hr-tab-content" id="hr-tab-payroll">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>💰 Generar Planilla de Sueldos</h3>
-                        </div>
-                        <div class="payroll-gen-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Tipo de Planilla</label>
-                                    <select id="payrollType" class="form-input" onchange="onPayrollTypeChange()">
-                                        <option value="monthly">📅 Mensual</option>
-                                        <option value="biweekly">📅 Quincenal</option>
-                                        <option value="weekly">📅 Semanal</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Mes</label>
-                                    <select id="payrollMonth" class="form-input">
-                                        <option value="1">Enero</option>
-                                        <option value="2">Febrero</option>
-                                        <option value="3">Marzo</option>
-                                        <option value="4">Abril</option>
-                                        <option value="5">Mayo</option>
-                                        <option value="6">Junio</option>
-                                        <option value="7">Julio</option>
-                                        <option value="8">Agosto</option>
-                                        <option value="9">Septiembre</option>
-                                        <option value="10">Octubre</option>
-                                        <option value="11">Noviembre</option>
-                                        <option value="12">Diciembre</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Año</label>
-                                    <input type="number" id="payrollYear" class="form-input" value="2025" min="2020" max="2030" />
-                                </div>
-                            </div>
-                            <div class="form-row" id="biweeklyOptions" style="display:none;">
-                                <div class="form-group">
-                                    <label>Quincena</label>
-                                    <select id="payrollPeriodNumber" class="form-input">
-                                        <option value="1">1ra Quincena (1-15)</option>
-                                        <option value="2">2da Quincena (16-fin)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row" id="weeklyOptions" style="display:none;">
-                                <div class="form-group">
-                                    <label>Semana</label>
-                                    <select id="payrollWeekNumber" class="form-input">
-                                        <option value="1">Semana 1</option>
-                                        <option value="2">Semana 2</option>
-                                        <option value="3">Semana 3</option>
-                                        <option value="4">Semana 4</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <button class="btn-primary" onclick="generatePayroll()" style="align-self:flex-end;">🔄 Generar Planilla</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="panel" id="payrollResultPanel" style="display:none;">
-                        <div class="panel-header">
-                            <h3>📊 Planilla Generada</h3>
-                            <div class="btn-group">
-                                <button class="btn-primary sm" onclick="exportPayrollExcel()">� Excel General</button>
-                                <button class="btn-primary sm" onclick="exportPayrollISSS()" title="Exportar formato ISSS">🏥 ISSS</button>
-                                <button class="btn-primary sm" onclick="exportPayrollCRECER()" title="Exportar formato CRECER">📋 CRECER</button>
-                            </div>
-                        </div>
-                        <div id="payrollResult"></div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📚 Planillas Históricas</h3>
-                        </div>
-                        <div class="table-wrap">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Período</th>
-                                        <th>Empleados</th>
-                                        <th>Total Salarios</th>
-                                        <th>Total Deducciones</th>
-                                        <th>Total Neto</th>
-                                        <th>Fecha Generación</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="payrollHistoryBody">
-                                    <tr><td colspan="7" class="empty-feed">No hay planillas generadas</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === SECURITY === -->
-            <section class="page" id="page-security">
-                <div class="security-layout">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>🔑 Gestión de Claves</h3>
-                        </div>
-                        <div class="key-display">
-                            <div class="key-field">
-                                <label>Clave HMAC Secreta Actual</label>
-                                <div class="key-val-wrap">
-                                    <input type="password" id="secretKeyDisplay" readonly />
-                                    <button onclick="toggleKeyVis()" class="btn-icon-sm">👁</button>
-                                    <button onclick="copyKey()" class="btn-icon-sm">📋</button>
-                                </div>
-                            </div>
-                            <div class="key-field">
-                                <label>Última Rotación de Clave</label>
-                                <span class="info-text" id="lastKeyRotation">—</span>
-                            </div>
-                            <div class="key-field">
-                                <label>Próxima Rotación Automática</label>
-                                <span class="info-text warning" id="nextKeyRotation">—</span>
-                            </div>
-                            <button class="btn-danger" onclick="rotateKey()">🔄 Rotar Clave Ahora</button>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>⚙️ Configuración de Tokens</h3>
-                        </div>
-                        <div class="config-grid">
-                            <div class="config-item">
-                                <label for="cfgTokenLife">Vida del Token (segundos)</label>
-                                <div class="range-wrap">
-                                    <input type="range" id="cfgTokenLife" min="15" max="120" step="5" value="30"
-                                        oninput="updateConfig()" />
-                                    <span id="cfgTokenLifeVal">30s</span>
-                                </div>
-                            </div>
-                            <div class="config-item">
-                                <label for="cfgTimeWindow">Ventana de Tolerancia (segundos)</label>
-                                <div class="range-wrap">
-                                    <input type="range" id="cfgTimeWindow" min="5" max="60" step="5" value="30"
-                                        oninput="updateConfig()" />
-                                    <span id="cfgTimeWindowVal">30s</span>
-                                </div>
-                            </div>
-                            <div class="config-item">
-                                <label for="cfgMaxRetries">Intentos Fallidos Máximos</label>
-                                <div class="range-wrap">
-                                    <input type="range" id="cfgMaxRetries" min="1" max="10" step="1" value="3"
-                                        oninput="updateConfig()" />
-                                    <span id="cfgMaxRetriesVal">3</span>
-                                </div>
-                            </div>
-                            <div class="config-item toggle-item">
-                                <label>Anti-Replay Protection</label>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="cfgAntiReplay" checked onchange="updateConfig()" />
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <div class="config-item toggle-item">
-                                <label>Bloqueo por IP / Dispositivo</label>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="cfgDeviceLock" onchange="updateConfig()" />
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                            <div class="config-item toggle-item">
-                                <label>Alertas de Acceso Fallido</label>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="cfgAlerts" checked onchange="updateConfig()" />
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                        <button class="btn-primary" onclick="saveConfig()">💾 Guardar Configuración</button>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>🚨 Log de Seguridad</h3>
-                        </div>
-                        <div class="security-log" id="securityLog">
-                            <div class="empty-feed">Sin eventos de seguridad</div>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📋 Audit Trail</h3>
-                        </div>
-                        <div class="replay-cache-info">
-                            <div class="si-item">
-                                <span class="si-label">Tokens en caché anti-replay</span>
-                                <span class="si-val" id="auditCacheSize">0</span>
-                            </div>
-                            <div class="si-item">
-                                <span class="si-label">Total intentos rechazados</span>
-                                <span class="si-val danger" id="auditRejected">0</span>
-                            </div>
-                            <div class="si-item">
-                                <span class="si-label">Total accesos válidos</span>
-                                <span class="si-val success" id="auditValid">0</span>
-                            </div>
-                            <div class="si-item">
-                                <span class="si-label">Tasa de éxito</span>
-                                <span class="si-val" id="auditRate">—</span>
-                            </div>
-                        </div>
-                        <button class="btn-ghost sm" onclick="clearReplayCache()">🧹 Limpiar Caché Replay</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === ADMIN / CONFIG === -->
-            <section class="page" id="page-admin">
-                <div class="admin-layout">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>🏢 Información de la Empresa</h3>
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre de la Empresa</label>
-                            <input type="text" id="cfgCompany" value="Mi Empresa S.A." class="form-input" />
-                        </div>
-                        <div class="form-group">
-                            <label>Logo/Ícono</label>
-                            <input type="text" id="cfgLogo" value="🏢" class="form-input" placeholder="Emoji o URL" />
-                        </div>
-                        <div class="form-group">
-                            <label>Horario de Entrada</label>
-                            <input type="time" id="cfgEntryTime" value="08:00" class="form-input" />
-                        </div>
-                        <div class="form-group">
-                            <label>Horario de Salida</label>
-                            <input type="time" id="cfgExitTime" value="18:00" class="form-input" />
-                        </div>
-                        <div class="form-group">
-                            <label>Minutos de Gracia</label>
-                            <input type="number" id="cfgGrace" value="10" min="0" max="60" class="form-input" />
-                        </div>
-                        <button class="btn-primary" onclick="saveAdminConfig()">💾 Guardar</button>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>📂 Departamentos</h3>
-                        </div>
-                        <div class="dept-list" id="deptList"></div>
-                        <div class="add-dept-row">
-                            <input type="text" id="newDeptInput" placeholder="Nombre del departamento"
-                                class="form-input" />
-                            <button class="btn-primary sm" onclick="addDepartment()">+ Agregar</button>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel-header">
-                            <h3>💾 Backup & Restauración</h3>
-                        </div>
-                        <p class="info-text muted">Exporta o importa todos los datos del sistema.</p>
-                        <div class="backup-actions">
-                            <button class="btn-primary" onclick="exportData()">⬇ Exportar Datos</button>
-                            <label class="btn-ghost" for="importFile">⬆ Importar Datos</label>
-                            <input type="file" id="importFile" accept=".json" onchange="importData(event)"
-                                style="display:none" />
-                        </div>
-                        <div class="danger-zone">
-                            <h4>⚠️ Zona de Peligro</h4>
-                            <button class="btn-danger" onclick="resetSystem()">🗑 Resetear Todo el Sistema</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === LOCATION === -->
-            <section class="page" id="page-location">
-                <div class="location-layout">
-                    <!-- Panel izquierdo -->
-                    <div class="location-list-panel">
-                        <div class="loc-day-counter">
-                            <span class="count-num" id="locDayCount">0</span>
-                            <div>
-                                <div style="font-weight:600;font-size:0.9rem;">Empleados hoy</div>
-                                <div class="count-lbl">compartieron ubicación</div>
-                            </div>
-                        </div>
-                        <div class="panel" style="flex:1;overflow-y:auto;padding:16px;">
-                            <div class="panel-header" style="margin-bottom:12px;">
-                                <h3>📍 Con ubicación</h3>
-                                <button class="btn-ghost sm" onclick="refreshLocationMap()">🔄 Actualizar</button>
-                            </div>
-                            <div id="locList"><div class="empty-feed">Cargando...</div></div>
-                            <div class="loc-section-title" style="margin-top:16px;">Sin ubicación registrada</div>
-                            <div id="locNoLocationList"></div>
-                            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-                                <button class="btn-danger sm" id="btnClearLocation" onclick="clearLocationHistory()" style="width:100%;">
-                                    🗑 Limpiar historial de ubicaciones
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Mapa -->
-                    <div class="location-map-container">
-                        <div id="locationMap"></div>
-                        <div class="loc-empty-msg" id="locEmptyMsg" style="display:none;">
-                            <span style="font-size:2rem;">📍</span>
-                            <span>No hay ubicaciones registradas aún</span>
-                            <span style="font-size:0.8rem;opacity:0.6;">Las ubicaciones aparecen cuando los empleados comparten su GPS al hacer check-in</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-    </div>
-    <!-- Employee Modal -->
-    <div class="modal-overlay" id="empModalOverlay" onclick="closeEmpModal()"></div>
-    <div class="modal" id="empModal">
-        <div class="modal-header">
-            <h3 id="empModalTitle">Nuevo Empleado</h3>
-            <button onclick="closeEmpModal()" class="modal-close">✕</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="empId" />
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre(s)</label>
-                    <input type="text" id="empFirstName" class="form-input" placeholder="Juan" required />
-                </div>
-                <div class="form-group">
-                    <label>Apellidos</label>
-                    <input type="text" id="empLastName" class="form-input" placeholder="García López" required />
+        <!-- ========== EMPLOYEES PAGE ========== -->
+        <section class="page" id="page-employees">
+            <div class="page-header">
+                <h1 class="page-title">Gestión de Empleados</h1>
+                <p class="page-subtitle">Administra el personal de la empresa</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddEmployeeModal()">
+                        ➕ Agregar Empleado
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportEmployees()">
+                        📊 Exportar Excel
+                    </button>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>ID / Número de Empleado</label>
-                    <input type="text" id="empNum" class="form-input" placeholder="EMP-001" required />
+
+            <div class="search-filters">
+                <div class="search-box">
+                    <input type="text" id="employeeSearch" placeholder="🔍 Buscar empleado..." onkeyup="filterEmployees()">
                 </div>
-                <div class="form-group">
-                    <label>Departamento</label>
-                    <select id="empDept" class="form-input">
-                        <option value="">Seleccionar...</option>
+                <div class="filter-group">
+                    <select id="departmentFilter" onchange="filterEmployees()">
+                        <option value="">Todos los departamentos</option>
+                        <option value="RRHH">RRHH</option>
+                        <option value="OPERACIONES">OPERACIONES</option>
+                        <option value="VENTAS">VENTAS</option>
+                        <option value="TI">TI</option>
+                        <option value="FINANZAS">FINANZAS</option>
                     </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Cargo</label>
-                    <input type="text" id="empRole" class="form-input" placeholder="Desarrollador" />
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="empEmail" class="form-input" placeholder="juan@empresa.com" />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="tel" id="empPhone" class="form-input" placeholder="+52 55 1234 5678" />
-                </div>
-                <div class="form-group">
-                    <label>Estado</label>
-                    <select id="empStatus" class="form-input">
+                    <select id="statusFilter" onchange="filterEmployees()">
+                        <option value="">Todos los estados</option>
                         <option value="active">Activo</option>
                         <option value="inactive">Inactivo</option>
+                        <option value="suspended">Suspendido</option>
                     </select>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Salario Mensual (USD)</label>
-                    <input type="number" id="empMonthlySalary" class="form-input" placeholder="0.00" step="0.01" min="0" />
-                </div>
-                <div class="form-group">
-                    <label>Foto (Emoji o Inicial)</label>
-                    <input type="text" id="empAvatar" class="form-input" placeholder="👨‍💻 o iniciales" maxlength="4" />
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-ghost" onclick="closeEmpModal()">Cancelar</button>
-            <button class="btn-primary" onclick="saveEmployee()">💾 Guardar Empleado</button>
-        </div>
-    </div>
 
-    <!-- Confirm Modal -->
-    <div class="modal-overlay" id="confirmOverlay" onclick="closeConfirm()"></div>
-    <div class="modal sm-modal" id="confirmModal">
-        <div class="modal-header">
-            <h3 id="confirmTitle">Confirmar</h3>
-            <button onclick="closeConfirm()" class="modal-close">✕</button>
-        </div>
-        <div class="modal-body">
-            <p id="confirmMsg"></p>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-ghost" onclick="closeConfirm()">Cancelar</button>
-            <button class="btn-danger" id="confirmOkBtn">Confirmar</button>
-        </div>
-    </div>
+            <div class="table-container">
+                <table class="data-table" id="employeesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Departamento</th>
+                            <th>Puesto</th>
+                            <th>Email</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No hay empleados registrados</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-    <!-- Toast -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Application Modal -->
-    <div class="modal-overlay" id="appModalOverlay" onclick="closeApplicationModal()"></div>
-    <div class="modal large-modal" id="appModal">
-        <div class="modal-header">
-            <h3 id="appModalTitle">Nueva Solicitud de Empleo</h3>
-            <button onclick="closeApplicationModal()" class="modal-close">✕</button>
-        </div>
-        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
-            <input type="hidden" id="appId" />
-            
-            <h4 class="section-title">📋 I. Datos Personales</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre(s) *</label>
-                    <input type="text" id="appFirstName" class="form-input" required />
-                </div>
-                <div class="form-group">
-                    <label>Apellidos *</label>
-                    <input type="text" id="appLastName" class="form-input" required />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>DUI *</label>
-                    <input type="text" id="appDUI" class="form-input" placeholder="00000000-0" required />
-                </div>
-                <div class="form-group">
-                    <label>NIT</label>
-                    <input type="text" id="appNIT" class="form-input" placeholder="0000-000000-000-0" />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>ISSS</label>
-                    <input type="text" id="appISSS" class="form-input" />
-                </div>
-                <div class="form-group">
-                    <label>AFP</label>
-                    <input type="text" id="appAFP" class="form-input" />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Fecha de Nacimiento *</label>
-                    <input type="date" id="appBirthDate" class="form-input" required />
-                </div>
-                <div class="form-group">
-                    <label>Lugar de Nacimiento</label>
-                    <input type="text" id="appBirthPlace" class="form-input" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Dirección *</label>
-                <input type="text" id="appAddress" class="form-input" required />
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Teléfono *</label>
-                    <input type="tel" id="appPhone" class="form-input" required />
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="appEmail" class="form-input" />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Estado Civil</label>
-                    <select id="appMaritalStatus" class="form-input">
-                        <option value="">Seleccionar...</option>
-                        <option value="soltero">Soltero/a</option>
-                        <option value="casado">Casado/a</option>
-                        <option value="divorciado">Divorciado/a</option>
-                        <option value="viudo">Viudo/a</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Profesión</label>
-                    <input type="text" id="appProfession" class="form-input" />
+        <!-- ========== RECRUITMENT PAGE ========== -->
+        <section class="page" id="page-recruitment">
+            <div class="page-header">
+                <h1 class="page-title">Reclutamiento</h1>
+                <p class="page-subtitle">Gestiona el proceso de contratación</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddPositionModal()">
+                        ➕ Agregar Vacante
+                    </button>
                 </div>
             </div>
 
-            <h4 class="section-title">👨‍👩‍👧‍👦 II. Estructura Familiar</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre del Padre</label>
-                    <input type="text" id="appFatherName" class="form-input" />
-                </div>
-                <div class="form-group">
-                    <label>Nombre de la Madre</label>
-                    <input type="text" id="appMotherName" class="form-input" />
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Nombre del Cónyuge</label>
-                <input type="text" id="appSpouseName" class="form-input" />
-            </div>
-            <div class="form-group">
-                <label>Hijos (Nombre y Edad, separados por coma)</label>
-                <textarea id="appChildren" class="form-input" rows="2" placeholder="Juan 5, María 3"></textarea>
-            </div>
-
-            <h4 class="section-title">👥 III. Referencias Personales (mínimo 2)</h4>
-            <div id="personalRefsContainer">
-                <div class="ref-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre</label>
-                            <input type="text" class="form-input personal-ref-name" />
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono</label>
-                            <input type="tel" class="form-input personal-ref-phone" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Dirección</label>
-                            <input type="text" class="form-input personal-ref-address" />
-                        </div>
-                        <div class="form-group">
-                            <label>Ocupación</label>
-                            <input type="text" class="form-input personal-ref-occupation" />
-                        </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalApplications">0</div>
+                        <div class="stat-label">Total Aplicaciones</div>
                     </div>
                 </div>
-                <div class="ref-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre</label>
-                            <input type="text" class="form-input personal-ref-name" />
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono</label>
-                            <input type="tel" class="form-input personal-ref-phone" />
-                        </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="inReview">0</div>
+                        <div class="stat-label">En Revisión</div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Dirección</label>
-                            <input type="text" class="form-input personal-ref-address" />
-                        </div>
-                        <div class="form-group">
-                            <label>Ocupación</label>
-                            <input type="text" class="form-input personal-ref-occupation" />
-                        </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="interviewing">0</div>
+                        <div class="stat-label">En Entrevista</div>
                     </div>
                 </div>
             </div>
 
-            <h4 class="section-title">💼 IV. Referencias Laborales (mínimo 2)</h4>
-            <div id="workRefsContainer">
-                <div class="ref-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre de la Empresa</label>
-                            <input type="text" class="form-input work-ref-company" />
-                        </div>
-                        <div class="form-group">
-                            <label>Cargo Desempeñado</label>
-                            <input type="text" class="form-input work-ref-position" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Período (inicio - fin)</label>
-                            <input type="text" class="form-input work-ref-period" placeholder="Ej: Enero 2020 - Marzo 2022" />
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono de la Empresa</label>
-                            <input type="tel" class="form-input work-ref-phone" />
-                        </div>
+            <div class="table-container">
+                <table class="data-table" id="positionsTable">
+                    <thead>
+                        <tr>
+                            <th>Puesto</th>
+                            <th>Departamento</th>
+                            <th>Tipo</th>
+                            <th>Salario</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="positionsTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <p>No hay vacantes abiertas</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== PAYROLL PAGE ========== -->
+        <section class="page" id="page-payroll">
+            <div class="page-header">
+                <h1 class="page-title">Nómina</h1>
+                <p class="page-subtitle">Gestión de salarios y pagos</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="generatePayroll()">
+                        🧾 Generar Nómina
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportPayroll()">
+                        📊 Exportar Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="payrollTable">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Salario Base</th>
+                            <th>Bonos</th>
+                            <th>Deducciones</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrollTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No hay registros de nómina</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== DOCUMENTS PAGE ========== -->
+        <section class="page" id="page-documents">
+            <div class="page-header">
+                <h1 class="page-title">Documentos</h1>
+                <p class="page-subtitle">Gestión de documentos de empleados</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showUploadDocumentModal()">
+                        📄 Subir Documento
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Documento</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <p>No hay documentos registrados</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== PERMISSIONS PAGE ========== -->
+        <section class="page" id="page-permissions">
+            <div class="page-header">
+                <h1 class="page-title">Permisos</h1>
+                <p class="page-subtitle">Gestión de permisos y ausencias</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddPermissionModal()">
+                        ➕ Solicitar Permiso
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="permissionsTable">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Tipo</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permissionsTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No hay solicitudes de permiso</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== ADMIN PAGE ========== -->
+        <section class="page" id="page-admin">
+            <div class="page-header">
+                <h1 class="page-title">Configuración</h1>
+                <p class="page-subtitle">Configuración del sistema</p>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3 class="card-title">Configuración General</h3>
+                    <div class="form-group">
+                        <label>Nombre de la Empresa</label>
+                        <input type="text" id="companyName" value="Mi Empresa">
                     </div>
                     <div class="form-group">
-                        <label>Dirección de la Empresa</label>
-                        <input type="text" class="form-input work-ref-address" />
-                    </div>
-                </div>
-                <div class="ref-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre de la Empresa</label>
-                            <input type="text" class="form-input work-ref-company" />
-                        </div>
-                        <div class="form-group">
-                            <label>Cargo Desempeñado</label>
-                            <input type="text" class="form-input work-ref-position" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Período (inicio - fin)</label>
-                            <input type="text" class="form-input work-ref-period" placeholder="Ej: Enero 2020 - Marzo 2022" />
-                        </div>
-                        <div class="form-group">
-                            <label>Teléfono de la Empresa</label>
-                            <input type="tel" class="form-input work-ref-phone" />
-                        </div>
+                        <label>Dirección</label>
+                        <input type="text" id="companyAddress" value="Dirección de la empresa">
                     </div>
                     <div class="form-group">
-                        <label>Dirección de la Empresa</label>
-                        <input type="text" class="form-input work-ref-address" />
+                        <label>Teléfono</label>
+                        <input type="text" id="companyPhone" value="+503 0000-0000">
                     </div>
                 </div>
-            </div>
-            <button class="btn-ghost sm" onclick="addWorkRef()" style="margin-top:8px">+ Agregar Referencia Laboral</button>
 
-            <h4 class="section-title">🎓 V. Educación</h4>
-            <div id="educationContainer">
-                <div class="ref-item edu-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nivel Académico</label>
-                            <select class="form-input edu-level">
-                                <option value="">Seleccionar...</option>
-                                <option value="primaria">Primaria</option>
-                                <option value="secundaria">Secundaria / Bachillerato</option>
-                                <option value="tecnico">Técnico</option>
-                                <option value="universitario">Universitario</option>
-                                <option value="postgrado">Postgrado / Maestría</option>
-                                <option value="doctorado">Doctorado</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre de la Institución</label>
-                            <input type="text" class="form-input edu-institution" placeholder="Ej: Universidad de El Salvador" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Título o Diploma Obtenido</label>
-                            <input type="text" class="form-input edu-degree" placeholder="Ej: Licenciatura en Administración" />
-                        </div>
-                        <div class="form-group">
-                            <label>Año de Graduación</label>
-                            <input type="text" class="form-input edu-year" placeholder="Ej: 2018" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button class="btn-ghost sm" onclick="addEducation()" style="margin-top:8px">+ Agregar Educación</button>
-
-            <h4 class="section-title">🏢 VI. Experiencia Laboral</h4>
-            <div id="workExpContainer">
-                <div class="ref-item exp-item">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre de la Empresa</label>
-                            <input type="text" class="form-input exp-company" />
-                        </div>
-                        <div class="form-group">
-                            <label>Cargo Desempeñado</label>
-                            <input type="text" class="form-input exp-position" />
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Período (inicio - fin)</label>
-                            <input type="text" class="form-input exp-period" placeholder="Ej: Enero 2019 - Diciembre 2022" />
-                        </div>
-                        <div class="form-group">
-                            <label>Motivo de Retiro</label>
-                            <input type="text" class="form-input exp-reason" placeholder="Ej: Búsqueda de nuevas oportunidades" />
-                        </div>
+                <div class="settings-card">
+                    <h3 class="card-title">Configuración de RRHH</h3>
+                    <div class="form-group">
+                        <label>Administrador RRHH</label>
+                        <input type="text" id="hrAdmin" value="admin@empresa.com">
                     </div>
                     <div class="form-group">
-                        <label>Funciones Principales</label>
-                        <textarea class="form-input exp-functions" rows="2" placeholder="Describa las principales funciones desempeñadas..."></textarea>
-                    </div>
-                </div>
-            </div>
-            <button class="btn-ghost sm" onclick="addWorkExp()" style="margin-top:8px">+ Agregar Experiencia</button>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-ghost" onclick="closeApplicationModal()">Cancelar</button>
-            <button class="btn-primary" onclick="saveApplication()">💾 Guardar Solicitud</button>
-        </div>
-    </div>
-
-    <!-- ===== MODAL: CONTRATO ===== -->
-    <div class="modal-overlay" id="contractModal" style="display:none">
-        <div class="modal-box" style="max-width:500px">
-            <div class="modal-header">
-                <h3>📄 Subir Contrato Laboral</h3>
-                <button class="modal-close" onclick="closeContractModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Empleado *</label>
-                    <select id="contractEmpId" class="form-input">
-                        <option value="">Seleccionar empleado...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Documento</label>
-                    <select id="contractDocType" class="form-input">
-                        <option value="contrato_laboral">Contrato Laboral</option>
-                        <option value="renovacion">Renovación de Contrato</option>
-                        <option value="adenda">Adenda/Modificación</option>
-                        <option value="terminacion">Carta de Terminación</option>
-                        <option value="otro">Otro Documento</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Descripción (opcional)</label>
-                    <input type="text" id="contractDescription" class="form-input" placeholder="Ej: Contrato 2024-2025, Renovación anual, etc." />
-                </div>
-                <div class="form-group">
-                    <label>Adjuntar Archivo *</label>
-                    <div class="upload-drop-zone" onclick="document.getElementById('contractFileInput').click()" style="padding:40px;text-align:center;border:2px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s">
-                        <div style="font-size:48px;margin-bottom:12px">📁</div>
-                        <div style="font-weight:600;color:#475569;margin-bottom:4px">Clic para seleccionar archivo</div>
-                        <div style="font-size:0.85em;color:#94a3b8">O arrastra y suelta aquí</div>
-                        <div style="font-size:0.75em;color:#94a3b8;margin-top:8px">PDF, Word, Imágenes, o cualquier formato</div>
-                        <input type="file" id="contractFileInput" style="display:none" />
-                    </div>
-                    <span id="contractFileName" style="font-size:13px;color:#6366f1;margin-top:8px;display:block;font-weight:500"></span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-ghost" onclick="closeContractModal()">Cancelar</button>
-                <button class="btn-primary" onclick="saveContract()">⬆️ Subir Documento</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== MODAL: CARTA DE CONFIDENCIALIDAD ===== -->
-    <div class="modal-overlay" id="confidentialityModal" style="display:none">
-        <div class="modal-box" style="max-width:500px">
-            <div class="modal-header">
-                <h3>🔒 Subir Carta de Confidencialidad</h3>
-                <button class="modal-close" onclick="closeConfidentialityModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Empleado *</label>
-                    <select id="confEmpId" class="form-input">
-                        <option value="">Seleccionar empleado...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Documento</label>
-                    <select id="confDocType" class="form-input">
-                        <option value="carta_confidencialidad">Carta de Confidencialidad</option>
-                        <option value="acuerdo_nda">Acuerdo de Confidencialidad (NDA)</option>
-                        <option value="compromiso_seguridad">Compromiso de Seguridad</option>
-                        <option value="politica_privacidad">Política de Privacidad Firmada</option>
-                        <option value="otro">Otro Documento</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Descripción (opcional)</label>
-                    <input type="text" id="confDescription" class="form-input" placeholder="Ej: Carta de confidencialidad 2024, NDA proyecto X, etc." />
-                </div>
-                <div class="form-group">
-                    <label>Adjuntar Archivo *</label>
-                    <div class="upload-drop-zone" onclick="document.getElementById('confFileInput').click()" style="padding:40px;text-align:center;border:2px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s">
-                        <div style="font-size:48px;margin-bottom:12px">�</div>
-                        <div style="font-weight:600;color:#475569;margin-bottom:4px">Clic para seleccionar archivo</div>
-                        <div style="font-size:0.85em;color:#94a3b8">O arrastra y suelta aquí</div>
-                        <div style="font-size:0.75em;color:#94a3b8;margin-top:8px">PDF, Word, Imágenes, o cualquier formato</div>
-                        <input type="file" id="confFileInput" style="display:none" />
-                    </div>
-                    <span id="confFileName" style="font-size:13px;color:#6366f1;margin-top:8px;display:block;font-weight:500"></span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-ghost" onclick="closeConfidentialityModal()">Cancelar</button>
-                <button class="btn-primary" onclick="saveConfidentiality()">⬆️ Subir Documento</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== MODAL: PERMISO ===== -->
-    <div class="modal-overlay" id="permissionModal" style="display:none">
-        <div class="modal-box" style="max-width:600px">
-            <div class="modal-header">
-                <h3>🗓 Solicitud de Permiso</h3>
-                <button class="modal-close" onclick="closePermissionModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Empleado *</label>
-                        <select id="permEmpId" class="form-input">
-                            <option value="">Seleccionar empleado...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo de Permiso *</label>
-                        <select id="permType" class="form-input">
-                            <option value="medico">Médico / Enfermedad</option>
-                            <option value="personal">Personal</option>
-                            <option value="vacaciones">Vacaciones</option>
-                            <option value="maternidad">Maternidad</option>
-                            <option value="paternidad">Paternidad</option>
-                            <option value="estudio">Estudio / Capacitación</option>
-                            <option value="duelo">Duelo Familiar</option>
-                            <option value="otro">Otro</option>
+                        <label>Notificaciones por Email</label>
+                        <select id="emailNotifications">
+                            <option value="enabled">Activadas</option>
+                            <option value="disabled">Desactivadas</option>
                         </select>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Fecha de Inicio *</label>
-                        <input type="date" id="permStartDate" class="form-input" />
-                    </div>
-                    <div class="form-group">
-                        <label>Fecha de Fin *</label>
-                        <input type="date" id="permEndDate" class="form-input" />
-                    </div>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    💾 Guardar Configuración
+                </button>
+                <button class="btn btn-danger" onclick="clearData()">
+                    🗑️ Limpiar Datos
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========== LOGIN SCREEN ========== -->
+    <section class="screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">👥</div>
+                <h1 class="login-title">Sistema de <strong>RRHH</strong></h1>
+                <p class="login-subtitle">Recursos Humanos v2.6</p>
+            </div>
+
+            <form class="login-form" onsubmit="login(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@empresa.com">
                 </div>
                 <div class="form-group">
-                    <label>Motivo / Descripción *</label>
-                    <textarea id="permReason" class="form-input" rows="3" placeholder="Describa el motivo del permiso..."></textarea>
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="•••••">
                 </div>
-                <div class="form-group">
-                    <label>Adjuntar Documento de Soporte (opcional)</label>
-                    <div class="upload-drop-zone sm" onclick="document.getElementById('permFileInput').click()">
-                        <span>📎 Clic para adjuntar archivo (receta médica, etc.)</span>
-                        <input type="file" id="permFileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png" />
+                <button type="submit" class="btn btn-primary login-btn">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ========== MODALS ========== -->
+    <div class="modal" id="addEmployeeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Agregar Empleado</h3>
+                <button class="modal-close" onclick="closeModal('addEmployeeModal')">×</button>
+            </div>
+            <form class="modal-body" onsubmit="addEmployee(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="empFirstName" required>
                     </div>
-                    <span id="permFileName" style="font-size:12px;color:#888;margin-top:4px;display:block"></span>
+                    <div class="form-group">
+                        <label>Apellido</label>
+                        <input type="text" id="empLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Empleado</label>
+                        <input type="text" id="empNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Departamento</label>
+                        <select id="empDept" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="RRHH">RRHH</option>
+                            <option value="OPERACIONES">OPERACIONES</option>
+                            <option value="VENTAS">VENTAS</option>
+                            <option value="TI">TI</option>
+                            <option value="FINANZAS">FINANZAS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Puesto</label>
+                        <input type="text" id="empRole" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="empEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="empPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>Salario</label>
+                        <input type="number" id="empSalary" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Contratación</label>
+                        <input type="date" id="empHireDate" required>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-ghost" onclick="closePermissionModal()">Cancelar</button>
-                <button class="btn-primary" onclick="savePermission()">💾 Guardar Solicitud</button>
-            </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEmployeeModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="crypto-utils.js"></script>
-    <script src="app.js"></script>
+    <script src="app-rrhh.js"></script>
 </body>
 
 </html>
