@@ -35,11 +35,6 @@ echo.
 echo Abriendo sistema principal...
 start https://sistema-asistencia-s0m2.onrender.com
 
-timeout /t 3 >nul
-
-echo Abriendo link de registro simple y funcional...
-start https://sistema-asistencia-s0m2.onrender.com/registro-simple.html
-
 REM Iniciar servidor Y watch-deploy en paralelo
 echo Iniciando servidor local...
 node -e "const {spawn}=require('child_process');const s=spawn('node',['server.js'],{stdio:'inherit'});const w=spawn('node',['watch-deploy.js'],{stdio:'inherit'});s.on('close',()=>process.exit());process.on('SIGINT',()=>{s.kill();w.kill();process.exit());});"
