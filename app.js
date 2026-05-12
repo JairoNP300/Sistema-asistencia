@@ -159,10 +159,8 @@ function login(event) {
 }
 
 function logout() {
-    state.currentUser = null;
-    localStorage.removeItem('currentUser');
-    showLoginScreen();
-    showToast('👋 Sesión cerrada', 'info');
+    // Eliminada funcionalidad innecesaria
+    console.log('Logout deshabilitado - sistema sin autenticación');
 }
 
 function showLoginScreen() {
