@@ -497,8 +497,14 @@ function renderPositions() {
 }
 
 function showAddPositionModal() {
+    // Eliminar modal existente si hay
+    const existingModal = document.getElementById('addPositionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modal = document.createElement('div');
-    modal.className = 'modal active';
+    modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -550,6 +556,11 @@ function showAddPositionModal() {
     `;
     modal.id = 'addPositionModal';
     document.body.appendChild(modal);
+    
+    // Mostrar modal
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
 }
 
 function addPosition(event) {
@@ -602,11 +613,29 @@ function deletePosition(posId) {
         state.positions = state.positions.filter(pos => pos.id !== posId);
         savePositions();
         renderPositions();
+        closeModal('addPositionModal');
         showToast('✅ Vacante eliminada', 'success');
     }
 }
 
 /* ---- PAYROLL ---- */
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
+
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
 function renderPayroll() {
     const tbody = document.getElementById('payrollTableBody');
     
@@ -704,8 +733,14 @@ function renderDocuments() {
 }
 
 function showUploadDocumentModal() {
+    // Eliminar modal existente si hay
+    const existingModal = document.getElementById('uploadDocumentModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modal = document.createElement('div');
-    modal.className = 'modal active';
+    modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -750,6 +785,11 @@ function showUploadDocumentModal() {
     `;
     modal.id = 'uploadDocumentModal';
     document.body.appendChild(modal);
+    
+    // Mostrar modal
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
 }
 
 function uploadDocument(event) {
@@ -845,8 +885,14 @@ function renderPermissions() {
 }
 
 function showAddPermissionModal() {
+    // Eliminar modal existente si hay
+    const existingModal = document.getElementById('addPermissionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modal = document.createElement('div');
-    modal.className = 'modal active';
+    modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -896,6 +942,11 @@ function showAddPermissionModal() {
     `;
     modal.id = 'addPermissionModal';
     document.body.appendChild(modal);
+    
+    // Mostrar modal
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
 }
 
 function addPermission(event) {
