@@ -51,6 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ---- VERSION CHECK ---- */
 async function checkVersion() {
     try {
+        // Evitar bucle infinito - solo verificar si no hay actualización pendiente
+        if (localStorage.getItem('updatePending') === 'true') {
+            console.log('Actualización pendiente, omitiendo verificación');
+            return;
+        }
+        
         const response = await fetch('/api/version');
         const serverVersion = await response.text();
         
@@ -59,14 +65,12 @@ async function checkVersion() {
         if (serverVersion !== localVersion) {
             console.log('Nueva versión detectada:', serverVersion);
             localStorage.setItem('appVersion', serverVersion);
+            localStorage.setItem('updatePending', 'true');
             
             // Mostrar notificación de actualización
             showUpdateNotification(serverVersion);
             
-            // Recargar página después de 3 segundos
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 3000);
+            // NO recargar automáticamente - dejar que el usuario decida
         }
         
         state.lastCheck = new Date().toISOString();
@@ -100,28 +104,25 @@ function showUpdateNotification(newVersion) {
     
     notification.innerHTML = `
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
-            <div style="font-size: 32px; animation: pulse 2s infinite;">🔄</div>
+            <div style="font-size: 32px;">🔄</div>
             <div>
-                <div style="font-weight: 700; font-size: 18px; margin-bottom: 4px;">Actualización Automática</div>
+                <div style="font-weight: 700; font-size: 18px; margin-bottom: 4px;">Actualización Disponible</div>
                 <div style="font-size: 15px; opacity: 0.95;">Versión ${newVersion}</div>
             </div>
         </div>
         <div style="font-size: 14px; opacity: 0.85; line-height: 1.5;">
-            <div style="margin-bottom: 8px;">✨ Se han aplicado cambios importantes</div>
-            <div>El sistema se actualizará automáticamente en 5 segundos...</div>
+            <div style="margin-bottom: 8px;">✨ Hay cambios disponibles</div>
+            <div>Recarga la página para ver las mejoras</div>
         </div>
         <div style="margin-top: 16px; display: flex; gap: 12px;">
-            <button onclick="cancelUpdate()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;">Cancelar</button>
+            <button onclick="cancelUpdate()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;">Más Tarde</button>
             <button onclick="forceUpdate()" style="background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;">Actualizar Ahora</button>
         </div>
     `;
     
     document.body.appendChild(notification);
     
-    // Auto-actualizar después de 5 segundos
-    setTimeout(() => {
-        forceUpdate();
-    }, 5000);
+    // NO auto-recargar - dejar que el usuario decida
 }
 
 function cancelUpdate() {
@@ -133,6 +134,8 @@ function cancelUpdate() {
 }
 
 function forceUpdate() {
+    // Limpiar estado pendiente para evitar bucle
+    localStorage.removeItem('updatePending');
     localStorage.setItem('skipVersion', 'true');
     window.location.reload(true);
 }
