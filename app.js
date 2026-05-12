@@ -306,6 +306,166 @@ function deleteEmployee(empId) {
     }
 }
 
+function viewPayrollDetails(recordId) {
+    const record = state.payroll.find(r => r.id === recordId);
+    if (!record) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal active large-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalles de Nómina</h3>
+                <button class="modal-close" onclick="closeModal('payrollDetailsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Empleado</label>
+                        <input type="text" value="${record.employee}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Salario Base</label>
+                        <input type="number" value="${record.baseSalary}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Bonos</label>
+                        <input type="number" value="${record.bonuses}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Deducciones</label>
+                        <input type="number" value="${record.deductions}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Total</label>
+                        <input type="number" value="${record.total}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <input type="text" value="${getStatusText(record.status)}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Período</label>
+                        <input type="text" value="${new Date(record.period).toLocaleDateString()}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('payrollDetailsModal')">Cerrar</button>
+                <button class="btn btn-primary" onclick="printPayroll('${recordId}')">Imprimir</button>
+            </div>
+        </div>
+    `;
+    modal.id = 'payrollDetailsModal';
+    document.body.appendChild(modal);
+}
+
+function printPayroll(recordId) {
+    const record = state.payroll.find(r => r.id === recordId);
+    if (record) {
+        showToast('🖨️ Imprimiendo detalles de nómina...', 'info');
+        window.print();
+    }
+}
+
+function editEmployee(empId) {
+    const employee = state.employees.find(emp => emp.id === empId);
+    if (!employee) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Empleado</h3>
+                <button class="modal-close" onclick="closeModal('editEmployeeModal')">×</button>
+            </div>
+            <form class="modal-body" onsubmit="updateEmployee(event, '${empId}')">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="editEmpFirstName" value="${employee.firstName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido</label>
+                        <input type="text" id="editEmpLastName" value="${employee.lastName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Empleado</label>
+                        <input type="text" id="editEmpNumber" value="${employee.empNum}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Departamento</label>
+                        <select id="editEmpDept" required>
+                            <option value="RRHH" ${employee.dept === 'RRHH' ? 'selected' : ''}>RRHH</option>
+                            <option value="OPERACIONES" ${employee.dept === 'OPERACIONES' ? 'selected' : ''}>OPERACIONES</option>
+                            <option value="VENTAS" ${employee.dept === 'VENTAS' ? 'selected' : ''}>VENTAS</option>
+                            <option value="TI" ${employee.dept === 'TI' ? 'selected' : ''}>TI</option>
+                            <option value="FINANZAS" ${employee.dept === 'FINANZAS' ? 'selected' : ''}>FINANZAS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Puesto</label>
+                        <input type="text" id="editEmpRole" value="${employee.role}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="editEmpEmail" value="${employee.email}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="editEmpPhone" value="${employee.phone}">
+                    </div>
+                    <div class="form-group">
+                        <label>Salario</label>
+                        <input type="number" id="editEmpSalary" value="${employee.salary}" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="editEmpStatus" required>
+                            <option value="active" ${employee.status === 'active' ? 'selected' : ''}>Activo</option>
+                            <option value="inactive" ${employee.status === 'inactive' ? 'selected' : ''}>Inactivo</option>
+                            <option value="suspended" ${employee.status === 'suspended' ? 'selected' : ''}>Suspendido</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    `;
+    modal.id = 'editEmployeeModal';
+    document.body.appendChild(modal);
+}
+
+function updateEmployee(event, empId) {
+    event.preventDefault();
+    
+    const employeeIndex = state.employees.findIndex(emp => emp.id === empId);
+    if (employeeIndex === -1) return;
+    
+    state.employees[employeeIndex] = {
+        ...state.employees[employeeIndex],
+        firstName: document.getElementById('editEmpFirstName').value.toUpperCase(),
+        lastName: document.getElementById('editEmpLastName').value.toUpperCase(),
+        empNum: document.getElementById('editEmpNumber').value,
+        dept: document.getElementById('editEmpDept').value,
+        role: document.getElementById('editEmpRole').value.toUpperCase(),
+        email: document.getElementById('editEmpEmail').value,
+        phone: document.getElementById('editEmpPhone').value,
+        salary: parseFloat(document.getElementById('editEmpSalary').value),
+        status: document.getElementById('editEmpStatus').value,
+        updatedAt: new Date().toISOString()
+    };
+    
+    saveEmployees();
+    renderEmployees();
+    closeModal('editEmployeeModal');
+    showToast('✅ Empleado actualizado correctamente', 'success');
+}
+
 /* ---- RECRUITMENT ---- */
 function renderPositions() {
     const tbody = document.getElementById('positionsTableBody');
@@ -337,8 +497,113 @@ function renderPositions() {
 }
 
 function showAddPositionModal() {
-    // Implementar modal para agregar posición
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Agregar Vacante</h3>
+                <button class="modal-close" onclick="closeModal('addPositionModal')">×</button>
+            </div>
+            <form class="modal-body" onsubmit="addPosition(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Puesto</label>
+                        <input type="text" id="posTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Departamento</label>
+                        <select id="posDepartment" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="RRHH">RRHH</option>
+                            <option value="OPERACIONES">OPERACIONES</option>
+                            <option value="VENTAS">VENTAS</option>
+                            <option value="TI">TI</option>
+                            <option value="FINANZAS">FINANZAS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="posType" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="tiempo-completo">Tiempo Completo</option>
+                            <option value="medio-tiempo">Medio Tiempo</option>
+                            <option value="temporal">Temporal</option>
+                            <option value="practicas">Prácticas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Salario</label>
+                        <input type="number" id="posSalary" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea id="posDescription" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPositionModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+    `;
+    modal.id = 'addPositionModal';
+    document.body.appendChild(modal);
+}
+
+function addPosition(event) {
+    event.preventDefault();
+    
+    const position = {
+        id: `pos_${Date.now()}`,
+        title: document.getElementById('posTitle').value.toUpperCase(),
+        department: document.getElementById('posDepartment').value,
+        type: document.getElementById('posType').value,
+        salary: parseFloat(document.getElementById('posSalary').value),
+        description: document.getElementById('posDescription').value,
+        status: 'open',
+        createdAt: new Date().toISOString()
+    };
+    
+    state.positions.push(position);
+    savePositions();
+    renderPositions();
+    closeModal('addPositionModal');
+    showToast('✅ Vacante agregada correctamente', 'success');
+}
+
+async function savePositions() {
+    try {
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ positions: state.positions })
+        });
+        
+        if (response.ok) {
+            updateStats();
+        }
+    } catch (error) {
+        console.error('Error guardando posiciones:', error);
+    }
+}
+
+function editPosition(posId) {
+    const position = state.positions.find(pos => pos.id === posId);
+    if (!position) return;
+    
+    // Implementar edición de posición
     showToast('📝 Función en desarrollo', 'info');
+}
+
+function deletePosition(posId) {
+    if (confirm('¿Estás seguro de eliminar esta vacante?')) {
+        state.positions = state.positions.filter(pos => pos.id !== posId);
+        savePositions();
+        renderPositions();
+        showToast('✅ Vacante eliminada', 'success');
+    }
 }
 
 /* ---- PAYROLL ---- */
@@ -439,7 +704,113 @@ function renderDocuments() {
 }
 
 function showUploadDocumentModal() {
-    showToast('📄 Función en desarrollo', 'info');
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Subir Documento</h3>
+                <button class="modal-close" onclick="closeModal('uploadDocumentModal')">×</button>
+            </div>
+            <form class="modal-body" onsubmit="uploadDocument(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Empleado</label>
+                        <select id="docEmployee" required>
+                            <option value="">Seleccionar...</option>
+                            ${state.employees.map(emp => `<option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Documento</label>
+                        <input type="text" id="docName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="docType" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="contrato">Contrato</option>
+                            <option value="dni">DNI</option>
+                            <option value="curriculum">Currículum</option>
+                            <option value="certificado">Certificado</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Archivo</label>
+                        <input type="file" id="docFile" accept=".pdf,.doc,.docx,.jpg,.png" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('uploadDocumentModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Subir</button>
+                </div>
+            </form>
+        </div>
+    `;
+    modal.id = 'uploadDocumentModal';
+    document.body.appendChild(modal);
+}
+
+function uploadDocument(event) {
+    event.preventDefault();
+    
+    const employeeId = document.getElementById('docEmployee').value;
+    const employee = state.employees.find(emp => emp.id === employeeId);
+    
+    if (!employee) {
+        showToast('❌ Debes seleccionar un empleado', 'error');
+        return;
+    }
+    
+    const document = {
+        id: `doc_${Date.now()}`,
+        employee: `${employee.firstName} ${employee.lastName}`,
+        employeeId: employeeId,
+        name: document.getElementById('docName').value,
+        type: document.getElementById('docType').value,
+        date: new Date().toISOString(),
+        status: 'pending'
+    };
+    
+    state.documents.push(document);
+    saveDocuments();
+    renderDocuments();
+    closeModal('uploadDocumentModal');
+    showToast('✅ Documento subido correctamente', 'success');
+}
+
+async function saveDocuments() {
+    try {
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ documents: state.documents })
+        });
+        
+        if (response.ok) {
+            updateStats();
+        }
+    } catch (error) {
+        console.error('Error guardando documentos:', error);
+    }
+}
+
+function downloadDocument(docId) {
+    const document = state.documents.find(doc => doc.id === docId);
+    if (document) {
+        showToast(`📄 Descargando: ${document.name}`, 'info');
+        // Implementar descarga real del archivo
+    }
+}
+
+function deleteDocument(docId) {
+    if (confirm('¿Estás seguro de eliminar este documento?')) {
+        state.documents = state.documents.filter(doc => doc.id !== docId);
+        saveDocuments();
+        renderDocuments();
+        showToast('✅ Documento eliminado', 'success');
+    }
 }
 
 /* ---- PERMISSIONS ---- */
@@ -474,7 +845,129 @@ function renderPermissions() {
 }
 
 function showAddPermissionModal() {
-    showToast('📝 Función en desarrollo', 'info');
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Solicitar Permiso</h3>
+                <button class="modal-close" onclick="closeModal('addPermissionModal')">×</button>
+            </div>
+            <form class="modal-body" onsubmit="addPermission(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Empleado</label>
+                        <select id="permEmployee" required>
+                            <option value="">Seleccionar...</option>
+                            ${state.employees.map(emp => `<option value="${emp.id}">${emp.firstName} ${emp.lastName}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Permiso</label>
+                        <select id="permType" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="vacaciones">Vacaciones</option>
+                            <option value="enfermedad">Enfermedad</option>
+                            <option value="personal">Personal</option>
+                            <option value="duelo">Duelo</option>
+                            <option value="maternidad">Maternidad</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Inicio</label>
+                        <input type="date" id="permStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin</label>
+                        <input type="date" id="permEndDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Motivo</label>
+                        <textarea id="permReason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPermissionModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Solicitar</button>
+                </div>
+            </form>
+        </div>
+    `;
+    modal.id = 'addPermissionModal';
+    document.body.appendChild(modal);
+}
+
+function addPermission(event) {
+    event.preventDefault();
+    
+    const employeeId = document.getElementById('permEmployee').value;
+    const employee = state.employees.find(emp => emp.id === employeeId);
+    
+    if (!employee) {
+        showToast('❌ Debes seleccionar un empleado', 'error');
+        return;
+    }
+    
+    const permission = {
+        id: `perm_${Date.now()}`,
+        employee: `${employee.firstName} ${employee.lastName}`,
+        employeeId: employeeId,
+        type: document.getElementById('permType').value,
+        startDate: document.getElementById('permStartDate').value,
+        endDate: document.getElementById('permEndDate').value,
+        reason: document.getElementById('permReason').value,
+        status: 'pending',
+        requestedAt: new Date().toISOString()
+    };
+    
+    state.permissions.push(permission);
+    savePermissions();
+    renderPermissions();
+    closeModal('addPermissionModal');
+    showToast('✅ Permiso solicitado correctamente', 'success');
+}
+
+async function savePermissions() {
+    try {
+        const response = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ permissions: state.permissions })
+        });
+        
+        if (response.ok) {
+            updateStats();
+        }
+    } catch (error) {
+        console.error('Error guardando permisos:', error);
+    }
+}
+
+function approvePermission(permId) {
+    if (confirm('¿Estás seguro de aprobar este permiso?')) {
+        const permission = state.permissions.find(perm => perm.id === permId);
+        if (permission) {
+            permission.status = 'approved';
+            permission.approvedAt = new Date().toISOString();
+            savePermissions();
+            renderPermissions();
+            showToast('✅ Permiso aprobado', 'success');
+        }
+    }
+}
+
+function rejectPermission(permId) {
+    if (confirm('¿Estás seguro de rechazar este permiso?')) {
+        const permission = state.permissions.find(perm => perm.id === permId);
+        if (permission) {
+            permission.status = 'rejected';
+            permission.rejectedAt = new Date().toISOString();
+            savePermissions();
+            renderPermissions();
+            showToast('❌ Permiso rechazado', 'error');
+        }
+    }
 }
 
 /* ---- DASHBOARD ---- */
