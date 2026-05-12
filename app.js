@@ -1,27 +1,33 @@
 ﻿/* ---- STATE MANAGEMENT ---- */
 const state = {
+    version: '2.6.1',
+    lastCheck: null,
     currentUser: null,
     employees: [],
     positions: [],
-    applications: [],
     payroll: [],
     documents: [],
     permissions: [],
+    logs: [],
     config: {
-        companyName: 'Mi Empresa',
-        companyAddress: 'Dirección de la empresa',
-        companyPhone: '+503 0000-0000',
-        hrAdmin: 'admin@empresa.com',
-        emailNotifications: 'enabled'
+        tokenLife: 30,
+        timeWindow: 300,
+        maxRetries: 3,
+        antiReplay: true
+    },
+    adminConfig: {
+        company: 'Mi Empresa S.A.',
+        logo: '',
+        entryTime: '08:00',
+        exitTime: '18:00',
+        grace: 10
     },
     stats: {
         totalEmployees: 0,
         activeEmployees: 0,
         openPositions: 0,
         pendingDocuments: 0
-    },
-    version: '2.6.0',
-    lastCheck: null
+    }
 };
 
 /* ---- CREDENTIALS ---- */
@@ -1121,43 +1127,96 @@ function updateDashboard() {
 }
 
 function updateStats() {
-    state.stats.totalEmployees = state.employees.length;
-    state.stats.activeEmployees = state.employees.filter(emp => emp.status === 'active').length;
-    state.stats.openPositions = state.positions.filter(pos => pos.status === 'open').length;
-    state.stats.pendingDocuments = state.documents.filter(doc => doc.status === 'pending').length;
-    
-    // Update UI
-    document.getElementById('totalEmployees').textContent = state.stats.totalEmployees;
-    document.getElementById('activeEmployees').textContent = state.stats.activeEmployees;
-    document.getElementById('openPositions').textContent = state.stats.openPositions;
-    document.getElementById('pendingDocuments').textContent = state.stats.pendingDocuments;
+    try {
+        // Inicializar stats si no existen
+        if (!state.stats) state.stats = {};
+        
+        state.stats.totalEmployees = state.employees ? state.employees.length : 0;
+        state.stats.activeEmployees = state.employees ? state.employees.filter(emp => emp.status === 'active').length : 0;
+        state.stats.openPositions = state.positions ? state.positions.filter(pos => pos.status === 'open').length : 0;
+        state.stats.pendingDocuments = state.documents ? state.documents.filter(doc => doc.status === 'pending').length : 0;
+        
+        // Update UI con validación
+        const totalEl = document.getElementById('totalEmployees');
+        const activeEl = document.getElementById('activeEmployees');
+        const openEl = document.getElementById('openPositions');
+        const pendingEl = document.getElementById('pendingDocuments');
+        
+        if (totalEl) totalEl.textContent = state.stats.totalEmployees;
+        if (activeEl) activeEl.textContent = state.stats.activeEmployees;
+        if (openEl) openEl.textContent = state.stats.openPositions;
+        if (pendingEl) pendingEl.textContent = state.stats.pendingDocuments;
+        
+        console.log('Stats actualizados:', state.stats);
+    } catch (error) {
+        console.error('Error en updateStats:', error);
+    }
 }
 
 function renderRecentEmployees() {
-    const container = document.getElementById('recentEmployees');
-    const recentEmployees = state.employees
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5);
-    
-    if (recentEmployees.length === 0) {
-        container.innerHTML = '<p class="empty-state">No hay empleados recientes</p>';
-        return;
-    }
-    
-    container.innerHTML = recentEmployees.map(emp => `
-        <div class="recent-item">
-            <div class="recent-avatar">${emp.avatar || emp.firstName[0]}</div>
-            <div class="recent-info">
-                <div class="recent-name">${emp.firstName} ${emp.lastName}</div>
-                <div class="recent-detail">${emp.dept} • ${emp.role}</div>
+    try {
+        const container = document.getElementById('recentEmployees');
+        if (!container) {
+            console.warn('Container recentEmployees no encontrado');
+            return;
+        }
+        
+        const recentEmployees = state.employees && state.employees.length > 0
+            ? state.employees
+                .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                .slice(0, 5)
+            : [];
+        
+        if (recentEmployees.length === 0) {
+            container.innerHTML = '<p class="empty-state">No hay empleados recientes</p>';
+            return;
+        }
+        
+        container.innerHTML = recentEmployees.map(emp => `
+            <div class="recent-item">
+                <div class="recent-avatar">${emp.avatar || emp.firstName ? emp.firstName[0] : '?'}</div>
+                <div class="recent-info">
+                    <div class="recent-name">${emp.firstName || ''} ${emp.lastName || ''}</div>
+                    <div class="recent-detail">${emp.dept || 'N/A'} • ${emp.role || 'N/A'}</div>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    } catch (error) {
+        console.error('Error en renderRecentEmployees:', error);
+    }
 }
 
 function renderRecentActivity() {
-    const container = document.getElementById('recentActivity');
-    container.innerHTML = '<p class="empty-state">No hay actividad reciente</p>';
+    try {
+        const container = document.getElementById('recentActivity');
+        if (!container) {
+            console.warn('Container recentActivity no encontrado');
+            return;
+        }
+        
+        // Simular actividad reciente o mostrar mensaje
+        const activities = state.logs && state.logs.length > 0
+            ? state.logs.slice(0, 5)
+            : [];
+        
+        if (activities.length === 0) {
+            container.innerHTML = '<p class="empty-state">No hay actividad reciente</p>';
+            return;
+        }
+        
+        container.innerHTML = activities.map(activity => `
+            <div class="activity-item">
+                <div class="activity-avatar">${activity.employee ? activity.employee[0] : '?'}</div>
+                <div class="activity-body">
+                    <div class="activity-name">${activity.employee || 'Sistema'}</div>
+                    <div class="activity-detail">${activity.action || 'Actividad'}</div>
+                </div>
+                <div class="activity-time">${new Date(activity.timestamp || Date.now()).toLocaleTimeString()}</div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error en renderRecentActivity:', error);
+    }
 }
 
 /* ---- SETTINGS ---- */
