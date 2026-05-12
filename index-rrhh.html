@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RRHH — Sistema de Recursos Humanos</title>
+    <meta name="description"
+        content="Sistema de gestión de recursos humanos para administración de personal." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet" />
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+</head>
+
+<body>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="brand-icon">👥</div>
+                <div class="brand-text">
+                    <span class="brand-name">Sistema de <strong>RRHH</strong></span>
+                    <span class="brand-sub">Recursos Humanos v2.6</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-label">Principal</span>
+                <button class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" id="nav-employees" onclick="showPage('employees')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="m23 21-3-3m3 3a3 3 0 1 0-3-3 3 3 0 0 0 3 3" />
+                    </svg>
+                    <span>Empleados</span>
+                </button>
+                <button class="nav-item" id="nav-recruitment" onclick="showPage('recruitment')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="m22 21-3-3m3 3a3 3 0 1 0-3-3 3 3 0 0 0 3 3" />
+                    </svg>
+                    <span>Reclutamiento</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Administración</span>
+                <button class="nav-item" id="nav-payroll" onclick="showPage('payroll')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    <span>Nómina</span>
+                </button>
+                <button class="nav-item" id="nav-documents" onclick="showPage('documents')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    <span>Documentos</span>
+                </button>
+                <button class="nav-item" id="nav-permissions" onclick="showPage('permissions')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                    </svg>
+                    <span>Permisos</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Configuración</span>
+                <button class="nav-item" id="nav-admin" onclick="showPage('admin')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
+                    </svg>
+                    <span>Admin</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Cerrar sesión</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content" id="mainContent">
+        <!-- ========== DASHBOARD PAGE ========== -->
+        <section class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard RRHH</h1>
+                <p class="page-subtitle">Vista general de recursos humanos</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalEmployees">0</div>
+                        <div class="stat-label">Total Empleados</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">💼</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="activeEmployees">0</div>
+                        <div class="stat-label">Empleados Activos</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="openPositions">0</div>
+                        <div class="stat-label">Vacantes Abiertas</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingDocuments">0</div>
+                        <div class="stat-label">Documentos Pendientes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3 class="card-title">Empleados Recientes</h3>
+                    <div id="recentEmployees" class="recent-list">
+                        <p class="empty-state">No hay empleados recientes</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="card-title">Actividad Reciente</h3>
+                    <div id="recentActivity" class="activity-list">
+                        <p class="empty-state">No hay actividad reciente</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== EMPLOYEES PAGE ========== -->
+        <section class="page" id="page-employees">
+            <div class="page-header">
+                <h1 class="page-title">Gestión de Empleados</h1>
+                <p class="page-subtitle">Administra el personal de la empresa</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddEmployeeModal()">
+                        ➕ Agregar Empleado
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportEmployees()">
+                        📊 Exportar Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="search-filters">
+                <div class="search-box">
+                    <input type="text" id="employeeSearch" placeholder="🔍 Buscar empleado..." onkeyup="filterEmployees()">
+                </div>
+                <div class="filter-group">
+                    <select id="departmentFilter" onchange="filterEmployees()">
+                        <option value="">Todos los departamentos</option>
+                        <option value="RRHH">RRHH</option>
+                        <option value="OPERACIONES">OPERACIONES</option>
+                        <option value="VENTAS">VENTAS</option>
+                        <option value="TI">TI</option>
+                        <option value="FINANZAS">FINANZAS</option>
+                    </select>
+                    <select id="statusFilter" onchange="filterEmployees()">
+                        <option value="">Todos los estados</option>
+                        <option value="active">Activo</option>
+                        <option value="inactive">Inactivo</option>
+                        <option value="suspended">Suspendido</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="employeesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Departamento</th>
+                            <th>Puesto</th>
+                            <th>Email</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No hay empleados registrados</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== RECRUITMENT PAGE ========== -->
+        <section class="page" id="page-recruitment">
+            <div class="page-header">
+                <h1 class="page-title">Reclutamiento</h1>
+                <p class="page-subtitle">Gestiona el proceso de contratación</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddPositionModal()">
+                        ➕ Agregar Vacante
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalApplications">0</div>
+                        <div class="stat-label">Total Aplicaciones</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="inReview">0</div>
+                        <div class="stat-label">En Revisión</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="interviewing">0</div>
+                        <div class="stat-label">En Entrevista</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="positionsTable">
+                    <thead>
+                        <tr>
+                            <th>Puesto</th>
+                            <th>Departamento</th>
+                            <th>Tipo</th>
+                            <th>Salario</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="positionsTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <p>No hay vacantes abiertas</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== PAYROLL PAGE ========== -->
+        <section class="page" id="page-payroll">
+            <div class="page-header">
+                <h1 class="page-title">Nómina</h1>
+                <p class="page-subtitle">Gestión de salarios y pagos</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="generatePayroll()">
+                        🧾 Generar Nómina
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportPayroll()">
+                        📊 Exportar Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="payrollTable">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Salario Base</th>
+                            <th>Bonos</th>
+                            <th>Deducciones</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrollTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No hay registros de nómina</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== DOCUMENTS PAGE ========== -->
+        <section class="page" id="page-documents">
+            <div class="page-header">
+                <h1 class="page-title">Documentos</h1>
+                <p class="page-subtitle">Gestión de documentos de empleados</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showUploadDocumentModal()">
+                        📄 Subir Documento
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Documento</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <p>No hay documentos registrados</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== PERMISSIONS PAGE ========== -->
+        <section class="page" id="page-permissions">
+            <div class="page-header">
+                <h1 class="page-title">Permisos</h1>
+                <p class="page-subtitle">Gestión de permisos y ausencias</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddPermissionModal()">
+                        ➕ Solicitar Permiso
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="permissionsTable">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Tipo</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permissionsTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <p>No hay solicitudes de permiso</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========== ADMIN PAGE ========== -->
+        <section class="page" id="page-admin">
+            <div class="page-header">
+                <h1 class="page-title">Configuración</h1>
+                <p class="page-subtitle">Configuración del sistema</p>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3 class="card-title">Configuración General</h3>
+                    <div class="form-group">
+                        <label>Nombre de la Empresa</label>
+                        <input type="text" id="companyName" value="Mi Empresa">
+                    </div>
+                    <div class="form-group">
+                        <label>Dirección</label>
+                        <input type="text" id="companyAddress" value="Dirección de la empresa">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="companyPhone" value="+503 0000-0000">
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="card-title">Configuración de RRHH</h3>
+                    <div class="form-group">
+                        <label>Administrador RRHH</label>
+                        <input type="text" id="hrAdmin" value="admin@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Notificaciones por Email</label>
+                        <select id="emailNotifications">
+                            <option value="enabled">Activadas</option>
+                            <option value="disabled">Desactivadas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-actions">
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    💾 Guardar Configuración
+                </button>
+                <button class="btn btn-danger" onclick="clearData()">
+                    🗑️ Limpiar Datos
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========== LOGIN SCREEN ========== -->
+    <section class="screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">👥</div>
+                <h1 class="login-title">Sistema de <strong>RRHH</strong></h1>
+                <p class="login-subtitle">Recursos Humanos v2.6</p>
+            </div>
+
+            <form class="login-form" onsubmit="login(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="•••••••">
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ========== MODALS ========== -->
+    <div class="modal" id="addEmployeeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Agregar Empleado</h3>
+                <button class="modal-close" onclick="closeModal('addEmployeeModal')">×</button>
+            </div>
+            <form class="modal-body" onsubmit="addEmployee(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="empFirstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido</label>
+                        <input type="text" id="empLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Empleado</label>
+                        <input type="text" id="empNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Departamento</label>
+                        <select id="empDept" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="RRHH">RRHH</option>
+                            <option value="OPERACIONES">OPERACIONES</option>
+                            <option value="VENTAS">VENTAS</option>
+                            <option value="TI">TI</option>
+                            <option value="FINANZAS">FINANZAS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Puesto</label>
+                        <input type="text" id="empRole" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="empEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="empPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>Salario</label>
+                        <input type="number" id="empSalary" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Contratación</label>
+                        <input type="date" id="empHireDate" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addEmployeeModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app-rrhh.js"></script>
+</body>
+
+</html>

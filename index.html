@@ -4,22 +4,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR-Asistencia — Control de Personal</title>
+    <title>RRHH — Sistema de Recursos Humanos</title>
     <meta name="description"
-        content="Sistema de control de asistencia mediante códigos QR dinámicos con seguridad criptográfica." />
+        content="Sistema de gestión de recursos humanos para administración de personal." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap"
         rel="stylesheet" />
-    <!-- QRCode.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- jsQR for scanning -->
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <!-- SheetJS for Excel export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- Leaflet.js para mapas -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#6366f1" />
@@ -33,10 +26,10 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="brand">
-                <div class="brand-icon">🔐</div>
+                <div class="brand-icon">�</div>
                 <div class="brand-text">
-                    <span class="brand-name">Sistema de <strong>asistencia</strong></span>
-                    <span class="brand-sub">Control de Personal v2.6</span>
+                    <span class="brand-name">Sistema de <strong>RRHH</strong></span>
+                    <span class="brand-sub">Recursos Humanos v2.6</span>
                 </div>
             </div>
         </div>
@@ -51,78 +44,53 @@
                         <rect x="14" y="14" width="7" height="7" />
                         <rect x="3" y="14" width="7" height="7" />
                     </svg>
-                    Dashboard
+                    <span>Dashboard</span>
                 </button>
-                <button class="nav-item" id="nav-scanner" onclick="showPage('scanner')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M3 9V6a3 3 0 0 1 3-3h3M15 3h3a3 3 0 0 1 3 3v3M21 15v3a3 3 0 0 1-3 3h-3M9 21H6a3 3 0 0 1-3-3v-3" />
-                        <line x1="9" y1="9" x2="15" y2="9" />
-                        <line x1="9" y1="12" x2="15" y2="12" />
-                        <line x1="9" y1="15" x2="12" y2="15" />
-                    </svg>
-                    Escáner QR
-                    <span class="nav-badge live">LIVE</span>
-                </button>
-                <button class="nav-item" id="nav-generate" onclick="showPage('generate')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 18h.01M18 15h.01M21 15h.01M21 18h.01M21 21h.01M18 21h.01M15 21h.01M18 18h.01" />
-                    </svg>
-                    Generar QR
-                </button>
-            </div>
-
-            <div class="nav-section">
-                <span class="nav-label">Gestión</span>
                 <button class="nav-item" id="nav-employees" onclick="showPage('employees')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                        <path d="m23 21-3-3m3 3a3 3 0 1 0-3-3 3 3 0 0 0 3 3" />
                     </svg>
-                    Empleados
+                    <span>Empleados</span>
                 </button>
-                <button class="nav-item" id="nav-hr" onclick="showPage('hr')">
+                <button class="nav-item" id="nav-recruitment" onclick="showPage('recruitment')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="m22 21-3-3m3 3a3 3 0 1 0-3-3 3 3 0 0 0 3 3" />
                     </svg>
-                    RRHH
-                </button>
-                <button class="nav-item" id="nav-location" onclick="showPage('location')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    Ubicación
-                </button>
-                <button class="nav-item" id="nav-logs" onclick="showPage('logs')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                    Registro de Accesos
-                </button>
-                <button class="nav-item" id="nav-reports" onclick="showPage('reports')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="20" x2="18" y2="10" />
-                        <line x1="12" y1="20" x2="12" y2="4" />
-                        <line x1="6" y1="20" x2="6" y2="14" />
-                    </svg>
-                    Reportes
+                    <span>Reclutamiento</span>
                 </button>
             </div>
 
             <div class="nav-section">
-                <span class="nav-label">Sistema</span>
-                <button class="nav-item" id="nav-security" onclick="showPage('security')">
+                <span class="nav-label">Administración</span>
+                <button class="nav-item" id="nav-payroll" onclick="showPage('payroll')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    <span>Nómina</span>
+                </button>
+                <button class="nav-item" id="nav-documents" onclick="showPage('documents')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    <span>Documentos</span>
+                </button>
+                <button class="nav-item" id="nav-permissions" onclick="showPage('permissions')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                    </svg>
+                    <span>Permisos</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Configuración</span>
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                     Seguridad
