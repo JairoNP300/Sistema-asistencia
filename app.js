@@ -149,43 +149,54 @@ function showMainApp() {
 
 /* ---- PAGE NAVIGATION ---- */
 function showPage(pageId) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    
-    // Show selected page
-    document.getElementById(`page-${pageId}`).classList.add('active');
-    
-    // Update nav
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.getElementById(`nav-${pageId}`).classList.add('active');
-    
-    // Load page-specific data
-    switch(pageId) {
-        case 'dashboard':
-            updateDashboard();
-            break;
-        case 'employees':
-            renderEmployees();
-            break;
-        case 'recruitment':
-            renderPositions();
-            break;
-        case 'payroll':
-            renderPayroll();
-            break;
-        case 'documents':
-            renderDocuments();
-            break;
-        case 'permissions':
-            renderPermissions();
-            break;
-        case 'admin':
-            loadSettings();
-            break;
+    try {
+        // Hide all pages
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        
+        // Show selected page
+        const selectedPage = document.getElementById(`page-${pageId}`);
+        if (selectedPage) {
+            selectedPage.classList.add('active');
+        }
+        
+        // Update nav
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const navItem = document.getElementById(`nav-${pageId}`);
+        if (navItem) {
+            navItem.classList.add('active');
+        }
+        
+        // Load page-specific data
+        switch(pageId) {
+            case 'dashboard':
+                updateDashboard();
+                break;
+            case 'employees':
+                renderEmployees();
+                break;
+            case 'recruitment':
+                renderPositions();
+                break;
+            case 'payroll':
+                renderPayroll();
+                break;
+            case 'documents':
+                renderDocuments();
+                break;
+            case 'permissions':
+                renderPermissions();
+                break;
+            case 'admin':
+                loadSettings();
+                break;
+        }
+    } catch (error) {
+        console.error('Error en showPage:', error);
+        showToast('❌ Error al cambiar de página', 'error');
     }
 }
 
@@ -249,11 +260,27 @@ function filterEmployees() {
 }
 
 function showAddEmployeeModal() {
-    document.getElementById('addEmployeeModal').classList.remove('hidden');
+    const modal = document.getElementById('addEmployeeModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
+    }
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        modal.classList.add('hidden');
+    }
+}
+
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
+    }
 }
 
 function addEmployee(event) {
@@ -369,75 +396,94 @@ function printPayroll(recordId) {
 }
 
 function editEmployee(empId) {
-    const employee = state.employees.find(emp => emp.id === empId);
-    if (!employee) return;
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Editar Empleado</h3>
-                <button class="modal-close" onclick="closeModal('editEmployeeModal')">×</button>
+    try {
+        const employee = state.employees.find(emp => emp.id === empId);
+        if (!employee) {
+            showToast('❌ Empleado no encontrado', 'error');
+            return;
+        }
+        
+        // Eliminar modal existente si hay
+        const existingModal = document.getElementById('editEmployeeModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Empleado</h3>
+                    <button class="modal-close" onclick="closeModal('editEmployeeModal')">×</button>
+                </div>
+                <form class="modal-body" onsubmit="updateEmployee(event, '${empId}')">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="editEmpFirstName" value="${employee.firstName}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellido</label>
+                            <input type="text" id="editEmpLastName" value="${employee.lastName}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Número de Empleado</label>
+                            <input type="text" id="editEmpNumber" value="${employee.empNum}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Departamento</label>
+                            <select id="editEmpDept" required>
+                                <option value="RRHH" ${employee.dept === 'RRHH' ? 'selected' : ''}>RRHH</option>
+                                <option value="OPERACIONES" ${employee.dept === 'OPERACIONES' ? 'selected' : ''}>OPERACIONES</option>
+                                <option value="VENTAS" ${employee.dept === 'VENTAS' ? 'selected' : ''}>VENTAS</option>
+                                <option value="TI" ${employee.dept === 'TI' ? 'selected' : ''}>TI</option>
+                                <option value="FINANZAS" ${employee.dept === 'FINANZAS' ? 'selected' : ''}>FINANZAS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Puesto</label>
+                            <input type="text" id="editEmpRole" value="${employee.role}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="editEmpEmail" value="${employee.email}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" id="editEmpPhone" value="${employee.phone}">
+                        </div>
+                        <div class="form-group">
+                            <label>Salario</label>
+                            <input type="number" id="editEmpSalary" value="${employee.salary}" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select id="editEmpStatus" required>
+                                <option value="active" ${employee.status === 'active' ? 'selected' : ''}>Activo</option>
+                                <option value="inactive" ${employee.status === 'inactive' ? 'selected' : ''}>Inactivo</option>
+                                <option value="suspended" ${employee.status === 'suspended' ? 'selected' : ''}>Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
             </div>
-            <form class="modal-body" onsubmit="updateEmployee(event, '${empId}')">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" id="editEmpFirstName" value="${employee.firstName}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Apellido</label>
-                        <input type="text" id="editEmpLastName" value="${employee.lastName}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Número de Empleado</label>
-                        <input type="text" id="editEmpNumber" value="${employee.empNum}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Departamento</label>
-                        <select id="editEmpDept" required>
-                            <option value="RRHH" ${employee.dept === 'RRHH' ? 'selected' : ''}>RRHH</option>
-                            <option value="OPERACIONES" ${employee.dept === 'OPERACIONES' ? 'selected' : ''}>OPERACIONES</option>
-                            <option value="VENTAS" ${employee.dept === 'VENTAS' ? 'selected' : ''}>VENTAS</option>
-                            <option value="TI" ${employee.dept === 'TI' ? 'selected' : ''}>TI</option>
-                            <option value="FINANZAS" ${employee.dept === 'FINANZAS' ? 'selected' : ''}>FINANZAS</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Puesto</label>
-                        <input type="text" id="editEmpRole" value="${employee.role}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="editEmpEmail" value="${employee.email}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Teléfono</label>
-                        <input type="tel" id="editEmpPhone" value="${employee.phone}">
-                    </div>
-                    <div class="form-group">
-                        <label>Salario</label>
-                        <input type="number" id="editEmpSalary" value="${employee.salary}" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Estado</label>
-                        <select id="editEmpStatus" required>
-                            <option value="active" ${employee.status === 'active' ? 'selected' : ''}>Activo</option>
-                            <option value="inactive" ${employee.status === 'inactive' ? 'selected' : ''}>Inactivo</option>
-                            <option value="suspended" ${employee.status === 'suspended' ? 'selected' : ''}>Suspendido</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editEmployeeModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Actualizar</button>
-                </div>
-            </form>
-        </div>
-    `;
-    modal.id = 'editEmployeeModal';
-    document.body.appendChild(modal);
+        `;
+        modal.id = 'editEmployeeModal';
+        document.body.appendChild(modal);
+        
+        // Mostrar modal
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
+    } catch (error) {
+        console.error('Error en editEmployee:', error);
+        showToast('❌ Error al editar empleado', 'error');
+    }
 }
 
 function updateEmployee(event, empId) {

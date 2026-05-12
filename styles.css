@@ -2789,8 +2789,8 @@ textarea.form-input {
 .form-group input,
 .form-group select,
 .form-group textarea {
-    padding: 12px 16px;
-    background: var(--surface2);
+    padding: 14px 18px;
+    background: linear-gradient(135deg, var(--surface2), var(--surface3));
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text);
@@ -2799,14 +2799,29 @@ textarea.form-input {
     outline: none;
     transition: var(--transition);
     width: 100%;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     border-color: var(--primary);
-    background: var(--surface3);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    background: linear-gradient(135deg, var(--surface3), var(--surface2));
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15), var(--shadow);
+    transform: translateY(-1px);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.form-group select option {
+    background: var(--surface2);
+    color: var(--text);
+    padding: 10px;
 }
 
 .form-group textarea {
@@ -2829,64 +2844,86 @@ textarea.form-input {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 24px;
+    padding: 14px 28px;
     border: none;
     border-radius: var(--radius-sm);
     font-family: var(--font);
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
     text-decoration: none;
+    outline: none;
     position: relative;
     overflow: hidden;
-    user-select: none;
-    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
 }
 
 .btn-primary {
     background: linear-gradient(135deg, var(--primary), var(--primary-h));
     color: white;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    border: 2px solid var(--primary);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+    background: linear-gradient(135deg, var(--primary-h), var(--primary-light));
+    border-color: var(--primary-h);
 }
 
 .btn-secondary {
-    background: var(--surface2);
+    background: linear-gradient(135deg, var(--surface2), var(--surface3));
     color: var(--text);
-    border: 1px solid var(--border2);
+    border: 2px solid var(--border);
 }
 
 .btn-secondary:hover {
-    background: var(--surface3);
+    background: linear-gradient(135deg, var(--surface3), var(--surface2));
     border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
+    color: var(--primary-h);
 }
 
 .btn-success {
-    background: linear-gradient(135deg, var(--green), #059669);
+    background: linear-gradient(135deg, var(--green), var(--green-light));
     color: white;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    border: 2px solid var(--green);
 }
 
 .btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
-}
-
-.btn-success:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, var(--green-light), var(--green));
+    border-color: var(--green-light);
 }
 
 .btn-danger {
