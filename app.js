@@ -1,4 +1,4 @@
-/* ---- STATE MANAGEMENT ---- */
+﻿/* ---- STATE MANAGEMENT ---- */
 const state = {
     currentUser: null,
     employees: [],
@@ -19,7 +19,9 @@ const state = {
         activeEmployees: 0,
         openPositions: 0,
         pendingDocuments: 0
-    }
+    },
+    version: '2.6.0',
+    lastCheck: null
 };
 
 /* ---- CREDENTIALS ---- */
@@ -33,8 +35,71 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClocks();
     setInterval(updateClocks, 1000);
     loadSettings();
+    checkVersion();
     checkAuth();
+    
+    // Verificar versión cada 30 segundos
+    setInterval(checkVersion, 30000);
 });
+
+/* ---- VERSION CHECK ---- */
+async function checkVersion() {
+    try {
+        const response = await fetch('/api/version');
+        const serverVersion = await response.text();
+        
+        const localVersion = localStorage.getItem('appVersion') || state.version;
+        
+        if (serverVersion !== localVersion) {
+            console.log('Nueva versión detectada:', serverVersion);
+            localStorage.setItem('appVersion', serverVersion);
+            
+            // Mostrar notificación de actualización
+            showUpdateNotification(serverVersion);
+            
+            // Recargar página después de 3 segundos
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 3000);
+        }
+        
+        state.lastCheck = new Date().toISOString();
+    } catch (error) {
+        console.log('Error verificando versión:', error);
+    }
+}
+
+function showUpdateNotification(newVersion) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        z-index: 10000;
+        max-width: 350px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <div style="font-size: 24px;">🔄</div>
+            <div>
+                <div style="font-weight: 600; font-size: 16px;">Actualización Disponible</div>
+                <div style="font-size: 14px; opacity: 0.9;">Versión ${newVersion}</div>
+            </div>
+        </div>
+        <div style="font-size: 13px; opacity: 0.8;">
+            El sistema se actualizará automáticamente en 3 segundos...
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+}
 
 /* ---- AUTHENTICATION ---- */
 function checkAuth() {

@@ -1831,11 +1831,19 @@ app.get('/api/hr/certificates', async (req, res) => {
     }
 });
 
+// GET /api/version — Obtener versión actual del sistema
+app.get('/api/version', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.send('2.6.0');
+});
+
 // Iniciar
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`=========================================`);
     console.log(`🚀 SISTEMA CLOUD ACTIVO Y LISTO`);
     console.log(`🌍 Modo: ${useMongo ? 'Sincronizado con Atlas' : 'Local (Esperando .env)'}`);
     console.log(`📍 Puerto: ${PORT}`);
+    console.log(`🔄 Sistema de actualización automática activo`);
     console.log(`=========================================`);
 });
