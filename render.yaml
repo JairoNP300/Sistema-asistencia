@@ -1,0 +1,41 @@
+services:
+  # Servicio Web Principal
+  - type: web
+    name: sistema-rrhh
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node server.js"
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+
+# Configuración de Build
+build:
+  - npm install
+  - npm run build
+
+# Configuración de Health Check
+healthCheck:
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+# Configuración de Auto-Deploy
+autoDeploy: true
+deployHook:
+  - type: github
+    events:
+      - push
+      - pull_request
+    branches:
+      - main

@@ -70,35 +70,65 @@ async function checkVersion() {
 }
 
 function showUpdateNotification(newVersion) {
+    // Eliminar notificaciones existentes
+    const existingNotifications = document.querySelectorAll('.update-notification');
+    existingNotifications.forEach(notif => notif.remove());
+    
     const notification = document.createElement('div');
+    notification.className = 'update-notification';
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
         background: linear-gradient(135deg, #10b981, #059669);
         color: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        padding: 24px 28px;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(16, 185, 129, 0.4);
         z-index: 10000;
-        max-width: 350px;
-        animation: slideIn 0.3s ease;
+        max-width: 400px;
+        animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
     `;
     
     notification.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-            <div style="font-size: 24px;">🔄</div>
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <div style="font-size: 32px; animation: pulse 2s infinite;">🔄</div>
             <div>
-                <div style="font-weight: 600; font-size: 16px;">Actualización Disponible</div>
-                <div style="font-size: 14px; opacity: 0.9;">Versión ${newVersion}</div>
+                <div style="font-weight: 700; font-size: 18px; margin-bottom: 4px;">Actualización Automática</div>
+                <div style="font-size: 15px; opacity: 0.95;">Versión ${newVersion}</div>
             </div>
         </div>
-        <div style="font-size: 13px; opacity: 0.8;">
-            El sistema se actualizará automáticamente en 3 segundos...
+        <div style="font-size: 14px; opacity: 0.85; line-height: 1.5;">
+            <div style="margin-bottom: 8px;">✨ Se han aplicado cambios importantes</div>
+            <div>El sistema se actualizará automáticamente en 5 segundos...</div>
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 12px;">
+            <button onclick="cancelUpdate()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;">Cancelar</button>
+            <button onclick="forceUpdate()" style="background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5); color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;">Actualizar Ahora</button>
         </div>
     `;
     
     document.body.appendChild(notification);
+    
+    // Auto-actualizar después de 5 segundos
+    setTimeout(() => {
+        forceUpdate();
+    }, 5000);
+}
+
+function cancelUpdate() {
+    const notification = document.querySelector('.update-notification');
+    if (notification) {
+        notification.remove();
+        showToast('⏸️ Actualización cancelada', 'info');
+    }
+}
+
+function forceUpdate() {
+    localStorage.setItem('skipVersion', 'true');
+    window.location.reload(true);
 }
 
 /* ---- AUTHENTICATION ---- */
@@ -1042,28 +1072,46 @@ async function savePermissions() {
 }
 
 function approvePermission(permId) {
-    if (confirm('¿Estás seguro de aprobar este permiso?')) {
-        const permission = state.permissions.find(perm => perm.id === permId);
-        if (permission) {
-            permission.status = 'approved';
-            permission.approvedAt = new Date().toISOString();
-            savePermissions();
-            renderPermissions();
-            showToast('✅ Permiso aprobado', 'success');
+    try {
+        if (confirm('¿Estás seguro de aprobar este permiso?')) {
+            const permission = state.permissions.find(perm => perm.id === permId);
+            if (permission) {
+                permission.status = 'approved';
+                permission.approvedAt = new Date().toISOString();
+                savePermissions();
+                renderPermissions();
+                updateStats();
+                showToast('✅ Permiso aprobado correctamente', 'success');
+                
+                // Enviar notificación de actualización
+                showUpdateNotification('2.6.1');
+            }
         }
+    } catch (error) {
+        console.error('Error en approvePermission:', error);
+        showToast('❌ Error al aprobar permiso', 'error');
     }
 }
 
 function rejectPermission(permId) {
-    if (confirm('¿Estás seguro de rechazar este permiso?')) {
-        const permission = state.permissions.find(perm => perm.id === permId);
-        if (permission) {
-            permission.status = 'rejected';
-            permission.rejectedAt = new Date().toISOString();
-            savePermissions();
-            renderPermissions();
-            showToast('❌ Permiso rechazado', 'error');
+    try {
+        if (confirm('¿Estás seguro de rechazar este permiso?')) {
+            const permission = state.permissions.find(perm => perm.id === permId);
+            if (permission) {
+                permission.status = 'rejected';
+                permission.rejectedAt = new Date().toISOString();
+                savePermissions();
+                renderPermissions();
+                updateStats();
+                showToast('❌ Permiso rechazado correctamente', 'error');
+                
+                // Enviar notificación de actualización
+                showUpdateNotification('2.6.1');
+            }
         }
+    } catch (error) {
+        console.error('Error en rejectPermission:', error);
+        showToast('❌ Error al rechazar permiso', 'error');
     }
 }
 

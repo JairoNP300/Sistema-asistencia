@@ -48,6 +48,7 @@ async function migrateToCloud() {
             console.log('📦 Base de datos en la nube vacía. Iniciando base de datos limpia.');
             const defaultState = new State({
                 employees: [], logs: [], departments: ['TI', 'RRHH', 'Ventas', 'Operaciones', 'Finanzas'],
+                positions: [], payroll: [], documents: [], permissions: [],
                 config: { tokenLife: 30, timeWindow: 300, maxRetries: 3, antiReplay: true },
                 adminConfig: { company: 'Mi Empresa S.A.', logo: '🏢', entryTime: '08:00', exitTime: '18:00', grace: 10 },
                 stats: { present: 0, entries: 0, exits: 0, blocked: 0 },
@@ -1839,11 +1840,24 @@ app.get('/api/version', (req, res) => {
 });
 
 // Iniciar
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`=========================================`);
-    console.log(`🚀 SISTEMA CLOUD ACTIVO Y LISTO`);
-    console.log(`🌍 Modo: ${useMongo ? 'Sincronizado con Atlas' : 'Local (Esperando .env)'}`);
-    console.log(`📍 Puerto: ${PORT}`);
-    console.log(`🔄 Sistema de actualización automática activo`);
-    console.log(`=========================================`);
+app.listen(PORT, () => {
+    const localIP = getLocalIP();
+    console.log(`🚀 Servidor corriendo en:`);
+    console.log(`   📍 Local: http://localhost:${PORT}`);
+    console.log(`   🌐 Red: http://${localIP}:${PORT}`);
+    console.log(`   📊 Panel: http://${localIP}:${PORT}/admin`);
+    console.log(`   📱 QR: http://${localIP}:${PORT}/checkin.html`);
+    console.log(`   📊 Estado: Base de datos sincronizada con MongoDB Atlas`);
+    console.log(`   ✨ Sistema de RRHH listo para uso automático`);
+    console.log(`   � Actualización automática activa cada 30 segundos`);
+    
+    // Iniciar sincronización automática
+    setInterval(async () => {
+        try {
+            await migrateToCloud();
+            console.log('🔄 Sincronización automática completada');
+        } catch (error) {
+            console.error('❌ Error en sincronización automática:', error);
+        }
+    }, 30000); // Cada 30 segundos
 });
